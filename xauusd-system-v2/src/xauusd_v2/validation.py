@@ -13,11 +13,16 @@ ALLOWED_RESULTS = {"AGREE", "DISAGREE", "AMBIGUOUS"}
 @dataclass(frozen=True, slots=True)
 class GroundTruthVector:
     id: str
-    image_file: str
+    source_locator: str
     expected_label: str
     expected_class: str
     evidence: tuple[str, ...]
     forbidden_inference: str
+
+    @property
+    def image_file(self) -> str:
+        """Backward-compatible alias for Round 01 datasets."""
+        return self.source_locator
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,10 +70,14 @@ def load_ground_truth(path: str | Path) -> GroundTruthDataset:
         if not evidence:
             raise ValueError(f"missing evidence for {vector_id}")
 
+        source_locator = str(raw.get("source_locator") or raw.get("image_file") or "").strip()
+        if not source_locator:
+            raise ValueError(f"missing source_locator/image_file for {vector_id}")
+
         vectors.append(
             GroundTruthVector(
                 id=vector_id,
-                image_file=str(raw["image_file"]).strip(),
+                source_locator=source_locator,
                 expected_label=expected_label,
                 expected_class=expected_class,
                 evidence=evidence,
