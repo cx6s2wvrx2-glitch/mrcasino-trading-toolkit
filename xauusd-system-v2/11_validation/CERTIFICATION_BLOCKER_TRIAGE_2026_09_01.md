@@ -6,30 +6,46 @@ Purpose: distinguish true implementation blockers from source-evolution, governa
 
 ## A. TRUE RAW-DETECTOR / PRODUCTION BLOCKERS
 
-### A1 — FU validity break criterion
+### A1 — Upstream `FU criteria met` predicate
 
-**State:** BLOCKER
+**State:** NARROWED BLOCKER
 
-Approved material requires liquidity taken + break/BOS in the FU event, but the corpus does not yet certify whether FU validity requires:
+Primary Reflection R-120..R-122 now resolves the FU **completion classification**:
 
-- wick breach of the previous high/low,
-- body close beyond the previous high/low,
-- or a context-dependent distinction.
+- no new high/low → `ATTEMPTED_FU_FORM_1`;
+- FU criteria met + close within the previous candle open/close body → `COMPLETE_FU`;
+- new high/low / FU-like setup without the required closure within the previous body → `ATTEMPTED_FU_FORM_2`.
 
-**Policy:** raw detector must preserve `wick_only`, `body_close`, and `ambiguous` as distinct states. Do not borrow body-close logic from broken-zone activation.
+Therefore wick-vs-close is no longer a free implementation choice for FU completion.
 
-### A2 — Imbalance geometry
+**Remaining blocker:** the source phrase `FU criteria met` still needs a fully certified upstream raw-OHLC predicate. Do not infer that predicate from Casino_v7/BETA helper logic.
 
-**State:** BLOCKER
+**Implemented candidate:** `src/xauusd_v2/fu_completion.py` applies only the source-confirmed completion layer and fails closed when upstream FU criteria are not certified.
 
-Competing candidate geometry remains:
+### A2 — Imbalance constructs / raw geometry
 
-- previous candle close → next candle open,
+**State:** SPLIT BLOCKER — DO NOT COLLAPSE CONSTRUCTS
+
+Primary material now indicates at least two different constructs:
+
+#### A2a — `Imbalanced candle` (main liquidity construct)
+
+Later primary Casino material calls the main traded form an **imbalanced candle** and treats it as liquidity. The primary 1h and 5m examples visually show single-candle, immediate one-sided movement. Later Last Areas Liquidity material describes imbalanced candles as moves that start immediately in one direction while the high/low is not manipulated.
+
+The implementation helper `Casino_v7` uses `open == low` / `open == high`, and the primary examples visually resemble that geometry, but helper code is not strategy authority and primary text has not yet stated the exact equality/tolerance mechanically.
+
+**Policy:** do not promote `open==low/open==high` to canonical raw detector until primary visual certification establishes exact equality/tolerance and broker-feed behavior.
+
+#### A2b — Classic / untested imbalance zone
+
+Earlier instructional sources describe an untested multi-candle price area, but boundary descriptions differ:
+
+- previous close → next open;
 - previous wick → next wick.
 
-Primary later material strongly supports the strategic use of IMB but has not yet certified the exact universal geometry boundary.
+This is not automatically the same construct as the later `imbalanced candle` liquidity primitive.
 
-**Policy:** no canonical raw imbalance detector until labelled primary visual geometry examples resolve the boundary.
+**Policy:** store `IMBALANCED_CANDLE` and `CLASSIC_UNTESTED_IMBALANCE_ZONE` as different candidate concepts. No universal IMB geometry switch.
 
 ### A3 — Strong FU quantitative threshold
 
@@ -114,14 +130,23 @@ The strict FU→FU retest case is a subset of the broader primary HCS grammar: e
 
 Body/close-enough retest can count; wick depth grades quality. Exact fib implementation remains A4.
 
+### D3 — FU completion class
+
+**State:** SOURCE-CONFIRMED CLASSIFICATION / UPSTREAM PREDICATE NOT VERIFIED
+
+R-120..R-122 distinguish Complete FU from two Attempted-FU forms. This classification can be implemented deterministically **after** an upstream detector supplies whether FU criteria are met and whether a new high/low occurred.
+
+This does not certify the upstream FU primitive and does not authorize VERIFIED promotion.
+
 ## Practical priority order
 
-1. FU validity break criterion
-2. Imbalance geometry
+1. upstream `FU criteria met` raw predicate
+2. `IMBALANCED_CANDLE` exact raw geometry/tolerance on broker data
 3. Strong FU threshold
 4. FU-retest fib anchor/orientation
-5. labelled zone-type boundary examples
-6. production risk policy only after strategy/research evidence is mature
+5. classic untested-imbalance zone boundary, if still needed as a separate strategy construct
+6. labelled zone-type boundary examples
+7. production risk policy only after strategy/research evidence is mature
 
 ## Current promotion rule
 
