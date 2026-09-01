@@ -39,7 +39,7 @@ class MarketDataValidationReport:
 class XAUUSDDataAgent:
     """Deterministic market-data gate; no LLM and no strategy authority."""
 
-    name = "xauusd_data_agent_04"
+    name = "xauusd_data_agent_03"
     version = "0.1.0"
 
     def validate_batch(
