@@ -8,7 +8,7 @@ Purpose: distinguish true implementation blockers from source-evolution, governa
 
 ### A1 — Upstream `FU criteria met` predicate
 
-**State:** NARROWED BLOCKER
+**State:** NARROWED SOURCE-EVOLUTION BLOCKER
 
 Primary Reflection R-120..R-122 now resolves the FU **completion classification**:
 
@@ -18,9 +18,20 @@ Primary Reflection R-120..R-122 now resolves the FU **completion classification*
 
 Therefore wick-vs-close is no longer a free implementation choice for FU completion.
 
-**Remaining blocker:** the source phrase `FU criteria met` still needs a fully certified upstream raw-OHLC predicate. Do not infer that predicate from Casino_v7/BETA helper logic.
+The remaining upstream wording evolves across approved sources:
 
-**Implemented candidate:** `src/xauusd_v2/fu_completion.py` applies only the source-confirmed completion layer and fails closed when upstream FU criteria are not certified.
+- early Free Lessons: liquidity taken + break of structure in the same candle;
+- Analysis Basics: liquidity taken + move in the opposite direction in the same candle, with explicit flexibility in definition;
+- Reflection R-120..R-122: Complete/Attempted classification based on new-high/low behavior plus previous-body closure.
+
+The R-120 primary visual does **not** justify converting the older BOS wording into a mandatory close beyond the opposite previous high/low.
+
+**Implemented evidence layers:**
+
+- `src/xauusd_v2/fu_observables.py` extracts previous-high/low sweep, candle direction, previous-body closure, outside-bar state and directional reversal-candidate facts without returning `valid_fu`.
+- `src/xauusd_v2/fu_completion.py` applies only the source-confirmed Complete/Attempted completion layer and fails closed when upstream FU criteria are not certified.
+
+**Remaining blocker:** certify the exact predicate represented by `FU criteria met` and reconcile/scope the earlier BOS wording. Do not infer it from Casino_v7/BETA helper logic.
 
 ### A2 — Imbalance constructs / raw geometry
 
@@ -75,7 +86,9 @@ Cross-source consolidation is strong:
 - wick touch = stronger,
 - 50% of FU wick = strongest.
 
-The unresolved part is the exact mechanical fib anchor/orientation and boundary cases.
+The Master itself marks the exact 0/100 fib orientation as unresolved. A targeted search of the current Reflection Master and primary notebook did not surface a later labelled visual that explicitly fixes the anchor.
+
+**Policy:** basic retest validity/relative grading may remain source-confirmed, but no numeric 70% raw detector is allowed until the anchor/orientation is visually certified.
 
 ### A5 — Production risk policy
 
@@ -150,7 +163,7 @@ This does not certify the upstream FU primitive and does not authorize VERIFIED 
 
 ## Practical priority order
 
-1. upstream `FU criteria met` raw predicate
+1. upstream `FU criteria met` source-evolution resolution
 2. `IMBALANCED_CANDLE` exact raw geometry/tolerance on broker data
 3. label/calibrate Strong-FU quality using objective metrics
 4. FU-retest fib anchor/orientation
