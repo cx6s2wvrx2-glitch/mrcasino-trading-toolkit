@@ -63,7 +63,7 @@ Current source-supported interpretation:
 
 The exact quantitative candle-shape threshold for SFU is NOT yet certified.
 
-## 5. FU Retest
+## 5. FU Retest — validity versus quality
 
 FU retest must be separated into two questions:
 1. Does a retest count as a retest?
@@ -75,12 +75,17 @@ Current primary evidence:
   - >70% fib of full FU without wick touch = weak but counts;
   - FU wick touch = stronger;
   - 50% of FU wick = strongest.
+- Primary Reflection visual evidence also shows HCS can sometimes be considered when the wick is not quite met but price is near enough in context, with x3 confirmation taking prevalence.
+- Casino notebook labels `Negation + ATT FU retest = Adv FU retest` as an advanced variant.
 
 Therefore candidate state model:
-`retest_valid = true/false`
-`retest_quality = weak | stronger | strongest | unresolved`
+`retest_valid = true | false`
+`retest_quality = weak | stronger | strongest | advanced | unresolved`
 
 Do not encode 50% wick as a mandatory condition for every valid retest.
+
+Remaining blocker:
+- exact fib anchor/orientation for the >70% full-FU grading is not yet visually certified.
 
 ## 6. FU Negation
 
@@ -97,28 +102,46 @@ Current hierarchy/context:
 Negation therefore needs at least:
 `source_tf`, `opposing_tf`, `formation_strength`, `context_alignment`.
 
-## 7. x3 FU / x3 manipulation
+## 7. x3 — final primitive definition now source-confirmed
 
-Primary Q&A gives the strongest direct definition currently available:
+Reflection R-213 gives the final primitive definition:
+
+`x3 = one candle containing BOTH FU and negation characteristics embedded at macro level inside the same candle.`
+
+This closes the earlier speculative geometry question around whether x3 meant merely three bodies, triple range, or three separate moves.
+
+Primary Q&A adds the operational manipulation sequence view:
 1. FU wick/manipulation in one direction;
 2. negation attempt from the opposite side;
 3. the negation attempt is broken.
 
-Mr Casino describes x3 FU as the strongest manipulation type, but also states liquidity calculation is more important than the x3 concept by itself.
+These are treated as compatible descriptions of the same x3 manipulation logic at different explanatory levels, pending labelled detector tests.
 
-Variants mentioned in the primary Q&A:
+Primary Q&A also mentions related variants/structures:
 - x3 FU candle;
 - x3 HCS retest;
 - three candles, each contributing one manipulation.
 
-These variants must NOT be collapsed into one detector until labelled visual examples certify their exact geometry.
+Casino primary notebook adds examples/labels for x3 negation, x3-by-x3, HCS x3 and TS build sequences.
+
+Important:
+- the core x3 primitive itself is now much better defined;
+- `x3 by x3` remains a separate unresolved advanced concept;
+- multi-candle variants must not be silently collapsed into the single-candle R-213 detector.
+
+Mr Casino describes x3 as very strong manipulation, but liquidity calculation still outranks x3 by itself.
 
 ## 8. Strength hierarchy — current candidate
 
 Older Last Areas material gives:
 `ATT FU < FU < FU retest < HCS < multiple HCS`.
 
-Reflection later adds nuance and an inferred refresh hierarchy where advanced HCS / advanced FU retest outrank ordinary variants.
+Reflection later adds nuance and an inferred refresh hierarchy:
+`Adv HCS > HCS > weaker HCS (ATT FU)` and `Adv FU retest > FU retest`.
+
+Direct primary HCS evidence clarifies:
+- strongest HCS = two Strong FU retesting each other;
+- ATT FU + negation wick = weaker HCS form.
 
 Use this only as a provisional ranking framework. Do not convert to arbitrary numeric weights yet.
 
@@ -129,12 +152,13 @@ Current source-supported principles:
 - HTF FU cannot be casually overridden by LTF FU;
 - stronger opposite-side HTF evidence is required for true negation/reversal;
 - FU at higher timeframe can support a larger directional move;
-- LTF FU is primarily useful for refinement/execution when HTF context already agrees.
+- LTF FU is primarily useful for refinement/execution when HTF context already agrees;
+- Reflection R-216: `The LTF builds the HTF but HTF commands the LTF`.
 
 Candidate rule:
 `LTF FU cannot independently overturn active HTF TFS/FU authority.`
 
-Exact timeframe-equivalence relationships (for example 30m FU vs 15m FU retest) remain source-specific and require chart certification before production use.
+Exact timeframe-equivalence relationships remain source-specific and require chart certification before production use.
 
 ## 10. Entry use
 
@@ -149,13 +173,21 @@ Current approved evidence supports:
 Therefore candidate gate:
 `FU entry requires pre-existing context; FU itself is never sufficient.`
 
-## 11. FU → HCS relationship
+## 11. FU → HCS relationship — conflict narrowed substantially
 
-Older HCS material defines HCS from FU/retest interaction and later broadens eligible components.
+Older HCS material gives both a strict example and a broader grammar.
+Direct primary evidence now clarifies the broader grammar:
+- HCS can use Strong FU, ATT FU or FU negation;
+- any two eligible manipulation forms retesting each other can form HCS;
+- strongest = two Strong FU retesting each other;
+- weaker example = ATT FU + negation wick.
+
+Therefore the strict `FU retest where retest also forms FU` structure is treated as a subset, not necessarily a contradictory definition.
+
 Reflection R-65 places HCS refinement above ordinary FU retest and ties it to TRUE STOP.
-Reflection R-180 requires a left FU retest before HCS can be ESTABLISHED.
+Reflection/primary visual evidence says HCS has an FU from the left to react/retest before the POI establishes; wick retest becomes part of the HCS range.
 
-Do not simplify HCS to 'any FU retest'. The current corpus explicitly distinguishes them.
+Do not simplify HCS to `any FU retest`.
 
 ## 12. Candidate state machine
 
@@ -173,13 +205,14 @@ Each state must carry:
 - direction;
 - liquidity reference;
 - close confirmation status;
+- retest validity;
 - retest quality;
 - HTF/TFS context;
 - source-evidence provenance.
 
 No transition should be inferred from future bars in historical data.
 
-## 13. Open certification questions
+## 13. Open certification questions after current primary review
 
 Before VERIFIED status:
 1. exact FU break criterion: wick vs close;
@@ -189,8 +222,12 @@ Before VERIFIED status:
 5. labelled positive/negative examples for AFU;
 6. labelled positive/negative examples for SFU;
 7. labelled FU-negation examples across TF hierarchy;
-8. labelled x3 FU examples for each stated variant;
+8. exact detector boundaries for multi-candle x3 variants and `x3 by x3`;
 9. precise rules for timeframe-equivalence claims;
-10. clear separation of valid FU retest from entry-quality FU retest.
+10. exact fib anchor/orientation for FU-retest >70% grading;
+11. quantitative HCS `near enough` tolerance.
+
+No longer treated as an open primitive-definition question:
+- core x3 meaning, because R-213 provides the final source definition.
 
 Ambiguous cases remain `NOT CERTIFIED / NO TRADE`.
