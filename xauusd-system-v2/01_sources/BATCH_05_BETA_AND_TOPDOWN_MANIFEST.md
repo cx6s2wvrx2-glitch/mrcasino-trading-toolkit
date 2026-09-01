@@ -42,20 +42,23 @@ Rules for V2:
 - Dated sequences: **29**
 - Date span visible from filenames: 2021–2024
 - macOS metadata entries excluded from inventory.
-- Current authority: **PENDING USER CONFIRMATION**
+- User-confirmed author/provenance: **Mr Casino himself**
+- Authority: **PRIMARY / HIGH-PRIORITY VISUAL GROUND-TRUTH SOURCE**
 
 ### Visual inspection
 
-The archive is not a random screenshot dump. Dated groups form sequential top-down analysis sets: higher-timeframe context and directional narrative, zones/HCS/refinement, then progressively lower-timeframe chart context/execution areas. This makes the archive potentially very valuable for sequence-level training and certification.
+The archive is not a random screenshot dump. Dated groups form sequential top-down analysis sets: higher-timeframe context and directional narrative, zones/HCS/refinement, then progressively lower-timeframe chart context/execution areas. Because the user confirmed these analyses are from Mr Casino himself, the dated sequences are eligible as primary visual ground truth for learning and certifying top-down sequencing.
 
-### Current handling
+### Handling
 
-- Approved for preservation and review.
-- May be segmented by date into top-down episodes.
-- Until author/provenance is confirmed, annotations are **not canonical strategy rules** and examples are **not ground truth**.
-- Once authority is known, each dated episode can be converted into a structured training object:
+- Preserve all 188 images and their original date/order grouping.
+- Segment by date into 29 top-down episodes; do not train from shuffled individual screenshots when sequence context matters.
+- Use annotations as primary visual evidence, but preserve the exact screenshot/date/context instead of turning every annotation into a decontextualized rule.
+- Where an image is ambiguous or wording is absent, cross-check against Reflection and other approved primary text rather than inventing an interpretation.
+- Each dated episode can become a structured training/certification object:
   `HTF context → active zones → liquidity/TFS/HCS state → refinement → LTF decision → outcome/next state`.
+- These episodes may be used as ground-truth examples for Agent 04/top-down reasoning once each episode is individually labeled and reviewed.
 
 ## Separation policy
 
-`Reflection / approved primary knowledge` remains above implementation helpers. Code can suggest detectors, data structures and state machines; it may never silently redefine a strategy concept. Visual top-down material can teach sequencing only according to its confirmed authority level.
+`Reflection / approved primary knowledge` remains the canonical textual/rule layer. The Mr Casino top-down archive is a primary visual ground-truth layer for how those concepts are sequenced and applied in charts. Implementation helpers can suggest detectors, data structures and state machines; they may never silently redefine a strategy concept.
