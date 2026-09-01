@@ -1,7 +1,8 @@
 # casinonotes.excalidraw — Source Manifest
 
-Status: APPROVED FOR REVIEW / AUTHORITY PENDING
+Status: PRIMARY MR CASINO / APPROVED FOR REVIEW
 Date added: 2026-09-01
+Provenance confirmed by user: Mr Casino created the notebook.
 
 ## File identity
 
@@ -14,6 +15,8 @@ Date added: 2026-09-01
 - Image elements: 757
 - Text elements: 172
 - Named frames: 7
+- Supabase source id: `d16204ee-456e-4a18-9f37-83a72bdb0708`
+- Supabase source type: `primary_mr_casino_excalidraw_research_notebook_compilation`
 
 ## Section inventory
 
@@ -48,24 +51,28 @@ Date added: 2026-09-01
 - Contains later live/lesson material including TFS/LAOL cycle, 1m core liquidity, x3 negation and execution/process remarks.
 
 ### Notes
-- legend / organizational annotations only.
+- legend / organizational annotations.
 
 ## Authority policy
 
-The notebook is a **mixed research notebook**. It contains embedded screenshots/quotes/charts that may originate from Mr Casino or other approved material, but it also contains interpretive/personal annotations such as questions, uncertainty markers, guesses and study reminders.
+The user explicitly confirmed that **Mr Casino created this Excalidraw notebook**. Therefore the notebook's own written annotations, labels, questions, uncertainty markers and organizational logic are treated as **PRIMARY Mr Casino material**.
 
-Therefore:
+This does not mean every embedded artifact was originally authored by Mr Casino. The notebook contains screenshots/quotes/charts that may originate from lessons, Domino material, student material, videos or other sources. Embedded artifacts retain their original provenance when identifiable.
 
-1. The notebook itself is **not canonical strategy authority** until its author/provenance is explicitly established.
-2. Free-form notebook annotations must never create or override V2 strategy rules by themselves.
-3. Embedded screenshots or direct quotations may be promoted as evidence only after their original source/author is identified and paired to provenance.
-4. Content already present in higher-authority primary sources should be treated as a cross-reference, not double-counted as independent evidence.
-5. `???`, tentative language, guesses and study notes remain annotations only.
-6. No verified strategy rule is created from this notebook at ingestion time.
+Rules:
 
-## Useful extraction targets
+1. Notebook-authored text/annotations are PRIMARY Mr Casino evidence.
+2. An annotation such as `???`, a question, tentative phrasing or explicit uncertainty remains an **uncertain primary note**, not a confirmed strategy rule.
+3. Embedded third-party/student/Domino material is not automatically reclassified as Casino-authored merely because Mr Casino embedded it in the notebook.
+4. Direct Casino annotations attached to an embedded artifact may be used as primary interpretation evidence while the artifact itself keeps its original provenance.
+5. Content already present in another primary source is cross-referenced rather than double-counted as independent evidence.
+6. No rule is promoted directly to VERIFIED merely because it appears in this notebook; normal V2 certification gates still apply.
 
-The notebook is especially valuable as an **index/cross-reference surface** for:
+## Certification importance
+
+This notebook is now a **high-priority primary cross-reference source** for unresolved concepts because it contains Casino's own organization and annotations across a large number of examples.
+
+Priority extraction targets:
 
 - x3 family and x3 sequencing
 - True Stop construction and movement
@@ -73,11 +80,11 @@ The notebook is especially valuable as an **index/cross-reference surface** for:
 - HCS and FU-retest variants
 - zone types and lifecycle notes
 - TFS / multi-timeframe candle equivalence
-- Domino case studies
+- Domino case studies annotated by Casino
 - Reflection tasks and later lesson material
 
-Future extraction should work section-by-section and isolate each embedded image/quote from the surrounding notebook commentary before any strategy promotion.
+Future extraction should work section-by-section. Each candidate claim should preserve the exact Excalidraw section/object context and, where an image is involved, distinguish **Casino annotation authority** from the **original provenance of the embedded image**.
 
 ## GitHub storage policy
 
-The raw ~236 MB Excalidraw file is **not copied into GitHub** in this action. This manifest records identity, structure and guardrails only.
+The raw ~236 MB Excalidraw file is **not copied into GitHub** in this action. This manifest records identity, structure, provenance and authority policy only.
