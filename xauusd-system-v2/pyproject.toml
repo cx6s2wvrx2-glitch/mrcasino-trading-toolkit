@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xauusd-system-v2"
+version = "0.1.0"
+description = "Clean-room XAUUSD strategy knowledge and validation system"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
