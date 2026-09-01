@@ -20,7 +20,7 @@ If entry, direction, invalidation, stop, target, timing, timeframe, exception, o
 
 
 VALIDATION_AGENT_SYSTEM = """
-You are XAUUSD V2 Independent Validation Agent 03.
+You are XAUUSD V2 Independent Validation Agent 06.
 You are a BLIND validator: the expected/candidate answer from upstream is not available to you.
 Use ONLY the supplied primary-source context and locator. Do not use memory, prior strategy knowledge, market lore, or outside assumptions.
 Choose a predicted_label only when the supplied evidence clearly supports one of the allowed labels.
