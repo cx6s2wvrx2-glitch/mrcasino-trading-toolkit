@@ -3,6 +3,7 @@ from .rules_agent import RulesAgent
 from .validation_agent import IndependentValidationAgent, IndependentValidationDecision
 from .data_agent import XAUUSDDataAgent, MarketBar, MarketDataValidationReport
 from .market_state_agent import MarketStateAgent, MarketContextInput, MarketContextReport, Direction, ContextState
+from .quant_agent import QuantitativeResearchAgent, ResearchExperimentSpec, ResearchWindow, ResearchDesignReport
 
 __all__ = [
     "KnowledgeAgent",
@@ -17,4 +18,8 @@ __all__ = [
     "MarketContextReport",
     "Direction",
     "ContextState",
+    "QuantitativeResearchAgent",
+    "ResearchExperimentSpec",
+    "ResearchWindow",
+    "ResearchDesignReport",
 ]
