@@ -1,0 +1,32 @@
+# XAUUSD V2 — Canonical Agent Status
+
+Status date: 2026-09-01
+
+This file distinguishes architecture role IDs from implementation order. The canonical role IDs are fixed below.
+
+| ID | Agent | Current state | Model/data connection | Authority boundary |
+|---|---|---|---|---|
+| 01 | Knowledge / Understanding Agent | IMPLEMENTED v0.1 | provider-neutral client contract; no production provider adapter yet | Extracts only from user-approved sources; output starts UNVERIFIED |
+| 02 | Strategy Formalization Agent | IMPLEMENTED v0.1 | provider-neutral client contract; no production provider adapter yet | Creates DRAFT rules only; cannot promote |
+| 03 | XAUUSD Data Agent | IMPLEMENTED v0.1 deterministic foundation | no broker/MT5 connection yet | Validates XAUUSD bars/provenance/time; no strategy or trade authority |
+| 04 | Market State / Context Agent | PLANNED | none | Will consume certified primitives + validated market data; no execution authority |
+| 05 | Quantitative Research Agent | PLANNED | none | Research/backtest only; cannot change live rules directly |
+| 06 | Independent Validation Agent | IMPLEMENTED v0.1 blind contract | provider-neutral client contract; no production provider adapter yet | Cannot see expected label; may abstain; cannot promote or trade |
+| 07 | Risk Agent / Deterministic Risk Engine | PLANNED | none | Future hard veto above strategy; no LLM discretion in live sizing/limits |
+| 08 | Continuous Improvement Agent | PLANNED | none | May propose changes only; promotion requires the full certification ladder |
+
+## Implemented agent tests
+
+- Agent 06 blind-validation contract: 5/5 local tests passed.
+- Agent 03 market-data contract: 7/7 local tests passed.
+- Existing ground-truth / reproducibility / candidate detector suites remain separate validation layers.
+
+## Non-negotiable architecture rules
+
+1. Agent numbering follows role architecture, not build order.
+2. No agent can self-promote strategy truth.
+3. Ambiguity is fail-closed.
+4. Data Agent preserves provisional vs confirmed bars.
+5. Independent Validator never receives the expected label.
+6. Risk Agent will be deterministic and will outrank strategy when implemented.
+7. No LLM is permitted in the latency-critical live execution path.
