@@ -1,0 +1,79 @@
+{
+  "dataset": "XAUUSD V2 Ground Truth Round 01",
+  "date": "2026-09-01",
+  "status": "candidate_not_verified",
+  "source_episode": "PRICE ACTION REFLECTION 2023-04-02/03",
+  "promotion_allowed": false,
+  "test_vectors": [
+    {
+      "id": "GT-R01-001",
+      "image_file": "IMG_20230402_183101_528.jpg",
+      "expected_label": "liquidity_priority_downgrade",
+      "expected_class": "valid",
+      "evidence": [
+        "1967 major taken",
+        "FU retest tells us we are not interested in liquidity below here",
+        "5 min FU retest starting the 4hr low"
+      ],
+      "forbidden_inference": "Do not generalize that every FU retest automatically invalidates all liquidity below."
+    },
+    {
+      "id": "GT-R01-002",
+      "image_file": "IMG_20230402_183103_164.jpg",
+      "expected_label": "lower_liquidity_after_failed_negation",
+      "expected_class": "valid",
+      "evidence": [
+        "failed sell negation = lower liquidity / manipulated",
+        "1 min FU alone ordinarily not enough confirmation",
+        "zone + HTF/LTF context supplied"
+      ],
+      "forbidden_inference": "Do not turn any failed negation into an automatic entry."
+    },
+    {
+      "id": "GT-R01-003",
+      "image_file": "IMG_20230402_183104_793.jpg",
+      "expected_label": "laol_within_move",
+      "expected_class": "valid",
+      "evidence": [
+        "1/3/5 min doji - last area of liquidity within move",
+        "separate liquidity trail becomes target after True Stop break"
+      ],
+      "forbidden_inference": "Do not equate LAOL with every major-liquidity target."
+    },
+    {
+      "id": "GT-R01-004",
+      "image_file": "IMG_20230402_183105_577.jpg",
+      "expected_label": "liquidity_priority_relative",
+      "expected_class": "valid",
+      "evidence": [
+        "1m IMB remains a liquidity trail",
+        "explicitly labelled not as major",
+        "major liquidity remains above"
+      ],
+      "forbidden_inference": "Do not discard lower-priority liquidity as nonexistent."
+    },
+    {
+      "id": "GT-R01-005",
+      "image_file": "IMG_20230402_183107_248.jpg",
+      "expected_label": "zone_refinement_from_broken_untested_fu_retest",
+      "expected_class": "valid",
+      "evidence": [
+        "Refined zone of manipulation",
+        "broken untested 30 min FU retest"
+      ],
+      "forbidden_inference": "Do not infer a universal zone-boundary rule from this one example."
+    },
+    {
+      "id": "GT-R01-006",
+      "image_file": "IMG_20230402_183108_403.jpg",
+      "expected_label": "htf_direction_authority_over_ltf_countermove",
+      "expected_class": "valid",
+      "evidence": [
+        "sells would have to be aligned on 4hr even for a retracement",
+        "1 min HCS starting 4hr high",
+        "sign of weak sell"
+      ],
+      "forbidden_inference": "Do not claim LTF counter-signals can never matter; they require HTF-compatible context."
+    }
+  ]
+}
