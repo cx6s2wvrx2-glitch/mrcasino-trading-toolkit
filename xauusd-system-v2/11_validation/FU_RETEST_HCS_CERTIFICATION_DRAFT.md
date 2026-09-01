@@ -3,7 +3,7 @@
 Status: DRAFT / NOT VERIFIED / NOT PRODUCTION
 Date: 2026-09-01
 
-This module consolidates only currently approved strategy sources. It does not infer strategy truth from implementation helpers and does not auto-resolve source conflicts.
+This module consolidates only currently approved strategy sources. It does not infer strategy truth from implementation helpers and does not auto-promote source claims to VERIFIED.
 
 ## 1. Separation of concepts
 
@@ -12,6 +12,7 @@ The system must keep the following as distinct entities:
 - FU retest validity
 - FU retest quality/strength
 - Attempted-FU retest
+- Advanced FU retest
 - HCS formation
 - HCS establishment
 - HCS strength
@@ -20,25 +21,27 @@ The system must keep the following as distinct entities:
 
 A generic `retest=true` flag is insufficient.
 
-## 2. FU retest — current supported definition
+## 2. FU retest — validity and quality are separate
 
-Cross-source support:
+Cross-source support is now strong:
 
 - FU retest is a retest of a previously formed FU and is price-action information, not an automatic trade trigger.
 - Attempted FU may also retest, but its use requires lower-timeframe/context confirmation.
-- Primary Q&A shows a valid 1m FU retest may occur on the body; wick contact is not mandatory for every valid retest.
-- Reflection R-54 grades retest quality separately from validity:
-  - >70% of full FU without wick touch = weak but still counts;
-  - FU wick touch = stronger;
-  - 50% of FU wick = strongest.
+- Primary Q&A: a valid 1m FU retest may occur on the body; wick contact is not mandatory for every valid retest.
+- Reflection R-54 grades quality separately:
+  - >70% of full FU without wick touch = WEAK but still counts;
+  - FU wick touch = STRONGER;
+  - 50% of FU wick = STRONGEST.
+- Casino primary notebook labels `Negation + ATT FU retest = Adv FU retest`.
 
-### Candidate model
+Candidate model:
 
 `retest_validity = valid | invalid | ambiguous`
 
-`retest_quality = weak | stronger | strongest | unresolved`
+`retest_quality = weak | stronger | strongest | advanced | unresolved`
 
-These must not be collapsed into one field.
+Remaining blocker:
+- exact fib anchor/orientation for the >70% full-FU grading remains unresolved.
 
 ## 3. FU retest is not automatically an entry
 
@@ -53,44 +56,44 @@ Therefore:
 
 `FU_RETEST_FOUND != ENTRY_ALLOWED`
 
-## 4. HCS — strict base definition candidate
+## 4. HCS grammar — conflict substantially clarified
 
-Direct HCS source gives the strict base definition:
+Direct primary evidence now clarifies that HCS is a family of two-manipulation retest structures, not only one strict geometry.
 
-1. a FU exists;
-2. that FU is retested;
-3. the retest itself forms another FU.
-
-Candidate output:
-
-`HCS_FORMED`
-
-This is stronger evidence than the older derived annotation that broadly equated `FU -> retest` with HCS.
-
-## 5. HCS — component extension
-
-The same HCS source broadens eligible manipulation components and states that an HCS can be constructed from two eligible manipulation forms retesting one another, including:
-
+Eligible components explicitly shown/stated:
 - Strong FU
 - Attempted FU
 - FU negation
 
-This creates a real specification problem: the system must distinguish the strict base definition from the broader component family until chart certification determines the exact canonical grammar.
+Primary Casino/Reflection statement:
+- any two eligible manipulation forms retesting each other can form HCS;
+- strongest HCS = two Strong FU retesting each other;
+- ATT FU + negation wick = weaker HCS form.
+
+The older strict example:
+`FU exists -> FU is retested -> retest itself forms another FU`
+
+is therefore treated as a valid subset of the broader grammar, not necessarily a contradictory definition.
 
 Candidate representation:
 
-`hcs_grammar = strict_fu_fu | extended_two_manipulations | unresolved`
+`hcs_component_A`
+`hcs_component_B`
+`hcs_retest_relationship`
+`hcs_variant = strong_fu_pair | att_fu_negation | other_source_confirmed | unresolved`
 
-No code should silently treat every retest as HCS.
+Hard restriction:
+`plain FU retest != HCS automatically`.
 
-## 6. HCS establishment is separate from HCS formation
+## 5. HCS establishment is separate from HCS formation
 
-Reflection R-180 occurrence 2 adds a critical state transition:
+Reflection R-180 and newly reviewed primary visual evidence add a critical state transition:
 
-- HCS is ESTABLISHED only if the left FU was retested first.
-- Without that prior retest, the HCS is not established; the next valid point becomes the established TFS POI.
+- HCS is ESTABLISHED only when the required left-side FU/retest relationship has occurred first.
+- Primary visual annotation: for HCS there is an FU from the left to react; when an FU is retested, the wick retest becomes part of the HCS range.
+- Without the prerequisite context, do not label the HCS established.
 
-Therefore future state machine must distinguish:
+Future state machine:
 
 `HCS_FORMING`
 `HCS_FORMED`
@@ -99,20 +102,37 @@ Therefore future state machine must distinguish:
 `HCS_RESPECTED`
 `HCS_BROKEN`
 
-This separation is mandatory for historical reproducibility and for eliminating repaint-style ambiguity.
+This separation is mandatory for historical reproducibility and anti-repaint design.
+
+## 6. HCS tolerance — exact wick touch is not universally mandatory
+
+Primary visual edge case now exists:
+
+- TS is marked respected;
+- chart annotation states HCS can still be considered even though price did not quite meet the wick but was `near enough in the moment`;
+- x3 confirmations are stated to take prevalence.
+
+Therefore:
+- exact wick touch cannot be hard-coded as a universal HCS-validity requirement;
+- however no numeric `near enough` threshold is yet certified.
+
+Candidate field:
+`hcs_retest_tolerance = exact_touch | near_enough_contextual | invalid | unresolved`
+
+Open blocker:
+quantitative tolerance remains unknown.
 
 ## 7. HCS strength hierarchy — candidate only
 
-Current sources support relative hierarchy but not every quantitative boundary:
+Current sources support relative hierarchy:
 
 - ATT FU < FU < FU retest < HCS < multiple HCS.
 - Strongest HCS example: two Strong FU retesting one another.
 - Weaker HCS example: Attempted FU + negation wick.
-- Reflection R-223 is explicitly inference-level and suggests Adv HCS > HCS > weaker HCS; it must not be promoted as source-confirmed without visual certification.
-- Older timeframe-strength material states 30m HCS = 1h FU, but universality of the exact 2x mapping remains unverified.
+- Reflection R-223 is inference-level and suggests `Adv HCS > HCS > weaker HCS` and `Adv FU retest > FU retest`.
+- Older timeframe-strength material states 30m HCS = 1h FU, but universality remains unverified.
 
-The future engine therefore needs:
-
+Candidate field:
 `hcs_strength = weak | standard | strong | multiple | unresolved`
 
 No numeric score is certified yet.
@@ -123,7 +143,19 @@ Strong primary/Reflection support:
 
 - Reflection R-65: HCS refinement is a retest of a TRUE STOP and sits above ordinary FU retest in hierarchy.
 - Reflection R-108: True Stop is a contextual Main POI where all 10m+ TFS factors align; LTF HCS/negation follows after respect plus final liquidity calculation.
-- Primary Q&A states that true-stop quality depends on formation strength, timeframe, session timing, zones, major-liquidity reasoning and TFS placement.
+- Primary notebook/Reflection charts now provide both positive and negative TS-build sequences.
+
+Positive sequence observed:
+`retail liquidity manipulated`
+→ `LTF LAOL taken starts 10m TS`
+→ `1m HCS x3`
+→ `1m x3 negation / x3-by-x3`
+→ `10m HCS EST`
+
+Negative sequence observed:
+- no prior 10m TS established;
+- outside timing;
+- x3 self-negation alone is weaker and not enough for a strong POI.
 
 Therefore:
 
@@ -142,16 +174,14 @@ Reflection R-221 frames HCS as an entry model containing:
 - reaction / True-Stop retest logic;
 - fractal use on scalp/LTF.
 
-Reflection R-145 adds LTF execution sequence:
+Reflection R-145 and newly reviewed primary charts support:
 
-retail liquidity manipulation -> LTF LAOL taken -> 1m negation or 3m HCS+negation trigger.
+`retail liquidity manipulation`
+→ `LTF LAOL taken`
+→ `1m negation OR 3m HCS + negation`
 
-Primary Price Action Reflection also shows:
-
-- established 1m HCS can act as entry when broader direction and major targets are already aligned;
-- waiting can produce additional 5m + 1m HCS confirmation;
-- 15m HCS after liquidity is taken can support an aggressive setup when zone retest and timeframe strength agree;
-- repeated HCS reactions can create re-entry opportunities while broader liquidity context remains valid.
+More aggressive use appears only with full TFS factors and 10m TS forming.
+Standard/safer continuation is shown after 10m TS is established, with LTF HCS/core-liquidity refinement.
 
 Thus HCS entry is contextual, not pattern-only.
 
@@ -166,31 +196,50 @@ Candidate gate:
 - relevant zone known;
 - True Stop respected or equivalent contextual support;
 - opposite-side/target liquidity supports the trade;
-- forming HCS/FU may be used only as provisional context until its required confirmation event occurs.
+- forming HCS/FU remains provisional until its required confirmation event occurs.
 
-This preserves the future distinction:
+This preserves:
 
 `LIVE_PROVISIONAL` vs `CONFIRMED_IMMUTABLE`.
 
-## 11. Certification blockers
+## 11. Current labelled visual evidence
 
-The module is NOT VERIFIED until the following are resolved with labelled primary examples:
+Primary notebook / embedded Reflection examples now include:
 
-1. exact grammar separating plain FU retest from HCS;
-2. exact extended-HCS component combinations and their minimum requirements;
-3. exact mechanics of "left FU retested first" for HCS establishment;
-4. retest validity geometry versus retest quality geometry;
-5. exact HCS invalidation/break criterion;
-6. exact quantitative strength boundaries, if any;
-7. whether the 30m HCS = 1h FU equivalence generalizes;
-8. positive, negative and edge examples for plain FU retest;
-9. positive, negative and edge examples for Attempted-FU retest;
-10. positive, negative and edge examples for HCS formation and HCS establishment;
-11. examples distinguishing aggressive HCS use from confirmed HCS entry.
+### Valid
+- minimum 1m manipulated sequence used for LTF TS build;
+- LTF LAOL + x3/HCS sequence building 10m HCS EST;
+- HCS left-side FU reaction/retest prerequisite.
 
-Until those gates pass, ambiguous observations produce `NOT_CERTIFIED / NO_TRADE` in any deterministic implementation.
+### Invalid
+- no 1m TS sequence -> wait for the correct bank-entry sequence;
+- no prior 10m TS + outside timing -> x3 self-negation alone is insufficient for strong POI.
 
-## 12. Implementation contract for later Python/MQL5
+### Edge cases
+- stronger prior-side TS remains in play against weaker opposing TS;
+- near-wick HCS can count contextually without exact touch;
+- aggressive 10m-TS-forming entry versus established 10m-TS entry flow.
+
+All remain UNVERIFIED until independent relabelling and historical reproducibility tests are run.
+
+## 12. Remaining certification blockers
+
+1. exact FU-retest fib anchor/orientation for >70% grading;
+2. exact HCS `near enough` tolerance;
+3. exact exhaustive component combinations for all HCS variants;
+4. exact HCS invalidation/break criterion;
+5. exact quantitative HCS strength boundaries, if any;
+6. whether 30m HCS = 1h FU generalizes;
+7. more positive/negative/edge examples for plain FU retest and ATT-FU retest;
+8. more examples separating HCS_FORMED from HCS_ESTABLISHED;
+9. independent validation and historical timestamp reproducibility.
+
+The old broad question `strict HCS definition versus extended grammar` is now substantially narrowed: direct primary evidence supports the extended grammar, with the strict FU/FU case treated as a subset.
+
+Until all required gates pass, ambiguous observations produce:
+`NOT_CERTIFIED / NO_TRADE`.
+
+## 13. Implementation contract for later Python/MQL5
 
 Future detector objects should expose at least:
 
@@ -203,7 +252,8 @@ Future detector objects should expose at least:
 - retest_quality
 - manipulation_component_A
 - manipulation_component_B
-- hcs_grammar
+- hcs_variant
+- hcs_retest_tolerance
 - hcs_state
 - hcs_strength
 - true_stop_ref
@@ -213,4 +263,4 @@ Future detector objects should expose at least:
 - provisional_or_confirmed
 - provenance_refs
 
-The strategy definition must be finalized before any implementation helper is allowed to map these fields.
+The strategy definition must be finalized before implementation helpers are allowed to map these fields.
