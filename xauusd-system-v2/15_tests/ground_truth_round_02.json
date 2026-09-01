@@ -1,0 +1,169 @@
+{
+  "dataset": "XAUUSD V2 Ground Truth Round 02",
+  "date": "2026-09-01",
+  "status": "candidate_not_verified",
+  "source_episode": "mixed primary Mr Casino notebook + top-down cases",
+  "promotion_allowed": false,
+  "test_vectors": [
+    {
+      "id": "GT-R02-001",
+      "source_locator": "casinonotes.excalidraw#embedded:95b7205bc49506c7f397e0678a45f07556ce105b",
+      "expected_label": "no_entry_without_1m_ts_sequence",
+      "expected_class": "invalid",
+      "evidence": ["No 1m true stop sequence", "wait for correct HCS/negation/x3 sequence showing bank entry"],
+      "forbidden_inference": "Do not infer that every missing 1m pattern permanently invalidates the broader HTF idea; this is an entry-readiness failure."
+    },
+    {
+      "id": "GT-R02-002",
+      "source_locator": "casinonotes.excalidraw#embedded:907e1816bce48502ddfd3d32076cbebcb7b1d8ed",
+      "expected_label": "minimum_1m_ts_build_sequence",
+      "expected_class": "valid",
+      "evidence": ["Banks are in only with a minimum 1m manipulated sequence", "new LTF TS build is evaluated within broader HTF TS context"],
+      "forbidden_inference": "Do not treat any arbitrary 1m sequence as a True Stop; the source context is required."
+    },
+    {
+      "id": "GT-R02-003",
+      "source_locator": "casinonotes.excalidraw#embedded:7db77b4d14096bd2dc23358147eda91bdac09139",
+      "expected_label": "stronger_ts_vs_weaker_opposing_ts",
+      "expected_class": "edge_case",
+      "evidence": ["HCS / TS retest", "previous stronger buy TS", "weaker sell TS", "buys still in play"],
+      "forbidden_inference": "Do not create a universal numeric TS strength score from this example."
+    },
+    {
+      "id": "GT-R02-004",
+      "source_locator": "casinonotes.excalidraw#text:OMwY9lMSC1oWmpOAW7S7p",
+      "expected_label": "laol_poi_true_stop_proximity",
+      "expected_class": "edge_case",
+      "evidence": ["LAOL should sit inside a POI", "annotation links LAOL placement to relevant True Stop proximity"],
+      "forbidden_inference": "Do not infer a fixed pip-distance threshold between LAOL and True Stop."
+    },
+    {
+      "id": "GT-R02-005",
+      "source_locator": "casinonotes.excalidraw#embedded:e1c26acf9711eeff11a99f6b8d3f3473ba3fdad3",
+      "expected_label": "intraday_laol_vs_swing_trail",
+      "expected_class": "edge_case",
+      "evidence": ["Intraday LAOL", "LAOL 2 - trail to swing", "10m x3 negation watched for TS respect/establishment"],
+      "forbidden_inference": "Do not collapse intraday LAOL and deeper swing trail into one target."
+    },
+    {
+      "id": "GT-R02-006",
+      "source_locator": "casinonotes.excalidraw#embedded:8a834788ba82de06ab966f8f0cf00b261f9a8219",
+      "expected_label": "extended_laol_deferred_by_opposite_overpower",
+      "expected_class": "edge_case",
+      "evidence": ["Extended LAOL may be left for future swing buy", "opposite side overpowers"],
+      "forbidden_inference": "Do not assume every visible LAOL must be the immediate active target."
+    },
+    {
+      "id": "GT-R02-007",
+      "source_locator": "casinonotes.excalidraw#embedded:9ac21863ede5494d6d5e712945cae90b45c48581",
+      "expected_label": "breakout_laol_blocked_by_nearer_poi_ts",
+      "expected_class": "edge_case",
+      "evidence": ["extended breakout LAOL possibility", "important nearer POI/TS must refine first", "self-negating weaker trail"],
+      "forbidden_inference": "Do not let a distant breakout target bypass nearer active POI/TS context."
+    },
+    {
+      "id": "GT-R02-008",
+      "source_locator": "casinonotes.excalidraw#embedded:fd0980870c9c9f0f2b0cef09c1c6818046a74a5a",
+      "expected_label": "ts_establishment_from_ltf_sequence",
+      "expected_class": "valid",
+      "evidence": ["retail liquidity manipulated", "LTF LAOL taken starts 10m TS", "1m HCS x3", "1m x3 negation", "10m HCS EST"],
+      "forbidden_inference": "Do not infer exact raw-OHLC geometry for each primitive from this sequence alone."
+    },
+    {
+      "id": "GT-R02-009",
+      "source_locator": "casinonotes.excalidraw#embedded:908dfb21c40bea00c3b63a7c070a7823245e3bfd",
+      "expected_label": "invalid_without_10m_ts_and_timing",
+      "expected_class": "invalid",
+      "evidence": ["no prior 10m TS established", "not within timing", "x3 self-negation weaker by default", "insufficient alone for strong POI"],
+      "forbidden_inference": "Do not promote x3 self-negation into a standalone entry signal."
+    },
+    {
+      "id": "GT-R02-010",
+      "source_locator": "casinonotes.excalidraw#embedded:7ddf93f70c07dea1b291f23300b02c06321d1400",
+      "expected_label": "aggressive_vs_established_entry_context",
+      "expected_class": "edge_case",
+      "evidence": ["LTF LAOL taken", "1m negation / 3m HCS+negation", "aggressive case has full TFS factors + 10m TS forming", "standard continuation uses 10m TS established"],
+      "forbidden_inference": "Do not treat forming/aggressive and established entry states as equivalent."
+    },
+    {
+      "id": "GT-R02-011",
+      "source_locator": "casinonotes.excalidraw#embedded:bae29c259e547872e737aa76b3c39e0e1654c9fd",
+      "expected_label": "hcs_left_fu_reaction_prerequisite",
+      "expected_class": "valid",
+      "evidence": ["POI waits for 10m+ establishment", "HCS has FU from the left to react", "FU retest wick becomes part of HCS range"],
+      "forbidden_inference": "Do not define every FU retest as established HCS."
+    },
+    {
+      "id": "GT-R02-012",
+      "source_locator": "casinonotes.excalidraw#embedded:36aa37aa6f8a34b239efa69ac0cfdc92d0fbcfa3",
+      "expected_label": "hcs_near_wick_tolerance",
+      "expected_class": "edge_case",
+      "evidence": ["TS respected", "not quite wick touch but near enough in the moment", "x3 confirmations take prevalence"],
+      "forbidden_inference": "Do not invent a numeric tolerance from a qualitative 'near enough' example."
+    },
+    {
+      "id": "GT-R02-013",
+      "source_locator": "casinonotes.excalidraw#embedded:a46bf1c244bec9d82ae6bf6559b507d46e1707cd",
+      "expected_label": "broken_hcs_zone_reaction_quota",
+      "expected_class": "valid",
+      "evidence": ["Broken HCS holds for two main true-move reactions on same TF", "third may occur but first two are confirmed/main"],
+      "forbidden_inference": "Do not treat every third reaction as equally strong or guaranteed."
+    },
+    {
+      "id": "GT-R02-014",
+      "source_locator": "casinonotes.excalidraw#embedded:7c144a2d92d0376a13fbea41caf17161affdc763",
+      "expected_label": "hcs_zone_rules_and_exception",
+      "expected_class": "edge_case",
+      "evidence": ["better HCS zone not anchored to exact retail pivot", "zone may expand with new HCS reaction", "small weak ATT-FU wick can suffice on 50m+ in stated exception"],
+      "forbidden_inference": "Do not generalize the 50m+ exception to all zone families/timeframes."
+    },
+    {
+      "id": "GT-R02-015",
+      "source_locator": "casinonotes.excalidraw#embedded:8ac53dc9378f9c568c27f49a080bb772c960d94a",
+      "expected_label": "broken_fu_wick_zone_activation",
+      "expected_class": "valid",
+      "evidence": ["becomes active only after body closure break", "one main same-TF true-move reaction confirmed", "second possible but not primary"],
+      "forbidden_inference": "Do not count wick penetration alone as confirmed broken-zone activation."
+    },
+    {
+      "id": "GT-R02-016",
+      "source_locator": "casinonotes.excalidraw#embedded:6002c168895b3ff94bfff2f40d00dd7bc6a39146",
+      "expected_label": "true_orderblock_body_in_wick",
+      "expected_class": "valid",
+      "evidence": ["candle body inside previous/next candle wick", "interpreted as bank-order clump", "not necessarily most accurate reaction point"],
+      "forbidden_inference": "Do not replace all older zone/OB definitions with this geometry without module-level certification."
+    },
+    {
+      "id": "GT-R02-017",
+      "source_locator": "casinonotes.excalidraw#embedded:04b836f9afeeb4440d00f771dcec7a1d8dea7426",
+      "expected_label": "one_minute_full_strong_fu_zone",
+      "expected_class": "valid",
+      "evidence": ["1m zone marks full Strong FU candle", "wait for retest or break-and-retest", "final bank orderblock power context"],
+      "forbidden_inference": "Do not apply full-candle boundary to every zone type or timeframe."
+    },
+    {
+      "id": "GT-R02-018",
+      "source_locator": "casinonotes.excalidraw#embedded:66685ec90725d4e70cdfff8f440fdbbb80dc0d78",
+      "expected_label": "weakest_att_fu_zone_timeframe_gate",
+      "expected_class": "edge_case",
+      "evidence": ["weakest ATT-FU wick can be a zone for one main reaction", "matters on 3h+ swing timeframes", "can be classed failed FU"],
+      "forbidden_inference": "Do not allow this zone type below 3h from this source rule."
+    },
+    {
+      "id": "GT-R02-019",
+      "source_locator": "casinonotes.excalidraw#embedded:15c886c8b7ca732cfa33ab5767dd4191dd4f3294",
+      "expected_label": "true_stop_respected_by_new_1m_x3_negation",
+      "expected_class": "valid",
+      "evidence": ["7m x3 negation high + 1m manipulated doji used to mark TS", "new 1m x3 negation evaluated for respecting previous TS", "resolution around 1m sequence"],
+      "forbidden_inference": "Do not infer the exact wick/body TS-respect geometry from this case alone."
+    },
+    {
+      "id": "GT-R02-020",
+      "source_locator": "top down analysis (1).zip#sequence:2023-11-01",
+      "expected_label": "end_to_end_topdown_sequence_2023_11_01",
+      "expected_class": "valid",
+      "evidence": ["preserve HTF prevalent state until adequate negation", "map active/refined/deactive zones", "track major liquidity targets", "refine from HTF toward LTF execution POI"],
+      "forbidden_inference": "Do not turn this single day into a fixed timeframe ladder for all sessions."
+    }
+  ]
+}
