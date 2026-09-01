@@ -1,0 +1,15 @@
+{
+  "dataset": "XAUUSD V2 Detector Fixtures Round 01",
+  "status": "candidate_not_verified",
+  "fixtures": [
+    {"id":"DF-R01-001","ground_truth_ref":"GT-R02-015","detector":"zone_lifecycle","inputs":{"zone_type":"broken_fu_wick","body_close_break":true,"main_same_tf_reactions":0},"expected_state":"active"},
+    {"id":"DF-R01-002","ground_truth_ref":"GT-R02-015","detector":"zone_lifecycle","inputs":{"zone_type":"broken_fu_wick","body_close_break":true,"main_same_tf_reactions":1},"expected_state":"expired"},
+    {"id":"DF-R01-003","ground_truth_ref":"GT-R02-013","detector":"zone_lifecycle","inputs":{"zone_type":"broken_hcs","body_close_break":true,"main_same_tf_reactions":1},"expected_state":"active"},
+    {"id":"DF-R01-004","ground_truth_ref":"GT-R02-013","detector":"zone_lifecycle","inputs":{"zone_type":"broken_hcs","body_close_break":true,"main_same_tf_reactions":2},"expected_state":"expired"},
+    {"id":"DF-R01-005","ground_truth_ref":"GT-R02-018","detector":"zone_lifecycle","inputs":{"zone_type":"weakest_att_fu","body_close_break":null,"main_same_tf_reactions":0,"timeframe_minutes":180},"expected_state":"active"},
+    {"id":"DF-R01-006","ground_truth_ref":"GT-R02-018","detector":"zone_lifecycle","inputs":{"zone_type":"weakest_att_fu","body_close_break":null,"main_same_tf_reactions":0,"timeframe_minutes":50},"expected_state":"not_certified"},
+    {"id":"DF-R01-007","ground_truth_ref":"GT-R02-001","detector":"standard_entry_gate","inputs":{"liquidity_calculation_resolved":true,"ltf_laol_taken":true,"ts_10m_established":true,"ts_respected":true,"htf_context_aligned":true,"ltf_trigger_present":false},"expected_state":"wait"},
+    {"id":"DF-R01-008","ground_truth_ref":"GT-R02-009","detector":"standard_entry_gate","inputs":{"liquidity_calculation_resolved":true,"ltf_laol_taken":true,"ts_10m_established":false,"ts_respected":true,"htf_context_aligned":true,"ltf_trigger_present":true},"expected_state":"wait"},
+    {"id":"DF-R01-009","ground_truth_ref":"GT-R02-008","detector":"standard_entry_gate","inputs":{"liquidity_calculation_resolved":true,"ltf_laol_taken":true,"ts_10m_established":true,"ts_respected":true,"htf_context_aligned":true,"ltf_trigger_present":true},"expected_state":"ready_candidate","note":"Tests only the semantic gate after upstream labels already exist; does not derive primitives from OHLC."}
+  ]
+}
