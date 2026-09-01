@@ -47,13 +47,23 @@ This is not automatically the same construct as the later `imbalanced candle` li
 
 **Policy:** store `IMBALANCED_CANDLE` and `CLASSIC_UNTESTED_IMBALANCE_ZONE` as different candidate concepts. No universal IMB geometry switch.
 
-### A3 — Strong FU quantitative threshold
+### A3 — Strong FU determinization / calibration
 
-**State:** BLOCKER
+**State:** CALIBRATION BLOCKER — NOT A MISSING SECRET PERCENTAGE
 
-`SFU = Strong FU` is user-confirmed. Sources associate strength with strong close / low rejection, but no exact numeric body/wick threshold is certified.
+Approved Analysis Basics describes the desired Strong FU qualitatively as a **strong close with little or no rejection** and explicitly says **not to be too strict in its definition**. The source therefore does not provide a canonical numeric body/wick percentage that V2 may simply copy.
 
-**Policy:** no invented percentage threshold from Pine/EX5 helpers.
+**Implemented measurement layer:** `src/xauusd_v2/fu_quality.py` now calculates objective, reproducible candle-shape metrics only:
+
+- body fraction of full candle range,
+- upper/lower wick fractions,
+- close-side rejection fraction,
+- manipulation-side wick fraction,
+- normalized close location within the candle range.
+
+It deliberately does **not** classify a candle as Strong FU and contains **no default threshold**.
+
+**Remaining blocker:** calibrate and certify any machine boundary against labelled primary Strong-FU / ATT-FU examples, then blind-validate it. Implementation-helper thresholds cannot become strategy truth.
 
 ### A4 — FU retest fib anchor/orientation
 
@@ -142,7 +152,7 @@ This does not certify the upstream FU primitive and does not authorize VERIFIED 
 
 1. upstream `FU criteria met` raw predicate
 2. `IMBALANCED_CANDLE` exact raw geometry/tolerance on broker data
-3. Strong FU threshold
+3. label/calibrate Strong-FU quality using objective metrics
 4. FU-retest fib anchor/orientation
 5. classic untested-imbalance zone boundary, if still needed as a separate strategy construct
 6. labelled zone-type boundary examples
