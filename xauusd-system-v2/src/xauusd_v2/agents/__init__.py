@@ -5,6 +5,7 @@ from .data_agent import XAUUSDDataAgent, MarketBar, MarketDataValidationReport
 from .market_state_agent import MarketStateAgent, MarketContextInput, MarketContextReport, Direction, ContextState
 from .quant_agent import QuantitativeResearchAgent, ResearchExperimentSpec, ResearchWindow, ResearchDesignReport
 from .risk_agent import DeterministicRiskEngine, RiskDecision, RiskDecisionState, RiskPolicy, RiskSnapshot
+from .improvement_agent import ContinuousImprovementAgent, ImprovementProposal, ImprovementProposalState, ImprovementReview
 
 __all__ = [
     "KnowledgeAgent",
@@ -28,4 +29,8 @@ __all__ = [
     "RiskDecisionState",
     "RiskPolicy",
     "RiskSnapshot",
+    "ContinuousImprovementAgent",
+    "ImprovementProposal",
+    "ImprovementProposalState",
+    "ImprovementReview",
 ]
