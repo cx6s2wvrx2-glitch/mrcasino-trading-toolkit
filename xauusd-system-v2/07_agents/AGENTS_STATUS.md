@@ -10,7 +10,7 @@ This file distinguishes architecture role IDs from implementation order. The can
 | 02 | Strategy Formalization Agent | IMPLEMENTED v0.1 | provider-neutral client contract; no production provider adapter yet | Creates DRAFT rules only; cannot promote |
 | 03 | XAUUSD Data Agent | IMPLEMENTED v0.1 deterministic foundation | no broker/MT5 connection yet | Validates XAUUSD bars/provenance/time; no strategy or trade authority |
 | 04 | Market State / Context Agent | IMPLEMENTED v0.1 fail-closed context foundation | consumes semantic confirmed/provisional context; no raw-market interpretation yet | Reports aligned/conflicting/ambiguous context only; no entry or execution authority |
-| 05 | Quantitative Research Agent | PLANNED | none | Research/backtest only; cannot change live rules directly |
+| 05 | Quantitative Research Agent | IMPLEMENTED v0.1 deterministic research-design gate | no historical data runner/backtest engine connection yet | Rejects leakage/non-reproducible experiments; cannot modify strategy, select live risk, or authorize trades |
 | 06 | Independent Validation Agent | IMPLEMENTED v0.1 blind contract | provider-neutral client contract; no production provider adapter yet | Cannot see expected label; may abstain; cannot promote or trade |
 | 07 | Risk Agent / Deterministic Risk Engine | PLANNED | none | Future hard veto above strategy; no LLM discretion in live sizing/limits |
 | 08 | Continuous Improvement Agent | PLANNED | none | May propose changes only; promotion requires the full certification ladder |
@@ -20,6 +20,7 @@ This file distinguishes architecture role IDs from implementation order. The can
 - Agent 06 blind-validation contract: 5/5 local tests passed.
 - Agent 03 market-data contract: 7/7 local tests passed.
 - Agent 04 market-state/context contract: 6/6 local tests passed.
+- Agent 05 quantitative-research design contract: 8/8 local tests passed.
 - Existing ground-truth / reproducibility / candidate detector suites remain separate validation layers.
 
 ## Non-negotiable architecture rules
@@ -30,5 +31,6 @@ This file distinguishes architecture role IDs from implementation order. The can
 4. Data Agent preserves provisional vs confirmed bars.
 5. Independent Validator never receives the expected label.
 6. Market State Agent cannot manufacture missing strategy primitives.
-7. Risk Agent will be deterministic and will outrank strategy when implemented.
-8. No LLM is permitted in the latency-critical live execution path.
+7. Quant Research Agent requires versioned strategy, frozen data snapshot, explicit cost model, and time-ordered train/validation/test windows before research is admissible.
+8. Risk Agent will be deterministic and will outrank strategy when implemented.
+9. No LLM is permitted in the latency-critical live execution path.
