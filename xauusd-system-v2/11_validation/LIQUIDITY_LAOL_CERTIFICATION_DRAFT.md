@@ -2,131 +2,354 @@
 
 Status: DRAFT / NOT VERIFIED / NOT PRODUCTION
 Date: 2026-09-01
+Round: 01 — mechanical decomposition started
 
-This document consolidates currently approved source claims. It does not create new strategy truth and does not resolve conflicts automatically.
+This document consolidates only approved V2 sources. It does not create new strategy truth and does not resolve conflicts automatically.
 
 ## 1. Core concept — strong cross-source support
 
-Current approved sources repeatedly place liquidity first in analysis. The strategy does not treat a single pattern, zone, FU or HCS as sufficient context by itself. Liquidity calculation is the primary frame and other concepts refine or confirm it.
+Current approved sources repeatedly place liquidity first in analysis. A single pattern, zone, FU or HCS is not sufficient context by itself.
 
-Primary-source formulation currently supported:
+Current source-supported core:
 
-- Liquidity refers to obvious/concentrated retail stop-loss areas.
-- Major liquidity is not identical to Last Area of Liquidity (LAOL).
+- Liquidity = obvious/concentrated retail stop-loss areas.
+- Major Liquidity != Last Area of Liquidity (LAOL).
 - Liquidity left behind is not automatically taken immediately.
-- A visible liquidity point can be downgraded when subsequent manipulation shows price is comfortable leaving it behind.
-- Bias/continuation requires comparison of the prevalent move, which side has been manipulated more, and which side carries more important liquidity.
+- A visible liquidity point can be downgraded when later manipulation shows price is comfortable leaving it behind.
+- Liquidity calculation compares the prevalent move, which side has already been manipulated more, and which side carries the more important remaining liquidity.
+- Entry logic comes after liquidity/LAOL context, not before it.
 
-## 2. Major-liquidity types
+## 2. Taxonomy versus operational marking
 
-Later direct/primary material strongly supports the following four-type list:
+Two source layers must be kept separate rather than blended:
+
+### 2.1 General major-liquidity taxonomy
+
+Later Last Areas material + primary Mr Casino Q&A support four main categories:
 
 1. unmanipulated doji
 2. perfect double top / double bottom
 3. perfect trendline
 4. imbalanced candle / IMB
 
-Q&A 2024 independently repeats the same four categories and states doji/IMB liquidity is the most prevalent.
+The Q&A independently repeats the same four categories and says doji/IMB liquidity is most prevalent.
 
-### Open evolution issue
+### 2.2 Reflection operational marking on 30m+
 
-Older Analysis Basics / How to Rinse material includes big-wick rejection as a liquidity example. Later Last Areas material explicitly presents the four-type list as an update, but no user certification has yet closed the evolution issue.
+Reflection later gives a narrower operational marking instruction:
 
-Therefore:
+- R-207: on 30m+, core marking = unfilled big-wick-to-fill + unmanipulated dojis; breakout liquidity optional/advanced.
+- R-62 earlier in Reflection lists unmanipulated doji, big wick to fill, ATT FU and breakout.
 
-- do not delete the older big-wick evidence;
-- do not treat big wick as a fifth canonical major-liquidity type yet;
-- preserve it as historical/source-evolution evidence until certified against Reflection/top-down examples.
+These statements are not automatically merged. V2 must preserve the distinction between:
 
-## 3. Major vs minor / lower-priority liquidity
+`liquidity_taxonomy`
 
-Source-supported observations:
+and
 
-- A perfect trendline requires 3+ perfect rejection points for major-liquidity classification; two points are described as low liquidity.
-- Opposite/weak forms are described in Last Areas material: doji ↔ Attempted FU, perfect double/trendline ↔ non-perfect rejection, imbalanced candle ↔ balanced candle.
-- A lower-timeframe DB/doji is not automatically a major target merely because it exists.
-- Primary Price Action Reflection examples explicitly downgrade nearby 1m liquidity after stronger HCS/manipulation evidence.
-- Manipulation after a liquidity point can be evidence that opposite-side liquidity is more important.
+`operational_marking_set_by_timeframe`
 
-Candidate future data field:
+The source-evolution issue remains open until certified visually / by user where needed.
 
-`liquidity_priority = major | lower_priority | minor | unresolved`
+## 3. Mechanical candidate rules — Round 01
 
-This field is NOT yet mechanically defined.
+These are candidate rules for certification. None is VERIFIED yet.
 
-## 4. LAOL — current strongest source-supported interpretation
+### C-LIQ-001 — Core doji eligibility
 
-Direct approved sources support LAOL as more specific than generic liquidity.
+Source: Reflection R-83.
 
-Current best-supported formulation:
+Candidate condition:
 
-- LAOL is the final/refined liquidity area associated with the move/reversal, not every major-liquidity point.
-- Reflection R-208: practical LAOL is the target of the liquidity grab that started the move; each reversal starts there and is refined lower.
-- Reflection R-90: a doji taken instantly or inside a liquidity grab is the LAOL of its timeframe.
-- Reflection R-60: true reversal is modeled LAOL→LAOL separately within each TFS setting.
-- Last Areas material describes LAOL as the most concentrated/refined liquidity areas where reaction/reversal is expected when major targets exist opposite.
+- candle is inside the previous wick context;
+- candle does not manipulate the last low/high.
 
-### Important distinction
+Candidate output:
+
+`liquidity_type = core_unmanipulated_doji`
+
+Invalid / non-core candidate:
+
+- the candle itself manipulates the last low/high;
+- geometry falls outside the source-defined core-doji structure.
+
+Open: exact programmatic geometry of "inside previous wick" still requires labelled chart tests.
+
+### C-LIQ-002 — Four-type major-liquidity taxonomy
+
+Sources: Last Areas Liquidity + primary Q&A 2024.
+
+Candidate categories:
+
+- `unmanipulated_doji`
+- `perfect_double_top_bottom`
+- `perfect_trendline`
+- `imbalanced_candle`
+
+Output:
+
+`liquidity_class = major_candidate`
+
+Important: category membership alone does NOT prove that the level is the active target, LAOL, or immediate reversal point.
+
+### C-LIQ-003 — Perfect trendline threshold
+
+Source: Last Areas Liquidity.
+
+Candidate condition:
+
+- >= 3 perfect rejection points => major-liquidity candidate.
+- 2 points => low-liquidity candidate.
+
+Open: exact numerical tolerance for "perfect" is still not defined mechanically.
+
+### C-LIQ-004 — Lower-timeframe liquidity is not automatically decisive
+
+Sources: primary Price Action Reflection + Q&A.
+
+Candidate logic:
+
+A visible LTF DB/doji/liquidity point must NOT automatically become the active target merely because it exists.
+
+Downgrade evidence includes:
+
+- stronger HCS/manipulation forms after or around the liquidity;
+- price leaves the liquidity behind while stronger opposite-side context remains active;
+- HTF/TFS/zone context supports the opposite target.
+
+Output candidate:
+
+`liquidity_priority = lower_priority`
+
+This rule is contextual and is not yet reducible to a single candle test.
+
+### C-LIQ-005 — Doji/liquidity hold gate
+
+Source: Reflection R-92.
+
+Candidate rule:
+
+A doji/liquidity is allowed to be treated as holding live only when BOTH are present:
+
+1. opposite-side liquidity overpowers;
+2. the liquidity is inside HCS or HCS forms after it.
+
+Output:
+
+`hold_candidate = true`
+
+If either condition is missing:
+
+`hold_candidate = false_or_unconfirmed`
+
+This is one of the strongest current candidates for later deterministic testing.
+
+### C-LIQ-006 — Liquidity calculation comparison frame
+
+Sources: primary Price Action Reflection + Q&A + Reflection.
+
+Candidate comparison fields:
+
+1. `prevalent_move`
+2. `side_more_manipulated`
+3. `remaining_liquidity_importance_buyside`
+4. `remaining_liquidity_importance_sellside`
+5. `HTF_TFS_context`
+6. `zone_context`
+7. `true_stop_context`
+
+Output:
+
+`direction_candidate = buy | sell | unresolved`
+
+Hard gate:
+
+If the evidence does not resolve the comparison => `NO_TRADE / unresolved`.
+
+Open: no certified numeric scoring formula exists yet. Do not invent one.
+
+### C-LIQ-007 — 30m+ operational marking set
+
+Primary source: Reflection R-207, with historical comparison to R-62.
+
+Current later-source candidate for 30m+ core marking:
+
+- unfilled big wick to fill
+- unmanipulated doji
+
+Optional/advanced:
+
+- breakout liquidity
+
+Open source-evolution item:
+
+- ATT FU appears in earlier R-62 but not the later core R-207 wording.
+
+V2 action now:
+
+Store `marking_mode = core | advanced | historical_candidate`; do not silently delete ATT FU or promote it into core.
+
+### C-LIQ-008 — Liquidity first entry gate
+
+Sources: Reflection R-95/R-143/R-145 + primary Q&A.
+
+Candidate gate:
+
+- liquidity calculation precedes final entry logic;
+- sole x3/FU/HCS/zone pattern is insufficient without compatible liquidity context;
+- visible liquidity alone is also insufficient for entry.
+
+Output:
+
+`entry_evaluation_allowed = true` only after liquidity/LAOL context has been established sufficiently for the current setup.
+
+## 4. LAOL mechanical candidates — Round 01
+
+### C-LAOL-001 — Practical LAOL definition
+
+Source: Reflection R-208.
+
+Candidate definition:
+
+LAOL = the target of the liquidity grab that started the move, refined lower as needed.
+
+Important:
 
 `major_liquidity != LAOL`
 
-A level can be major liquidity without being the final/active LAOL for the current move.
+A level may be major liquidity without being the active LAOL of the current move.
 
-## 5. Timeframe dependence
+### C-LAOL-002 — Instant-taken doji rule
 
-Current source-supported points:
+Source: Reflection R-90.
 
-- HTF liquidity establishes broader target/context.
-- Reflection R-111 says HTF major liquidity is finalized as a target only at 1m; 1m liquidity reasoning is core to final entry/refinement.
-- Reflection R-207 narrows practical 30m+ marking to core items: unfilled big-wick-to-fill and unmanipulated dojis, with breakout liquidity optional/advanced.
-- Earlier material gives broader scanning methods; these must be reconciled with the Reflection operational version rather than merged blindly.
+Candidate rule:
 
-No deterministic timeframe mapping is certified yet.
+If a doji is taken immediately / inside the liquidity grab, classify it as:
 
-## 6. Liquidity calculation — candidate process map
+`LAOL_of_its_timeframe = true`
 
-The following sequence is supported strongly enough to use as a certification hypothesis, but not yet as a production rule:
+Open: exact temporal boundary for "immediately" must be labelled from source examples.
 
-1. identify major liquidity in both directions;
-2. identify the prevalent/stronger move and HTF TFS context;
-3. determine which side has already been manipulated more;
-4. compare the importance/concentration of remaining liquidity on both sides;
-5. account for zones and true-stop placement;
-6. refine the active target/LAOL down to LTF, ultimately 1m where required;
-7. only then evaluate entry-model evidence such as HCS, FU retest, negation or x3.
+### C-LAOL-003 — LAOL-to-LAOL reversal model
 
-This ordering is reinforced by Reflection R-95/R-143/R-145 and Q&A statements that liquidity calculation outranks sole x3/pattern logic.
+Source: Reflection R-60.
 
-## 7. Liquidity and True Stop
+Candidate structural model:
 
-Current evidence links liquidity and TS tightly:
+`true_reversal(TFS_setting) = active_LAOL -> opposite_active_LAOL`
 
-- after liquidity is generated/manipulated, a true stop can form;
-- Reflection R-108 defines TRUE STOP as the low/high where all 10min+ TFS factors align, followed by LTF HCS/negation entry after respect plus final liquidity calculation;
-- primary Q&A states formation strength, timeframe, session timing, zones, major-liquidity reasoning and TFS placement determine the relevant true stop.
+This must be applied separately per TFS setting; do not merge scalp/intraday/swing LAOL state blindly.
 
-Therefore TS must not be coded as a static candle pattern independent of liquidity/TFS context.
+### C-LAOL-004 — LAOL refinement by timeframe
 
-## 8. Entry gate relationship
+Sources: Reflection R-208/R-111.
 
-Current primary material supports:
+Candidate process:
 
-- liquidity calculation first;
-- entry only after the active liquidity/LAOL and true-stop context is established;
-- aggressive/forming entries require stronger surrounding alignment, not merely a forming FU/HCS;
-- visible liquidity alone does not imply reversal or entry.
+- broader HTF liquidity provides context/target candidate;
+- active target is progressively refined;
+- 1m liquidity reasoning is part of final target/entry refinement when the source requires it.
 
-## 9. Open items requiring visual certification
+No fixed TF ladder is VERIFIED yet beyond explicit source statements.
 
-Before this concept can become VERIFIED, certify against primary Mr Casino Reflection/top-down visual episodes:
+### C-LAOL-005 — LAOL reaction is contextual, not automatic
 
-1. exact mechanical criteria for `major` vs `lower_priority` liquidity;
-2. exact LAOL identification procedure when several candidates exist;
-3. how 30m+ marking rules interact with 1m finalization;
-4. whether/when big wick is a canonical liquidity type versus a fill/target structure;
-5. how to quantify "which side has more important liquidity";
-6. how manipulation/HCS downgrades a previously marked liquidity point;
-7. positive, negative and edge-case examples for each of the four major-liquidity types;
-8. positive, negative and edge-case examples for LAOL.
+Sources: Last Areas Liquidity + Price Action Reflection.
 
-Until these are certified, ambiguous cases remain `NO TRADE / NOT CERTIFIED`.
+Candidate gate for reaction/reversal expectation:
+
+- candidate LAOL present;
+- major target exists in opposite direction;
+- manipulation / TS / TFS / zone context supports reaction.
+
+No standalone `touch LAOL => reverse` rule is permitted.
+
+## 5. First-pass visual evidence review
+
+Primary visual set currently available:
+
+- Price Action Reflection: 12 dated episodes / 124 images through 2023-05-31.
+- 2023-04-02 episode: 22 images with matching primary Casino text available.
+- Reflection Exercise 1: Doji Liquidity + Big Wicks + HCS, top-down 4H→1H→15m→5m→1m.
+- Reflection Exercise 3: official liquidity backtest protocol.
+- 188 primary Mr Casino top-down screenshots remain sequence-level ground-truth material for later labelled conversion.
+
+First visual pass on the 2023-04-02 episode supports using it as a multi-step evidence sequence rather than isolated screenshots. It contains repeated HTF/LTF zones, liquidity references, HCS reactions, target transitions and re-entry context that align with the paired text narrative.
+
+Do NOT yet promote individual frames to VERIFIED positive/negative examples until frame-level labels are written.
+
+## 6. Certification test matrix to build next
+
+Required labelled cases:
+
+### Core doji
+
+- positive: satisfies R-83 geometry and remains unmanipulated;
+- negative: manipulates last high/low;
+- edge: borderline previous-wick geometry.
+
+### Perfect DT/DB
+
+- positive: source-certified perfect level;
+- negative: visibly non-perfect rejection;
+- edge: broker-data discrepancy / tiny price difference.
+
+### Perfect trendline
+
+- positive: 3+ perfect rejection points;
+- negative: only 2 points;
+- edge: 3 points with one tolerance dispute.
+
+### IMB
+
+- positive: source-certified major IMB target;
+- negative: balanced candle / already materially filled structure;
+- edge: partially filled IMB.
+
+### Liquidity priority
+
+- positive major: remains active in broader context;
+- downgraded: HCS/manipulation demonstrates price can leave it behind;
+- edge: competing strong liquidity on both sides.
+
+### LAOL
+
+- positive: source identifies the active last area / liquidity-grab origin relationship;
+- negative: major liquidity that is NOT active LAOL;
+- edge: multiple LAOL candidates across TFs.
+
+## 7. Open questions after Round 01
+
+Do not ask the user yet unless the existing primary visual corpus cannot resolve them.
+
+1. Exact numerical tolerance for a "perfect" double top/bottom.
+2. Exact numerical tolerance for a "perfect" trendline rejection.
+3. Exact temporal definition of R-90 "taken instantly".
+4. Exact deterministic priority function when several major-liquidity candidates coexist.
+5. ATT FU status inside 30m+ operational marking after R-207 narrowing.
+6. Exact machine geometry for big-wick-to-fill.
+7. Exact mapping from HTF candidate liquidity to final 1m target when several LTF candidates exist.
+
+## 8. Current certification state
+
+Strong enough to proceed to labelled-example construction:
+
+- liquidity-first analysis principle;
+- four-category general taxonomy candidate;
+- core doji candidate definition;
+- perfect trendline 3+ threshold candidate;
+- major liquidity != LAOL;
+- R-90 doji→LAOL candidate;
+- R-92 hold gate candidate;
+- LAOL→LAOL per TFS model candidate;
+- contextual downgrade of visible LTF liquidity.
+
+NOT ready for VERIFIED / production:
+
+- numeric tolerances;
+- full priority scoring;
+- complete 30m+ historical-vs-later marking reconciliation;
+- frame-level positive/negative/edge certification.
+
+Ambiguous cases remain `NO_TRADE / NOT_CERTIFIED`.
