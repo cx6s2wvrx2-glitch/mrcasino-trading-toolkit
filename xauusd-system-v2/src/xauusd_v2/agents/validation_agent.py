@@ -29,7 +29,7 @@ class IndependentValidationAgent:
     ground truth happens later in the deterministic validation layer.
     """
 
-    name = "independent_validation_agent_03"
+    name = "independent_validation_agent_06"
     version = "0.1.0"
 
     def __init__(self, client: StructuredModelClient) -> None:
