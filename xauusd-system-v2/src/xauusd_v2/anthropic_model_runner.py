@@ -20,18 +20,20 @@ _MAX_IMAGE_BYTES = 25 * 1024 * 1024
 _MAX_TOTAL_IMAGE_BYTES = 100 * 1024 * 1024
 _MAX_ALLOWED_LABELS = 512
 _MAX_ALLOWED_LABEL_LENGTH = 256
+_TAXONOMY_CODE_RE = re.compile(r"^L([0-9]{3})$")
 
 # Anthropic structured outputs do not accept numeric minimum/maximum constraints
 # in raw JSON schemas. Keep the wire schema provider-compatible and enforce the
 # 0..1 confidence contract locally after the response is returned.
 #
-# IMPORTANT: do not place the full Agent-06 frozen taxonomy into a JSON-schema
-# enum. Anthropic compiles structured-output schemas into grammars and enforces
-# internal grammar-complexity limits. A large enum can therefore be rejected at
-# request time with HTTP 400. When allowed_labels are present, the provider wire
-# format uses one compact zero-based integer index (or null). The runner maps the
-# index back to the exact frozen taxonomy string before stdout leaves this
-# process, so downstream Agent-06 contracts still receive predicted_label.
+# IMPORTANT: never place the full Agent-06 frozen taxonomy into a JSON-schema
+# enum. Anthropic compiles structured-output schemas into grammars and can reject
+# overly complex schemas at request time. When allowed_labels are present, the
+# provider wire format therefore uses one compact taxonomy code (L001, L002, ...)
+# or null. The runner maps a valid code back to the exact frozen taxonomy string
+# before stdout leaves this process. Invalid/out-of-range provider codes are
+# converted to a fail-closed abstention for that case instead of aborting the
+# entire 173-case blind batch.
 _OUTPUT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -117,6 +119,10 @@ def _normalize_allowed_labels(value: object) -> tuple[str, ...]:
     return tuple(labels)
 
 
+def _taxonomy_code(zero_based_index: int) -> str:
+    return f"L{zero_based_index + 1:03d}"
+
+
 def _base_common_properties() -> dict[str, Any]:
     return {
         "confidence": dict(_OUTPUT_SCHEMA["properties"]["confidence"]),
@@ -134,11 +140,11 @@ def _base_common_properties() -> dict[str, Any]:
 def _output_schema(allowed_labels: tuple[str, ...]) -> dict[str, Any]:
     if allowed_labels:
         properties = {
-            "predicted_label_index": {
-                "type": ["integer", "null"],
+            "predicted_label_code": {
+                "type": ["string", "null"],
                 "description": (
-                    "Null to abstain, otherwise the zero-based index of the chosen exact label "
-                    "in ALLOWED LABEL TAXONOMY. Range is validated locally."
+                    "Null to abstain, otherwise one taxonomy transport code exactly as shown "
+                    "in PROVIDER TAXONOMY CODE MAP (for example L001)."
                 ),
             },
             **_base_common_properties(),
@@ -146,7 +152,7 @@ def _output_schema(allowed_labels: tuple[str, ...]) -> dict[str, Any]:
         return {
             "type": "object",
             "properties": properties,
-            "required": ["predicted_label_index", "confidence", "evidence", "ambiguities"],
+            "required": ["predicted_label_code", "confidence", "evidence", "ambiguities"],
             "additionalProperties": False,
         }
 
@@ -161,13 +167,19 @@ def _output_schema(allowed_labels: tuple[str, ...]) -> dict[str, Any]:
     }
 
 
-def _taxonomy_transport_instruction() -> str:
+def _taxonomy_transport_instruction(allowed_labels: tuple[str, ...]) -> str:
+    code_map = "\n".join(
+        f"{_taxonomy_code(index)} => {json.dumps(label, ensure_ascii=False)}"
+        for index, label in enumerate(allowed_labels)
+    )
     return (
-        "PROVIDER TRANSPORT CONTRACT: The structured-output schema uses predicted_label_index, "
-        "not predicted_label. If abstaining, return null. Otherwise return the ZERO-BASED integer "
-        "index of the one exact chosen label in ALLOWED LABEL TAXONOMY, preserving the taxonomy "
-        "order shown in the user prompt. Do not concatenate labels and do not invent a new label. "
-        "The local runner deterministically maps this index back to the exact taxonomy string."
+        "PROVIDER TRANSPORT CONTRACT:\n"
+        "The structured-output schema uses predicted_label_code, not predicted_label.\n"
+        "If abstaining, return null. Otherwise copy exactly ONE code from the map below.\n"
+        "Do not count positions, calculate an index, concatenate labels, rename labels, or invent a code.\n"
+        "The local runner deterministically maps the selected code back to the exact frozen taxonomy label.\n\n"
+        "PROVIDER TAXONOMY CODE MAP:\n"
+        f"{code_map}"
     )
 
 
@@ -244,7 +256,12 @@ def build_anthropic_request(command_request: object, config: AnthropicRunnerConf
         )
     content.append({"type": "text", "text": user})
     if allowed_labels:
-        content.append({"type": "text", "text": _taxonomy_transport_instruction()})
+        content.append(
+            {
+                "type": "text",
+                "text": _taxonomy_transport_instruction(allowed_labels),
+            }
+        )
 
     return {
         "model": config.model,
@@ -291,30 +308,55 @@ def _validate_decision_payload(value: object) -> dict[str, Any]:
     }
 
 
-def _validate_indexed_decision_payload(
+def _transport_abstention(
+    *,
+    evidence: list[str],
+    ambiguities: list[str],
+) -> dict[str, Any]:
+    note = "Provider taxonomy transport code was invalid or out of range; treated as a fail-closed abstention."
+    normalized_ambiguities = list(ambiguities)
+    if note not in normalized_ambiguities:
+        normalized_ambiguities.append(note)
+    return {
+        "predicted_label": None,
+        "confidence": 0.0,
+        "evidence": evidence,
+        "ambiguities": normalized_ambiguities,
+    }
+
+
+def _validate_coded_decision_payload(
     value: object,
     *,
     allowed_labels: tuple[str, ...],
 ) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise AnthropicRunnerError("Anthropic structured output must be a JSON object")
-    expected_keys = {"predicted_label_index", "confidence", "evidence", "ambiguities"}
+    expected_keys = {"predicted_label_code", "confidence", "evidence", "ambiguities"}
     if set(value) != expected_keys:
-        raise AnthropicRunnerError("Anthropic indexed structured output has unexpected fields")
-
-    index = value["predicted_label_index"]
-    if index is not None:
-        if isinstance(index, bool) or not isinstance(index, int):
-            raise AnthropicRunnerError("predicted_label_index must be an integer or null")
-        if index < 0 or index >= len(allowed_labels):
-            raise AnthropicRunnerError("predicted_label_index is outside frozen taxonomy")
-        label: str | None = allowed_labels[index]
-    else:
-        label = None
+        raise AnthropicRunnerError("Anthropic coded structured output has unexpected fields")
 
     confidence, evidence, ambiguities = _validate_common_fields(value)
+    code = value["predicted_label_code"]
+    if code is None:
+        return {
+            "predicted_label": None,
+            "confidence": confidence,
+            "evidence": evidence,
+            "ambiguities": ambiguities,
+        }
+    if not isinstance(code, str):
+        return _transport_abstention(evidence=evidence, ambiguities=ambiguities)
+
+    match = _TAXONOMY_CODE_RE.fullmatch(code.strip().upper())
+    if match is None:
+        return _transport_abstention(evidence=evidence, ambiguities=ambiguities)
+    one_based = int(match.group(1))
+    if one_based < 1 or one_based > len(allowed_labels):
+        return _transport_abstention(evidence=evidence, ambiguities=ambiguities)
+
     return {
-        "predicted_label": label,
+        "predicted_label": allowed_labels[one_based - 1],
         "confidence": confidence,
         "evidence": evidence,
         "ambiguities": ambiguities,
@@ -352,7 +394,7 @@ def parse_anthropic_response(
     except json.JSONDecodeError as exc:
         raise AnthropicRunnerError("Anthropic structured output is not valid JSON") from exc
     if allowed_labels:
-        return _validate_indexed_decision_payload(payload, allowed_labels=allowed_labels)
+        return _validate_coded_decision_payload(payload, allowed_labels=allowed_labels)
     return _validate_decision_payload(payload)
 
 
@@ -457,8 +499,6 @@ def _safe_runner_error_code(exc: AnthropicRunnerError) -> str:
         return "ANTHROPIC_STOP_MAX_TOKENS"
     if message == "Anthropic response stopped with refusal":
         return "ANTHROPIC_STOP_REFUSAL"
-    if message == "predicted_label_index is outside frozen taxonomy":
-        return "ANTHROPIC_LABEL_INDEX_OUTSIDE_TAXONOMY"
     if message == "predicted_label is outside frozen taxonomy":
         return "ANTHROPIC_LABEL_OUTSIDE_TAXONOMY"
     return "ANTHROPIC_RUNNER_CONTRACT_ERROR"
