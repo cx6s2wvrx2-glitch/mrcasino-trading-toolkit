@@ -64,7 +64,17 @@ ROUND_04_COVERAGE: tuple[GroundTruthCoverage, ...] = (
     GroundTruthCoverage("GT-R04-006", CoverageState.PARTIAL, ("hcs_semantic", "candidate_detectors.zone_lifecycle"), "ATT-FU/HCS respected-once visual is explicit but does not define universal ATT-FU strength or future reaction behavior"),
 )
 
-ALL_COVERAGE: tuple[GroundTruthCoverage, ...] = ROUND_02_COVERAGE + ROUND_03_COVERAGE + ROUND_04_COVERAGE
+ROUND_05_COVERAGE: tuple[GroundTruthCoverage, ...] = (
+    GroundTruthCoverage("GT-R05-001", CoverageState.EXECUTABLE, ("tfs_semantic", "hcs_semantic")),
+    GroundTruthCoverage("GT-R05-002", CoverageState.EXECUTABLE, ("classic_zone_confirmation",)),
+    GroundTruthCoverage("GT-R05-003", CoverageState.EXECUTABLE, ("doji_liquidity_semantic", "liquidity_taxonomy")),
+    GroundTruthCoverage("GT-R05-004", CoverageState.EXECUTABLE, ("doji_liquidity_semantic",)),
+    GroundTruthCoverage("GT-R05-005", CoverageState.EXECUTABLE, ("backtest_sequence",)),
+)
+
+ALL_COVERAGE: tuple[GroundTruthCoverage, ...] = (
+    ROUND_02_COVERAGE + ROUND_03_COVERAGE + ROUND_04_COVERAGE + ROUND_05_COVERAGE
+)
 
 
 def coverage_by_id() -> dict[str, GroundTruthCoverage]:
@@ -91,6 +101,14 @@ def round_04_coverage_by_id() -> dict[str, GroundTruthCoverage]:
 
 def round_04_coverage_counts() -> dict[CoverageState, int]:
     return _count(ROUND_04_COVERAGE)
+
+
+def round_05_coverage_by_id() -> dict[str, GroundTruthCoverage]:
+    return {item.ground_truth_id: item for item in ROUND_05_COVERAGE}
+
+
+def round_05_coverage_counts() -> dict[CoverageState, int]:
+    return _count(ROUND_05_COVERAGE)
 
 
 def all_coverage_by_id() -> dict[str, GroundTruthCoverage]:
