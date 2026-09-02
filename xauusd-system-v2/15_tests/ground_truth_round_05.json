@@ -1,0 +1,63 @@
+{
+  "dataset": "XAUUSD V2 Ground Truth Round 05",
+  "date": "2026-09-02",
+  "status": "candidate_not_verified",
+  "source_episode": "approved primary/top-priority negative and edge cases",
+  "promotion_allowed": false,
+  "test_vectors": [
+    {
+      "id": "GT-R05-001",
+      "source_locator": "v2_sources:f88aa3b8-2900-4829-a565-3d12580d591e#page:89#visual:hcs-not-established-left-fu-not-retested",
+      "expected_label": "hcs_not_established_without_prior_left_fu_retest",
+      "expected_class": "invalid",
+      "evidence": [
+        "primary text says this HCS was not established because a retest from the FU on the left had not yet been established",
+        "the next valid point is identified as the EST TFS POI"
+      ],
+      "forbidden_inference": "Do not invalidate HCS as a formation; this case is specifically about establishment/TFS-POI status before the required prior retest."
+    },
+    {
+      "id": "GT-R05-002",
+      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:7#text:potential-zone-before-first-reaction",
+      "expected_label": "zone_not_confirmed_before_first_reaction",
+      "expected_class": "invalid",
+      "evidence": [
+        "primary source explicitly states that until the first reaction it is only a potential zone of manipulation and is not confirmed"
+      ],
+      "forbidden_inference": "Do not infer that every first reaction automatically validates every later Reflection zone family; this is the older source's stated confirmation boundary."
+    },
+    {
+      "id": "GT-R05-003",
+      "source_locator": "v2_sources:8a73b7d8-923c-4222-bc95-f5597a90edde#page:1#exercise:1#case:manipulated-doji",
+      "expected_label": "manipulated_doji_not_core_liquidity",
+      "expected_class": "invalid",
+      "evidence": [
+        "exercise says only unmanipulated doji are marked",
+        "a doji whose wick breaks the last high/low is manipulated and is not marked as core liquidity"
+      ],
+      "forbidden_inference": "Do not conclude that the candle has no informational value at all; the invalid class is only for core-doji-liquidity marking."
+    },
+    {
+      "id": "GT-R05-004",
+      "source_locator": "v2_sources:8a73b7d8-923c-4222-bc95-f5597a90edde#page:2#exercise:1#case:doji-outside-last-wick",
+      "expected_label": "doji_outside_last_wick_is_attempted_fu_not_core_major_doji",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary exercise text says a doji outside the last wick is an instance of attempted FU",
+        "the same case is explicitly not the most core major doji liquidity of the task"
+      ],
+      "forbidden_inference": "Do not merge Attempted FU classification with true/unmanipulated major-doji liquidity."
+    },
+    {
+      "id": "GT-R05-005",
+      "source_locator": "v2_sources:f88aa3b8-2900-4829-a565-3d12580d591e#page:37#visual:r143-hcs-zone-secondary-confluence",
+      "expected_label": "hcs_zone_reaction_is_secondary_confluence_not_standalone_poi",
+      "expected_class": "invalid",
+      "evidence": [
+        "primary R-143 chart states 4hr HCS zone reaction is secondary confluence that makes up the POI",
+        "the same chart places HCS zone reaction as only the first stage of the full R-143 sequence"
+      ],
+      "forbidden_inference": "Do not reject HCS zone reaction as useful evidence; reject only the inference that the zone reaction alone equals a complete POI/setup."
+    }
+  ]
+}
