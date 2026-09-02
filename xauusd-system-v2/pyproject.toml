@@ -12,6 +12,10 @@ dependencies = []
 [project.scripts]
 xauusd-v2-ingest-mt5 = "xauusd_v2.mt5_history_cli:main"
 xauusd-v2-anthropic-runner = "xauusd_v2.anthropic_model_runner:main"
+xauusd-v2-agent06-packet = "xauusd_v2.agent06_packet_cli:main"
+xauusd-v2-agent06-readiness = "xauusd_v2.agent06_readiness_cli:main"
+xauusd-v2-agent06-run = "xauusd_v2.agent06_run_cli:main"
+xauusd-v2-agent06-compare = "xauusd_v2.agent06_compare_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
