@@ -18,6 +18,13 @@ class PipelineReadinessState(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
+class PipelineReadinessReport:
+    state: PipelineReadinessState
+    blockers: tuple[str, ...]
+    live_execution_authorized: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class StrategyCandidateReadinessInput:
     market_data_validated: bool
     market_context_unambiguous: bool
@@ -40,15 +47,8 @@ class ResearchReadinessInput:
 class ExecutionReadinessInput:
     market_data_validated: bool
     market_context_unambiguous: bool
-    strategy_candidate_ready: bool
+    strategy_report: PipelineReadinessReport | None
     risk_state: RiskDecisionState
-
-
-@dataclass(frozen=True, slots=True)
-class PipelineReadinessReport:
-    state: PipelineReadinessState
-    blockers: tuple[str, ...]
-    live_execution_authorized: bool = False
 
 
 class AgentPipelineCoordinator:
@@ -59,7 +59,7 @@ class AgentPipelineCoordinator:
     evidence always blocks progression.
     """
 
-    version = "0.4.0"
+    version = "0.5.0"
 
     def strategy_candidate_readiness(
         self,
@@ -130,8 +130,11 @@ class AgentPipelineCoordinator:
             blockers.append("market-data validation has not passed")
         if not inputs.market_context_unambiguous:
             blockers.append("market context is ambiguous/conflicting")
-        if not inputs.strategy_candidate_ready:
-            blockers.append("strategy candidate is not ready")
+
+        strategy = inputs.strategy_report
+        if strategy is None or strategy.state is not PipelineReadinessState.STRATEGY_CANDIDATE_READY:
+            blockers.append("strategy candidate report is not ready")
+
         if inputs.risk_state is not RiskDecisionState.APPROVE_CANDIDATE:
             blockers.append(f"risk gate state is {inputs.risk_state.value}")
 
