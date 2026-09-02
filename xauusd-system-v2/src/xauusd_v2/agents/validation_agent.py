@@ -32,7 +32,7 @@ class IndependentValidationAgent:
     """
 
     name = "independent_validation_agent_06"
-    version = "0.2.0"
+    version = "0.3.0"
 
     def __init__(self, client: StructuredModelClient) -> None:
         self.client = client
@@ -112,9 +112,19 @@ class IndependentValidationAgent:
             f"VECTOR ID: {vector_id}\n"
             f"SOURCE LOCATOR: {source_locator}\n"
             f"ALLOWED LABEL TAXONOMY: {list(labels)!r}\n\n"
+            "LABEL CONTRACT: predicted_label must be either null or one exact string copied verbatim "
+            "from ALLOWED LABEL TAXONOMY. Never merge, concatenate, rename, summarize, or invent labels.\n\n"
             f"PRIMARY SOURCE CONTEXT:\n{source_context}"
         )
-        raw = self.client.generate_json(system=VALIDATION_AGENT_SYSTEM, user=user_prompt)
+        constrained_generate = getattr(self.client, "generate_json_with_allowed_labels", None)
+        if constrained_generate is not None and callable(constrained_generate):
+            raw = constrained_generate(
+                system=VALIDATION_AGENT_SYSTEM,
+                user=user_prompt,
+                allowed_labels=labels,
+            )
+        else:
+            raw = self.client.generate_json(system=VALIDATION_AGENT_SYSTEM, user=user_prompt)
         return self._parse_decision(
             raw=raw,
             vector_id=vector_id,
@@ -144,8 +154,16 @@ class IndependentValidationAgent:
                 allowed_labels=labels,
             )
 
+        constrained_multimodal_generate = getattr(
+            self.client,
+            "generate_json_multimodal_with_allowed_labels",
+            None,
+        )
         multimodal_generate = getattr(self.client, "generate_json_multimodal", None)
-        if multimodal_generate is None or not callable(multimodal_generate):
+        if (
+            constrained_multimodal_generate is None
+            or not callable(constrained_multimodal_generate)
+        ) and (multimodal_generate is None or not callable(multimodal_generate)):
             raise AgentContractError("configured model client does not support primary images")
 
         source_text = payload.text if payload.text else "[No primary source text; inspect the attached primary source image evidence.]"
@@ -153,15 +171,25 @@ class IndependentValidationAgent:
             f"VECTOR ID: {vector_id}\n"
             f"SOURCE LOCATOR: {source_locator}\n"
             f"ALLOWED LABEL TAXONOMY: {list(labels)!r}\n\n"
+            "LABEL CONTRACT: predicted_label must be either null or one exact string copied verbatim "
+            "from ALLOWED LABEL TAXONOMY. Never merge, concatenate, rename, summarize, or invent labels.\n\n"
             f"PRIMARY SOURCE TEXT:\n{source_text}\n\n"
             f"PRIMARY SOURCE IMAGES: {len(payload.images)} file(s) supplied out-of-band. "
             "Inspect the actual image evidence; do not infer missing chart content from the locator."
         )
-        raw = multimodal_generate(
-            system=VALIDATION_AGENT_SYSTEM,
-            user=user_prompt,
-            images=payload.images,
-        )
+        if constrained_multimodal_generate is not None and callable(constrained_multimodal_generate):
+            raw = constrained_multimodal_generate(
+                system=VALIDATION_AGENT_SYSTEM,
+                user=user_prompt,
+                images=payload.images,
+                allowed_labels=labels,
+            )
+        else:
+            raw = multimodal_generate(
+                system=VALIDATION_AGENT_SYSTEM,
+                user=user_prompt,
+                images=payload.images,
+            )
         return self._parse_decision(
             raw=raw,
             vector_id=vector_id,
