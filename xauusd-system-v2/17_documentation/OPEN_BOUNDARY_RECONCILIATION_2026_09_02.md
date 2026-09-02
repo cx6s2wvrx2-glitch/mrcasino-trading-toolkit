@@ -10,6 +10,10 @@ The live `v2_disagreements` table currently contains 14 records with `resolved_b
 
 This document consolidates them without guessing, deleting provenance, changing user-resolution state, or promoting any rule.
 
+Detailed primary-evidence audits:
+- `17_documentation/PRIMARY_BLOCKER_AUDIT_B01_B04_2026_09_02.md`
+- `17_documentation/PRIMARY_BLOCKER_AUDIT_B05_B08_2026_09_02.md`
+
 ## Canonical unresolved blocker set
 
 ### B-01 — FU sufficient opposite-direction move / break criterion
@@ -37,7 +41,7 @@ Related DB record:
 Current source-backed state:
 - retest validity and retest quality are separate concepts;
 - body/close-enough retest may be valid;
-- source grades wick interaction more strongly and references a numeric 70% branch.
+- the R-54 quality ordering is established: beyond 70% of full FU without wick touch is the weak branch, wick touch is stronger, and 50% of the FU wick is strongest.
 
 Still unresolved:
 - exact Fibonacci 0/100 anchor and orientation needed to reproduce the numeric 70% boundary.
@@ -53,13 +57,15 @@ Related DB record:
 Current source-backed state:
 - stronger FU is associated with strong close and little/no rejection;
 - V2 exposes threshold-free quality metrics;
-- one 1m-scoped structural Strong-FU feature exists in Reflection evidence.
+- explicit user clarification dated 2026-09-02 establishes that Strong FU / ATT FU use the same primitive logic on every timeframe;
+- a specific 1m Strong-FU zone application exists in Reflection, but that application is not the definition of Strong FU.
 
 Still unresolved:
-- no universal numeric candle-shape threshold is certified.
+- no universal numeric candle-shape threshold is certified; it remains unknown whether a universal body/wick/rejection percentage is intended at all.
 
 Fail-closed action:
-- never invent a universal SFU body/wick/rejection percentage.
+- never invent a universal SFU body/wick/rejection percentage;
+- do not re-open timeframe scope: the primitive logic is timeframe-invariant, while timeframe changes context/authority/downstream application.
 
 ### B-04 — Broker-specific Imbalanced-Candle classifier calibration
 
@@ -83,13 +89,15 @@ Related DB record:
 - `167aa018-4d6d-45e4-aa07-ca935c0855b3`
 
 Current source-backed state:
-- preserve explicit `x3 by x3` source labels as opaque context.
+- Reflection contains an applied establishment sequence where 1m HCS x3 and a following 1m x3 negation labelled `x3 by x3` contribute to 10m HCS establishment;
+- pure x3 negation and self-negating x3 are distinct concepts;
+- explicit `x3 by x3` source labels may be preserved as context.
 
 Still unresolved:
-- standalone raw-candle grammar/detector definition.
+- standalone raw-candle grammar/detector definition for autonomously identifying x3-by-x3 from OHLC.
 
 Fail-closed action:
-- no detector or strategy gate may infer what x3-by-x3 means from the name alone.
+- no detector or strategy gate may infer x3-by-x3 from the name, visual similarity, or helper behavior alone.
 
 ### B-06 — Accepted RR numeric/dynamic definition
 
@@ -97,13 +105,15 @@ Related DB record:
 - `5c71cac8-ce92-4ecb-8cd1-e585fa66987a`
 
 Current source-backed state:
-- `Accepted RR` is an approved-source concept in the advanced x3 entry model.
+- `Accepted RR` is an approved-source concept in the advanced x3 entry model;
+- it appears together with complete liquidity calculation and multi-timeframe alignment for advanced exact-entry context.
 
 Still unresolved:
-- no numeric threshold, formula or dynamic acceptance rule is defined.
+- no numeric threshold, formula or dynamic acceptance rule is defined;
+- historical RR examples do not define `Accepted RR`.
 
 Fail-closed action:
-- no fixed RR threshold may be inserted into the strategy gate.
+- no fixed RR threshold may be inserted into the strategy gate unless separately certified or explicitly adopted later as a production/research policy rather than attributed to the source.
 
 ### B-07 — 11h candle construction anchor
 
@@ -111,13 +121,16 @@ Related DB record:
 - `9f1b1bc0-5767-473a-a194-737b70d4b240`
 
 Current source-backed state:
+- 11h is repeatedly used as a genuine swing/context timeframe;
+- a forming 11h HCS+negation can be confirmed by aligned established lower-TF evidence in the cited sequence;
 - native/provenance-backed 11h evidence may be consumed as context.
 
 Still unresolved:
-- anchor/session origin required to synthesize reproducible 11h bars from lower-timeframe broker data.
+- anchor/session origin required to synthesize reproducible 11h bars from lower-timeframe broker data, including broker/server-time and DST implications.
 
 Fail-closed action:
-- synthetic 11h construction remains blocked.
+- synthetic 11h construction remains blocked until its anchor is proven;
+- do not treat the strategic role of 11h itself as unresolved.
 
 ### B-08 — Production risk policy
 
@@ -125,14 +138,16 @@ Related DB record:
 - `7f77aa6b-ef30-470b-817a-d7cef9f016de`
 
 Current source-backed state:
-- deterministic risk engine exists and can enforce a supplied policy.
+- deterministic risk engine exists and can enforce a supplied complete policy;
+- historical material contains 3% guidance and separate conditional up-to-5% language in another context;
+- source risk claims and production account-risk policy are intentionally separate layers.
 
 Still unresolved:
-- historical source conflict between 3% maximum and conditional up-to-5% language;
-- no production risk percentage has been approved for V2.
+- no production risk policy has been explicitly approved for V2, including per-trade, aggregate-open and daily-loss limits.
 
 Fail-closed action:
-- do not hard-code production 3% or 5% as canonical V2 policy.
+- do not hard-code production 3% or 5% as canonical V2 policy;
+- B-08 is a future user-approved deterministic safety/governance decision, not a strategy-source truth contest.
 
 ## Operationally reconciled but still formally unverified/governance-open
 
@@ -225,8 +240,9 @@ Important:
 
 ## Next certification implications
 
-1. Do not spend future source-review time treating duplicate FU records as separate blockers; resolve them through B-01.
-2. Search already-indexed primary visual evidence specifically for B-01/B-02/B-03/B-04 before asking for new source material.
-3. B-05/B-06/B-07 remain explicit-source-definition problems; absence of a definition is itself a fail-closed boundary.
-4. B-08 requires a production policy decision and must not be inferred from historical source conflict.
+1. Use `PRIMARY_BLOCKER_AUDIT_B01_B04_2026_09_02.md` for the narrowed mechanical/data unknowns B-01 through B-04.
+2. Use `PRIMARY_BLOCKER_AUDIT_B05_B08_2026_09_02.md` for the narrowed definition/governance unknowns B-05 through B-08.
+3. B-05/B-06/B-07 remain explicit-definition problems only at their unresolved layers; do not discard their already source-backed applied semantics.
+4. B-08 requires an explicit production safety-policy decision and must not be inferred from historical source conflict.
 5. Independent Agent-06 validation and broker-history ingestion can proceed in parallel; neither is allowed to auto-promote these boundaries.
+6. No future review should re-open the user-confirmed Strong FU / ATT FU timeframe-invariant primitive scope unless the user explicitly changes that clarification.
