@@ -82,6 +82,60 @@ def _append_if(blockers: list[str], condition: bool, message: str) -> None:
         blockers.append(message)
 
 
+def _audit_runtime_evidence_item(
+    *,
+    item: dict[str, Any],
+    vector_id: str,
+    blockers: list[str],
+) -> bool:
+    """Validate persisted evidence metadata without touching private evidence bytes.
+
+    The runtime manifest is deliberately path-free. The audit therefore validates the
+    content-addressed metadata that the blind process persisted: optional text SHA-256
+    and zero or more image MIME/SHA/size triples. It rejects path-like fields so a
+    completed audit cannot accidentally normalize leakage of local evidence paths.
+
+    Returns True when the case contains at least one image evidence record.
+    """
+    text_sha = item.get("source_text_sha256")
+    if text_sha is not None and not _is_sha256(text_sha):
+        blockers.append(f"runtime text SHA-256 is invalid for {vector_id}")
+
+    images = item.get("images")
+    if not isinstance(images, list):
+        blockers.append(f"runtime images metadata must be an array for {vector_id}")
+        return False
+
+    for index, image in enumerate(images):
+        if not isinstance(image, dict):
+            blockers.append(f"runtime image metadata is not an object for {vector_id}[{index}]")
+            continue
+        forbidden_path_keys = {
+            "path",
+            "file_path",
+            "local_path",
+            "absolute_path",
+            "relative_path",
+        }.intersection(image)
+        if forbidden_path_keys:
+            blockers.append(
+                f"runtime image metadata leaks path-like fields for {vector_id}[{index}]: "
+                f"{sorted(forbidden_path_keys)}"
+            )
+        mime_type = str(image.get("mime_type", "")).strip().lower()
+        if not mime_type.startswith("image/"):
+            blockers.append(f"runtime image MIME is invalid for {vector_id}[{index}]")
+        if not _is_sha256(image.get("sha256")):
+            blockers.append(f"runtime image SHA-256 is invalid for {vector_id}[{index}]")
+        size_bytes = image.get("size_bytes")
+        if isinstance(size_bytes, bool) or not isinstance(size_bytes, int) or size_bytes <= 0:
+            blockers.append(f"runtime image size is invalid for {vector_id}[{index}]")
+
+    if text_sha is None and not images:
+        blockers.append(f"runtime case has no persisted evidence fingerprint for {vector_id}")
+    return bool(images)
+
+
 def audit_agent06_run(
     *,
     run_root: Path,
@@ -212,7 +266,10 @@ def audit_agent06_run(
     _append_if(blockers, runtime.get("taxonomy_sha256") != predictions.taxonomy_sha256, "runtime/prediction taxonomy fingerprint mismatch")
 
     decision_by_id = {decision.vector_id: decision for decision in predictions.batch.decisions}
+    expected_abstained_count = sum(1 for decision in predictions.batch.decisions if decision.abstained)
     seen_runtime_ids: set[str] = set()
+    observed_image_case_count = 0
+    observed_abstained_count = 0
     for item in runtime_cases:
         if not isinstance(item, dict):
             blockers.append("runtime manifest contains a non-object case audit")
@@ -235,8 +292,28 @@ def audit_agent06_run(
             blockers.append(f"runtime/prediction label mismatch for {vector_id}")
         if item.get("abstained") is not decision.abstained:
             blockers.append(f"runtime/prediction abstention mismatch for {vector_id}")
+        if item.get("abstained") is True:
+            observed_abstained_count += 1
+        if _audit_runtime_evidence_item(item=item, vector_id=vector_id, blockers=blockers):
+            observed_image_case_count += 1
     if runtime_cases and seen_runtime_ids != set(decision_by_id):
         blockers.append("runtime manifest vector IDs do not exactly match prediction vector IDs")
+
+    _append_if(
+        blockers,
+        runtime.get("abstained_count") != expected_abstained_count,
+        "runtime manifest abstained_count does not match frozen predictions",
+    )
+    _append_if(
+        blockers,
+        observed_abstained_count != expected_abstained_count,
+        "runtime per-case abstention count does not match frozen predictions",
+    )
+    _append_if(
+        blockers,
+        runtime.get("image_case_count") != observed_image_case_count,
+        "runtime manifest image_case_count does not match per-case evidence metadata",
+    )
 
     _append_if(blockers, readiness.get("status") != "READY_TO_RUN", "readiness artifact is not READY_TO_RUN")
     _append_if(blockers, readiness.get("ready_to_run") is not True, "readiness artifact does not authorize blind-run start")
@@ -250,6 +327,11 @@ def audit_agent06_run(
     image_required_cases = readiness.get("image_required_cases")
     if isinstance(image_required_cases, int) and image_required_cases > 0:
         _append_if(blockers, readiness.get("multimodal_supported") is not True, "readiness did not prove multimodal model support")
+        _append_if(
+            blockers,
+            image_required_cases != observed_image_case_count,
+            "readiness image-required count does not match runtime image-evidence count",
+        )
 
     _append_if(blockers, comparison.get("version") != 1, "comparison artifact version mismatch")
     _append_if(blockers, str(comparison.get("run_id", "")).strip() != run_id, "comparison run_id mismatch")
@@ -300,6 +382,12 @@ def audit_agent06_run(
         "expected_case_count": expected_case_count,
         "predictions_sha256": predictions_sha256,
         "runtime_manifest_sha256": runtime_sha256,
+        "runtime_abstained_count": (
+            runtime.get("abstained_count") if isinstance(runtime.get("abstained_count"), int) else None
+        ),
+        "runtime_image_case_count": (
+            runtime.get("image_case_count") if isinstance(runtime.get("image_case_count"), int) else None
+        ),
         "agree": agree if isinstance(agree, int) else None,
         "disagree": disagree if isinstance(disagree, int) else None,
         "ambiguous": ambiguous if isinstance(ambiguous, int) else None,
