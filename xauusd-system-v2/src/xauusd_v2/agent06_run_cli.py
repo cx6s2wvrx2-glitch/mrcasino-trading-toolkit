@@ -38,11 +38,16 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--output-dir", required=True)
     parser.add_argument(
+        "--repo-commit",
+        default="UNSPECIFIED",
+        help="Git commit identity for reproducible checkpoint resume.",
+    )
+    parser.add_argument(
         "--resume-existing",
         action="store_true",
         help=(
             "Resume a previously interrupted blind run from its private checkpoint. "
-            "Packet/taxonomy/provider/model and primary evidence fingerprints must match exactly."
+            "Packet/taxonomy/provider/model/repo commit and primary evidence fingerprints must match exactly."
         ),
     )
     parser.add_argument(
@@ -83,6 +88,7 @@ def _checkpoint_payload(
     run_id: str,
     provider: str,
     model: str,
+    repo_commit: str,
     packet_sha256: str,
     taxonomy_sha256: str,
     cases: dict[str, ResumableBlindCase],
@@ -104,6 +110,7 @@ def _checkpoint_payload(
         "run_id": run_id,
         "model_provider": provider,
         "model_name": model,
+        "repo_commit": repo_commit,
         "packet_sha256": packet_sha256,
         "taxonomy_sha256": taxonomy_sha256,
         "completed_count": len(ordered),
@@ -120,6 +127,7 @@ def _load_checkpoint(
     run_id: str,
     provider: str,
     model: str,
+    repo_commit: str,
     packet_sha256: str,
     taxonomy_sha256: str,
 ) -> dict[str, ResumableBlindCase]:
@@ -133,6 +141,7 @@ def _load_checkpoint(
         "run_id": run_id,
         "model_provider": provider,
         "model_name": model,
+        "repo_commit": repo_commit,
         "packet_sha256": packet_sha256,
         "taxonomy_sha256": taxonomy_sha256,
     }
@@ -171,7 +180,7 @@ def _load_checkpoint(
                 ambiguities=tuple(str(item) for item in decision_raw["ambiguities"]),
             )
             images_raw = audit_raw["images"]
-            if not isinstance(images_raw, list):
+            if not isinstance(images_raw, list) or any(not isinstance(item, dict) for item in images_raw):
                 raise TypeError("images")
             audit = MultimodalRuntimeCaseAudit(
                 vector_id=str(audit_raw["vector_id"]),
@@ -188,7 +197,6 @@ def _load_checkpoint(
                         size_bytes=int(item["size_bytes"]),
                     )
                     for item in images_raw
-                    if isinstance(item, dict)
                 ),
                 predicted_label=(
                     None
@@ -211,6 +219,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     if not args.command:
         raise SystemExit("external model wrapper command is required")
+    repo_commit = args.repo_commit.strip() or "UNSPECIFIED"
     packet = load_blind_packet(args.packet)
     resolver = FileSystemPrimaryContextBundleResolver(
         bundle_root=args.bundle_root,
@@ -252,6 +261,7 @@ def main(argv: list[str] | None = None) -> int:
             run_id=args.run_id,
             provider=args.provider,
             model=args.model,
+            repo_commit=repo_commit,
             packet_sha256=packet_hash,
             taxonomy_sha256=taxonomy_hash,
         )
@@ -268,6 +278,7 @@ def main(argv: list[str] | None = None) -> int:
                 run_id=args.run_id,
                 provider=args.provider,
                 model=args.model,
+                repo_commit=repo_commit,
                 packet_sha256=packet_hash,
                 taxonomy_sha256=taxonomy_hash,
                 cases=resume_cases,
@@ -291,6 +302,7 @@ def main(argv: list[str] | None = None) -> int:
                 run_id=args.run_id,
                 provider=args.provider,
                 model=args.model,
+                repo_commit=repo_commit,
                 packet_sha256=packet_hash,
                 taxonomy_sha256=taxonomy_hash,
                 cases=checkpoint_cases,
@@ -344,6 +356,7 @@ def main(argv: list[str] | None = None) -> int:
         "run_id": manifest.run_id,
         "model_provider": manifest.model_provider,
         "model_name": manifest.model_name,
+        "repo_commit": repo_commit,
         "case_count": manifest.case_count,
         "completed_count": manifest.completed_count,
         "resumed_count": len(resume_cases),
