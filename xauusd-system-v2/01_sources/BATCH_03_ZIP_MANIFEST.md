@@ -1,23 +1,32 @@
 # XAUUSD V2 — Batch 03 ZIP Manifest
 
-Status: REVIEW
-Date: 2026-09-01
+Status: REVIEW / UNVERIFIED
+Date ingested: 2026-09-01
+Visual exhaustion updated: 2026-09-02
+
+## Authority
+The user confirmed that **both archives were created/annotated by a student of Mr Casino, not by Mr Casino**. They remain secondary material.
 
 ## 1. Swing low analysis XAU.zip
 - SHA-256: `0152aceb80539f5f741765f43362a3a6290023b87888393c4dcb9000e8a98cae`
 - Real assets after excluding macOS `__MACOSX` metadata: **34 PNG screenshots**
-- Initial classification: **XAUUSD annotated visual case-study sequence**
-- Visible concepts include FU, ATT FU, HCS, negation, liquidity / swing-low reasoning, no-entry annotations and timeframe-strength comments.
-- Policy: annotations are evidence from this case study only. They are NOT automatically promoted to strategy rules.
-- Author / authority of annotations: **PENDING USER CONFIRMATION**.
+- Visual inspection: **34 / 34 exhausted**
+- Classification: **secondary student XAUUSD annotated visual case-study sequence**
+- Repeated annotation themes include swing-low liquidity reasoning, FU / ATT FU, HCS, negation / True-Stop context, and explicit no-entry observations.
+- Use allowed: illustration, hypothesis generation, consistency checks against approved primary sources.
+- Use NOT allowed: creating, overriding, or verifying a strategy rule by itself.
 
 ## 2. trading_notes_jpg_exports(1).zip
 - SHA-256: `c5aeaf17f2a772f35008d3d799521da843eaa7b003e4ecc8b5ad23eeed93c08c`
-- Real assets after excluding macOS `__MACOSX` metadata: **20 JPG pages**
-- Initial classification: **handwritten trading notes**
-- Visible subjects include timeframe strength, HCS, FU / negation, swing-potential combinations and other strategy notes.
-- Policy: source is indexed but no handwritten statement may become V2 knowledge/rule until author/provenance is confirmed.
-- Author / authority of notes: **PENDING USER CONFIRMATION**.
+- Real assets after excluding macOS `__MACOSX` metadata: **20 JPG handwritten pages**
+- Visual inspection: **20 / 20 exhausted**
+- Classification: **secondary student handwritten notes / interpretation**
+- Repeated note themes include timeframe strength, HCS / True-Stop potential, FU and FU-retest concepts, liquidity, trendline/pattern discussion, risk/reward and trader psychology.
+- Use allowed: identify questions, hypotheses and relationships to cross-check against approved primary material.
+- Use NOT allowed: authoritative definitions, rule creation, rule override, or verification by itself.
 
-## Guardrail
-Both archives are approved for indexing inside V2, but source approval does not equal semantic verification. Provenance determines whether material is treated as primary strategy source, secondary interpretation, personal notes, or visual examples.
+## Exhaustion result
+Both active Batch 03 archives are now fully visually inspected: **54 / 54 real assets**. This is a source-exhaustion milestone only. It does not convert student annotations into primary evidence, canonical rules, verified knowledge, or backtest ground truth.
+
+## Governing guardrail
+A student annotation may support or illustrate a rule only after that rule is independently supported by an approved primary source and passes V2 certification. If student material conflicts with a primary source, the conflict must be preserved rather than silently merged.
