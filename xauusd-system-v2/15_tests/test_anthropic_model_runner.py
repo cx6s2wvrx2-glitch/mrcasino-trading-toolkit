@@ -92,6 +92,10 @@ class AnthropicModelRunnerTests(unittest.TestCase):
             set(schema["required"]),
             {"predicted_label", "confidence", "evidence", "ambiguities"},
         )
+        confidence_schema = schema["properties"]["confidence"]
+        self.assertEqual(confidence_schema["type"], "number")
+        self.assertNotIn("minimum", confidence_schema)
+        self.assertNotIn("maximum", confidence_schema)
 
     def test_multimodal_request_base64_encodes_verified_primary_image(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -144,6 +148,18 @@ class AnthropicModelRunnerTests(unittest.TestCase):
         request = urlopen.call_args.args[0]
         self.assertEqual(request.full_url, ANTHROPIC_MESSAGES_URL)
         self.assertNotIn("secret-test-key", json.dumps(result))
+
+    def test_confidence_range_is_enforced_locally_after_provider_response(self) -> None:
+        text = json.dumps(
+            {
+                "predicted_label": "candidate-a",
+                "confidence": 1.25,
+                "evidence": [],
+                "ambiguities": [],
+            }
+        )
+        with self.assertRaisesRegex(AnthropicRunnerError, "between 0 and 1"):
+            parse_anthropic_response(self.decision_response(text=text))
 
     def test_http_error_fails_closed_without_response_body_or_key(self) -> None:
         error = urllib.error.HTTPError(
