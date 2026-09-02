@@ -146,12 +146,40 @@ Implemented:
 - bounded validator response verbosity;
 - configurable Anthropic output-token cap;
 - frozen output hashes before post-run comparison;
+- strict post-run audit CLI;
 - explicit `api_key_written_to_disk=false`, `blind_process_loaded_ground_truth=false`, `promotion_allowed=false` contracts.
 
+### Post-run audit gate
+
+CLI: `xauusd-v2-agent06-audit`
+
+The audit process is separate from the blind provider execution and verifies the completed persisted run only after the provider/comparison pipeline is finished.
+
+It fail-closes on:
+- missing required artifacts;
+- wrong run/provider/model/case metadata;
+- wrong private bundle or primary-context manifest hashes;
+- mutated prediction/runtime files after freeze;
+- comparison not recorded after blind execution;
+- any promotion flag set true;
+- blind ground-truth loading;
+- mismatched packet/taxonomy/vector IDs/source locators;
+- inconsistent AGREE/DISAGREE/AMBIGUOUS totals;
+- runtime abstention-count mismatch;
+- runtime/readiness image-case mismatch;
+- invalid text/image evidence SHA-256 metadata;
+- invalid image MIME or byte size;
+- path-like local evidence fields in the persisted runtime manifest;
+- a runtime case without any persisted evidence fingerprint.
+
+`AUDIT_PASS` means the external run is internally coherent/auditable. It still does not promote strategy truth.
+
 Real-provider status:
-- a real Anthropic `claude-sonnet-5` local run is being attempted externally;
+- a real Anthropic `claude-sonnet-5` local run is currently executing on the user's machine;
 - earlier failed attempts exposed and fixed parser/schema/output-cap issues;
-- **until a run reaches `LOCAL_AGENT06_PIPELINE_COMPLETE` and its frozen output files are inspected, no completed external independent validation is claimed**.
+- **until that run reaches `LOCAL_AGENT06_PIPELINE_COMPLETE` and its frozen artifacts pass inspection/audit, no completed external independent validation is claimed**.
+
+Do not ask the user to pull the newer GitHub branch while that local process is still running.
 
 ## Primary Agent-06 evidence bundle
 
@@ -183,15 +211,50 @@ Implemented:
 - immutable raw + canonical snapshot persistence by SHA-256;
 - tamper-detecting snapshot reload;
 - replay-readiness CLI that re-verifies the persisted snapshot before alignment;
-- fail-closed stage timestamp certification;
+- strict six-stage R-143 timestamp/evidence certification tied to the exact immutable broker snapshot;
 - historical replay dataset schema that rejects extra fields, lookahead and `promotion_allowed=true`.
+
+### R-143 stage timestamp certification
+
+Module: `src/xauusd_v2/replay_stage_certification.py`
+
+Contract: `17_documentation/REPLAY_STAGE_CERTIFICATION_CONTRACT_2026_09_02.md`
+
+A bare `stage_timestamps_certified=true` cannot unlock the production-facing readiness path.
+
+A valid artifact must bind:
+- registered replay candidate;
+- primary source ID + locator;
+- exact verified persisted MT5 snapshot identity + normalized SHA-256;
+- broker + broker symbol + timeframe;
+- an already successful source-chart alignment against the same snapshot;
+- all six canonical R-143 stages in order.
+
+Canonical stages:
+1. HCS zone reaction;
+2. TFS;
+3. LAOL met;
+4. True Stop respected;
+5. 10m True Stop established;
+6. targets and timing.
+
+For each stage the system verifies timezone-aware `occurred_at`, `available_at`, exact `broker_bar_open`, source reference and evidence class. The referenced broker candle must exist and be closed in the exact snapshot. Evidence is conservatively unavailable before that candle closes, and stage times/bar references cannot move backward.
+
+The artifact itself must explicitly deny promotion, strategy verification and performance claims.
+
+`xauusd-v2-replay-readiness` accepts `--stage-certification <path>`. Exact alignment without a valid artifact remains `BLOCKED_STAGE_TIMESTAMPS`. Exact alignment plus a valid six-stage artifact may become `READY_CANDIDATE` only at the replay-admissibility layer.
 
 Current real-data state:
 - no real broker XAUUSD MT5 export has been ingested yet;
+- no real six-stage stage-certification artifact exists;
 - no real broker-aligned historical replay has been certified;
-- no performance/backtest claim exists.
+- no performance/backtest claim exists;
+- real replay READY count remains **0**.
 
-Current replay READY count remains **0**.
+Current candidates:
+- RC-001 remains timestamp-blocked unless source stages can be proven against admissible raw data;
+- RC-002 remains CONTEXT_ONLY and cannot be upgraded by a stage artifact;
+- RC-003 remains raw-data blocked until real immutable broker alignment, then still requires a valid six-stage artifact.
 
 Runbook:
 `17_documentation/MT5_TO_REPLAY_READINESS_RUNBOOK.md`
@@ -209,11 +272,14 @@ Source recovery is provenance infrastructure, not automatic strategy certificati
 
 ## Latest regression state
 
-Latest code regression before the documentation reconciliation:
-- commit `ed5fcf194710daf7cf81cb0c3df4b3b53460dda5`;
-- **636/636 tests PASS** on GitHub Actions.
+Latest fully verified code regression:
+- commit `268cca7bf35a001ec52b95bf23f4e5d307e6fbf1`;
+- GitHub Actions run `33675613850`;
+- job `100399431199`;
+- Python 3.12;
+- **656/656 tests PASS**.
 
-Subsequent documentation reconciliation through commit `ee3ef9a0379bc4c4e51cdfcbba67fd35867b2b3d` also completed GitHub Actions with **SUCCESS**.
+The subsequent replay-contract documentation commit `6c542b98183e6ae7acd37f16eed5cdf4f8522b89` also completed GitHub Actions successfully in run `33675694172`.
 
 The GitHub Actions Node deprecation warning is infrastructure noise and is not a strategy/certification blocker.
 
@@ -222,6 +288,7 @@ The GitHub Actions Node deprecation warning is infrastructure noise and is not a
 External/provider/data dependencies:
 - completion and audit of the real 173-case Agent-06 provider run;
 - real broker XAUUSD MT5 history for immutable alignment/replay;
+- real six-stage R-143 timestamp evidence for replay candidates;
 - broker-quality labelled OHLC fixtures for B-04 calibration;
 - any genuinely new primary material that explicitly defines B-01/B-02/B-03/B-05/B-06/B-07 remaining boundaries.
 
@@ -231,12 +298,15 @@ User/governance dependency:
 ## Current next work
 
 1. Let the real Agent-06 blind run complete without modifying its local checkout mid-run.
-2. On completion, audit frozen prediction/runtime/hash/comparison artifacts before making any external-validation claim.
-3. Obtain and ingest a real MT5 XAUUSD history export, then run immutable snapshot reload and source-chart/replay readiness checks.
-4. Use broker-aligned data to attack B-04 and historical replay rather than approximating from TradingView.
-5. Keep B-01/B-02/B-03/B-05/B-06/B-07 fail-closed at only their narrowed unresolved layers.
-6. Define B-08 later as an explicit deterministic production safety policy, separately from strategy truth.
-7. Only after certification and replay/data gates are sufficiently resolved, begin serious OOS/walk-forward/cost/slippage performance research.
+2. On completion, preserve and inspect its six persisted artifacts before pulling newer code.
+3. Pull/reinstall the editable package only after the live run finishes, then run the strict post-run auditor against the commit recorded by that run itself.
+4. Persist truthful provider/model/comparison metadata only after audit; never persist the API secret and never auto-promote.
+5. Obtain and ingest a real MT5 XAUUSD history export, then run immutable snapshot reload and source-chart/replay readiness checks.
+6. Build six-stage timestamp artifacts only when primary source evidence and immutable broker bars prove each stage and its availability time.
+7. Use broker-aligned data to attack B-04 and historical replay rather than approximating from TradingView.
+8. Keep B-01/B-02/B-03/B-05/B-06/B-07 fail-closed at only their narrowed unresolved layers.
+9. Define B-08 later as an explicit deterministic production safety policy, separately from strategy truth.
+10. Only after certification and replay/data gates are sufficiently resolved, begin serious OOS/walk-forward/cost/slippage performance research.
 
 ## Bottom line
 
@@ -244,8 +314,12 @@ The V2 foundation is substantially implemented and heavily regression-tested, bu
 
 Current truth:
 - 173-case blind corpus exists;
-- real independent-provider validation is not yet verified complete;
-- real broker replay/performance evidence does not yet exist;
+- real independent-provider validation is executing but not yet verified complete;
+- strict post-run Agent-06 audit path exists;
+- strict R-143 replay timestamp certification path exists;
+- real broker dataset is absent;
+- real replay-ready episodes = 0;
+- real performance evidence is absent;
 - 8 canonical blocker families remain explicit;
 - VERIFIED knowledge = 0;
 - VERIFIED rules = 0;
