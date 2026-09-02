@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from xauusd_v2.agents.quant_agent import QuantitativeResearchAgent, ResearchExperimentSpec, ResearchWindow
 from xauusd_v2.data_snapshot import DataSnapshotError, load_xauusd_csv_snapshot_bytes
+from xauusd_v2.evidence_gate import EvidenceGateReport
 from xauusd_v2.research_runtime import ResearchRuntimeStatus, prepare_research_runtime
 
 
@@ -22,6 +23,10 @@ def _csv_bytes() -> bytes:
 
 def _sha_ref(char: str) -> str:
     return "sha256:" + char * 64
+
+
+def _certification_gate(*, passed: bool = True, name: str = "strategy_certification") -> EvidenceGateReport:
+    return EvidenceGateReport(name, passed, ("evidence:strategy-certification",))
 
 
 def _spec(snapshot_id: str) -> ResearchExperimentSpec:
@@ -88,7 +93,7 @@ class DataSnapshotResearchRuntimeTests(unittest.TestCase):
             spec=_spec(manifest.snapshot_id),
             snapshot=manifest,
             data_report=report,
-            strategy_certification_ready=True,
+            strategy_certification_gate=_certification_gate(),
         )
         self.assertEqual(runtime.status, ResearchRuntimeStatus.BLOCKED)
         self.assertTrue(any("closed-only" in blocker for blocker in runtime.blockers))
@@ -99,23 +104,52 @@ class DataSnapshotResearchRuntimeTests(unittest.TestCase):
             spec=_spec(manifest.snapshot_id),
             snapshot=manifest,
             data_report=report,
-            strategy_certification_ready=False,
+            strategy_certification_gate=None,
             quant_agent=QuantitativeResearchAgent(),
         )
         self.assertTrue(design.ready_for_research)
         self.assertEqual(runtime.status, ResearchRuntimeStatus.DATA_READY)
         self.assertTrue(runtime.data_ready)
         self.assertFalse(runtime.strategy_certification_ready)
+        self.assertEqual(runtime.strategy_certification_evidence_refs, ())
 
-    def test_certified_strategy_can_reach_backtest_ready(self) -> None:
+    def test_certified_strategy_requires_provenance_gate_to_reach_backtest_ready(self) -> None:
         _, manifest, report = self._closed_snapshot()
         runtime, _ = prepare_research_runtime(
             spec=_spec(manifest.snapshot_id),
             snapshot=manifest,
             data_report=report,
-            strategy_certification_ready=True,
+            strategy_certification_gate=_certification_gate(),
         )
         self.assertEqual(runtime.status, ResearchRuntimeStatus.BACKTEST_READY)
+        self.assertTrue(runtime.strategy_certification_ready)
+        self.assertEqual(runtime.strategy_certification_evidence_refs, ("evidence:strategy-certification",))
+
+    def test_wrong_certification_gate_name_cannot_unlock_backtest(self) -> None:
+        _, manifest, report = self._closed_snapshot()
+        runtime, _ = prepare_research_runtime(
+            spec=_spec(manifest.snapshot_id),
+            snapshot=manifest,
+            data_report=report,
+            strategy_certification_gate=_certification_gate(name="strategy_candidate"),
+        )
+        self.assertEqual(runtime.status, ResearchRuntimeStatus.DATA_READY)
+        self.assertFalse(runtime.strategy_certification_ready)
+
+    def test_blocked_certification_gate_cannot_unlock_backtest(self) -> None:
+        _, manifest, report = self._closed_snapshot()
+        runtime, _ = prepare_research_runtime(
+            spec=_spec(manifest.snapshot_id),
+            snapshot=manifest,
+            data_report=report,
+            strategy_certification_gate=_certification_gate(passed=False),
+        )
+        self.assertEqual(runtime.status, ResearchRuntimeStatus.DATA_READY)
+        self.assertFalse(runtime.strategy_certification_ready)
+
+    def test_bare_positive_certification_gate_without_provenance_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "provenance"):
+            EvidenceGateReport("strategy_certification", True, ())
 
     def test_snapshot_reference_mismatch_is_blocked(self) -> None:
         _, manifest, report = self._closed_snapshot()
@@ -123,7 +157,7 @@ class DataSnapshotResearchRuntimeTests(unittest.TestCase):
             spec=_spec(_sha_ref("e")),
             snapshot=manifest,
             data_report=report,
-            strategy_certification_ready=True,
+            strategy_certification_gate=_certification_gate(),
         )
         self.assertTrue(design.ready_for_research)
         self.assertEqual(runtime.status, ResearchRuntimeStatus.BLOCKED)
