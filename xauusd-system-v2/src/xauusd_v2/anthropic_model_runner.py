@@ -19,11 +19,18 @@ _ALLOWED_IMAGE_MIME = {"image/jpeg", "image/png", "image/gif", "image/webp"}
 _MAX_IMAGE_BYTES = 25 * 1024 * 1024
 _MAX_TOTAL_IMAGE_BYTES = 100 * 1024 * 1024
 
+# Anthropic structured outputs do not accept numeric minimum/maximum constraints
+# in raw JSON schemas. Keep the wire schema provider-compatible and enforce the
+# 0..1 confidence contract after the response is returned in
+# _validate_decision_payload().
 _OUTPUT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
         "predicted_label": {"type": ["string", "null"]},
-        "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "confidence": {
+            "type": "number",
+            "description": "Confidence from 0.0 to 1.0 inclusive; validated again locally.",
+        },
         "evidence": {"type": "array", "items": {"type": "string"}},
         "ambiguities": {"type": "array", "items": {"type": "string"}},
     },
