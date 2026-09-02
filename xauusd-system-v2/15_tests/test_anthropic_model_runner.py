@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import tempfile
 import unittest
@@ -12,6 +13,7 @@ from xauusd_v2.anthropic_model_runner import (
     ANTHROPIC_MESSAGES_URL,
     AnthropicRunnerConfig,
     AnthropicRunnerError,
+    _safe_runner_error_code,
     build_anthropic_request,
     call_anthropic,
     parse_anthropic_response,
@@ -155,10 +157,37 @@ class AnthropicModelRunnerTests(unittest.TestCase):
             with self.assertRaisesRegex(AnthropicRunnerError, "HTTP 429") as raised:
                 call_anthropic({"system": "system", "user": "user"}, self.config())
         self.assertNotIn("secret-test-key", str(raised.exception))
+        self.assertEqual(_safe_runner_error_code(raised.exception), "ANTHROPIC_HTTP_429")
+
+    def test_billing_http_400_is_reduced_to_safe_code(self) -> None:
+        body = io.BytesIO(
+            json.dumps(
+                {
+                    "type": "error",
+                    "error": {
+                        "type": "invalid_request_error",
+                        "message": "Your credit balance is too low to access the Anthropic API",
+                    },
+                }
+            ).encode("utf-8")
+        )
+        error = urllib.error.HTTPError(
+            ANTHROPIC_MESSAGES_URL,
+            400,
+            "bad request",
+            hdrs=None,
+            fp=body,
+        )
+        with patch("urllib.request.urlopen", side_effect=error):
+            with self.assertRaises(AnthropicRunnerError) as raised:
+                call_anthropic({"system": "system", "user": "user"}, self.config())
+        self.assertEqual(_safe_runner_error_code(raised.exception), "ANTHROPIC_HTTP_400_BILLING")
+        self.assertNotIn("credit balance", str(raised.exception).lower())
 
     def test_non_end_turn_response_fails_closed(self) -> None:
-        with self.assertRaisesRegex(AnthropicRunnerError, "end_turn"):
+        with self.assertRaisesRegex(AnthropicRunnerError, "max_tokens") as raised:
             parse_anthropic_response(self.decision_response(stop_reason="max_tokens"))
+        self.assertEqual(_safe_runner_error_code(raised.exception), "ANTHROPIC_STOP_MAX_TOKENS")
 
     def test_malformed_or_extra_structured_fields_fail_closed(self) -> None:
         with self.assertRaisesRegex(AnthropicRunnerError, "valid JSON"):
