@@ -7,7 +7,6 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from xauusd_v2.agents.data_agent import MarketDataValidationReport
 from xauusd_v2.backtest_sequence import BacktestStage
 from xauusd_v2.data_snapshot import load_xauusd_csv_snapshot_bytes
 from xauusd_v2.mt5_snapshot_load import VerifiedPersistedMT5Snapshot
@@ -173,9 +172,9 @@ class ReplayStageCertificationTests(unittest.TestCase):
         payload = self._valid_payload()
         stages = list(payload["stages"])
         stages[4] = dict(stages[4])
-        # Keep this occurrence inside a real referenced bar but move the broker-bar
-        # reference backward. The loader must reject the source-order regression.
-        old_bar = self.start + timedelta(seconds=self.timeframe * 3)
+        # Keep the evidence on a real closed broker bar but move stage 5 behind
+        # stage 4 in time. The loader must reject this source-order regression.
+        old_bar = self.start + timedelta(seconds=self.timeframe * 2)
         stages[4]["broker_bar_open"] = old_bar.isoformat()
         stages[4]["occurred_at"] = (old_bar + timedelta(minutes=5)).isoformat()
         stages[4]["available_at"] = (old_bar + timedelta(seconds=self.timeframe)).isoformat()
