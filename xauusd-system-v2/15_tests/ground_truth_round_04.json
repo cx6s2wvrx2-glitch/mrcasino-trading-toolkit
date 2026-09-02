@@ -7,7 +7,7 @@
   "test_vectors": [
     {
       "id": "GT-R04-001",
-      "source_locator": "v2_sources:bdbc80ef-3ad9-4bbb-b711-3883ae26b824#page:2#visual:h4",
+      "source_locator": "v2_sources:bdbc80ef-3ad9-4bbb-b711-3883ae26b824#page:3#visual:h4",
       "expected_label": "fu_retest_visual_h4",
       "expected_class": "valid",
       "evidence": ["primary visual is explicitly captioned FU retest, 4hr XAUUSD (H4)"],
@@ -15,7 +15,7 @@
     },
     {
       "id": "GT-R04-002",
-      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:2#visual:classic-ob-att-real-fu",
+      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:3#visual:classic-ob-att-real-fu",
       "expected_label": "classic_ob_att_fu_real_fu_zone",
       "expected_class": "valid",
       "evidence": ["original chart labels Small 4hr OB / ATT FU followed by the real FU", "original annotation says both are the same kind of zones and marks relevance after same-TF reaction"],
@@ -23,7 +23,7 @@
     },
     {
       "id": "GT-R04-003",
-      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:3#visual:fu-wick-valid-zone",
+      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:4#visual:fu-wick-valid-zone",
       "expected_label": "fu_wick_respected_valid_zone",
       "expected_class": "valid",
       "evidence": ["original chart explicitly says FU wick respected so valid zone", "chart shows 4hr FU + retest context and first rejection/update logic"],
@@ -31,7 +31,7 @@
     },
     {
       "id": "GT-R04-004",
-      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:4#visual:hcs-vs-ob-fu",
+      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:5#visual:hcs-vs-ob-fu",
       "expected_label": "hcs_zone_stronger_than_ob_fu",
       "expected_class": "valid",
       "evidence": ["original annotation says HCS = more powerful than an ordinary OB + FU zone", "chart labels 4hr HCS after reaction confirmation"],
@@ -47,7 +47,7 @@
     },
     {
       "id": "GT-R04-006",
-      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:5#visual:att-fu-hcs-respected-once",
+      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:6#visual:att-fu-hcs-respected-once",
       "expected_label": "att_fu_hcs_zone_respected_once",
       "expected_class": "valid",
       "evidence": ["original visual labels ATT FU in the area", "original chart labels 4hr HCS stronger and respected once"],
