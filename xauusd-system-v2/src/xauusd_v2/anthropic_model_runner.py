@@ -18,11 +18,14 @@ ANTHROPIC_API_VERSION = "2023-06-01"
 _ALLOWED_IMAGE_MIME = {"image/jpeg", "image/png", "image/gif", "image/webp"}
 _MAX_IMAGE_BYTES = 25 * 1024 * 1024
 _MAX_TOTAL_IMAGE_BYTES = 100 * 1024 * 1024
+_MAX_ALLOWED_LABELS = 512
+_MAX_ALLOWED_LABEL_LENGTH = 256
 
 # Anthropic structured outputs do not accept numeric minimum/maximum constraints
 # in raw JSON schemas. Keep the wire schema provider-compatible and enforce the
 # 0..1 confidence contract after the response is returned in
-# _validate_decision_payload().
+# _validate_decision_payload(). The predicted-label schema is cloned per request
+# so Agent-06 can additionally constrain it to the exact frozen batch taxonomy.
 _OUTPUT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -83,6 +86,58 @@ def _sha256(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def _normalize_allowed_labels(value: object) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if not isinstance(value, list):
+        raise AnthropicRunnerError("allowed_labels must be an array")
+    labels: list[str] = []
+    seen: set[str] = set()
+    for item in value:
+        if not isinstance(item, str):
+            raise AnthropicRunnerError("allowed_labels must contain only strings")
+        label = item.strip()
+        if not label:
+            raise AnthropicRunnerError("allowed_labels cannot contain empty labels")
+        if len(label) > _MAX_ALLOWED_LABEL_LENGTH:
+            raise AnthropicRunnerError("allowed label exceeds runner safety limit")
+        if label not in seen:
+            labels.append(label)
+            seen.add(label)
+    if labels and len(labels) < 2:
+        raise AnthropicRunnerError("allowed_labels must contain at least two unique labels")
+    if len(labels) > _MAX_ALLOWED_LABELS:
+        raise AnthropicRunnerError("allowed_labels exceeds runner safety limit")
+    return tuple(labels)
+
+
+def _output_schema(allowed_labels: tuple[str, ...]) -> dict[str, Any]:
+    schema = {
+        "type": _OUTPUT_SCHEMA["type"],
+        "properties": {
+            "predicted_label": dict(_OUTPUT_SCHEMA["properties"]["predicted_label"]),
+            "confidence": dict(_OUTPUT_SCHEMA["properties"]["confidence"]),
+            "evidence": {
+                "type": "array",
+                "items": dict(_OUTPUT_SCHEMA["properties"]["evidence"]["items"]),
+            },
+            "ambiguities": {
+                "type": "array",
+                "items": dict(_OUTPUT_SCHEMA["properties"]["ambiguities"]["items"]),
+            },
+        },
+        "required": list(_OUTPUT_SCHEMA["required"]),
+        "additionalProperties": _OUTPUT_SCHEMA["additionalProperties"],
+    }
+    if allowed_labels:
+        schema["properties"]["predicted_label"] = {
+            "type": ["string", "null"],
+            "enum": [*allowed_labels, None],
+            "description": "Either null or one exact frozen taxonomy label; never synthesize a new label.",
+        }
+    return schema
+
+
 def _load_verified_image(item: object) -> tuple[bytes, str]:
     if not isinstance(item, dict):
         raise AnthropicRunnerError("image metadata must be an object")
@@ -113,9 +168,14 @@ def _load_verified_image(item: object) -> tuple[bytes, str]:
     return payload, mime_type
 
 
-def _normalize_command_request(value: object) -> tuple[str, str, tuple[dict[str, Any], ...]]:
+def _normalize_command_request(
+    value: object,
+) -> tuple[str, str, tuple[dict[str, Any], ...], tuple[str, ...]]:
     if not isinstance(value, dict):
         raise AnthropicRunnerError("runner stdin must contain one JSON object")
+    allowed_keys = {"system", "user", "images", "allowed_labels"}
+    if not set(value).issubset(allowed_keys):
+        raise AnthropicRunnerError("runner stdin contains unsupported fields")
     system = str(value.get("system", "")).strip()
     user = str(value.get("user", "")).strip()
     if not system:
@@ -125,11 +185,12 @@ def _normalize_command_request(value: object) -> tuple[str, str, tuple[dict[str,
     images_raw = value.get("images", [])
     if not isinstance(images_raw, list):
         raise AnthropicRunnerError("images must be an array")
-    return system, user, tuple(images_raw)
+    allowed_labels = _normalize_allowed_labels(value.get("allowed_labels"))
+    return system, user, tuple(images_raw), allowed_labels
 
 
 def build_anthropic_request(command_request: object, config: AnthropicRunnerConfig) -> dict[str, Any]:
-    system, user, image_items = _normalize_command_request(command_request)
+    system, user, image_items, allowed_labels = _normalize_command_request(command_request)
 
     content: list[dict[str, Any]] = []
     total_image_bytes = 0
@@ -158,13 +219,17 @@ def build_anthropic_request(command_request: object, config: AnthropicRunnerConf
         "output_config": {
             "format": {
                 "type": "json_schema",
-                "schema": _OUTPUT_SCHEMA,
+                "schema": _output_schema(allowed_labels),
             }
         },
     }
 
 
-def _validate_decision_payload(value: object) -> dict[str, Any]:
+def _validate_decision_payload(
+    value: object,
+    *,
+    allowed_labels: tuple[str, ...] = (),
+) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise AnthropicRunnerError("Anthropic structured output must be a JSON object")
     expected_keys = {"predicted_label", "confidence", "evidence", "ambiguities"}
@@ -173,6 +238,8 @@ def _validate_decision_payload(value: object) -> dict[str, Any]:
     label = value["predicted_label"]
     if label is not None and not isinstance(label, str):
         raise AnthropicRunnerError("predicted_label must be a string or null")
+    if label is not None and allowed_labels and label not in allowed_labels:
+        raise AnthropicRunnerError("predicted_label is outside frozen taxonomy")
     confidence = value["confidence"]
     if isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
         raise AnthropicRunnerError("confidence must be numeric")
@@ -190,7 +257,11 @@ def _validate_decision_payload(value: object) -> dict[str, Any]:
     }
 
 
-def parse_anthropic_response(value: object) -> dict[str, Any]:
+def parse_anthropic_response(
+    value: object,
+    *,
+    allowed_labels: tuple[str, ...] = (),
+) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise AnthropicRunnerError("Anthropic response must be a JSON object")
     if value.get("type") != "message":
@@ -216,7 +287,7 @@ def parse_anthropic_response(value: object) -> dict[str, Any]:
         payload = json.loads(text_blocks[0])
     except json.JSONDecodeError as exc:
         raise AnthropicRunnerError("Anthropic structured output is not valid JSON") from exc
-    return _validate_decision_payload(payload)
+    return _validate_decision_payload(payload, allowed_labels=allowed_labels)
 
 
 def _read_http_error_message(exc: urllib.error.HTTPError) -> str:
@@ -252,6 +323,7 @@ def _http_error_code(exc: urllib.error.HTTPError) -> str:
 
 
 def call_anthropic(command_request: object, config: AnthropicRunnerConfig) -> dict[str, Any]:
+    _, _, _, allowed_labels = _normalize_command_request(command_request)
     request_payload = build_anthropic_request(command_request, config)
     encoded = json.dumps(request_payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     headers = {
@@ -283,7 +355,7 @@ def call_anthropic(command_request: object, config: AnthropicRunnerConfig) -> di
         raw_response = json.loads(response_bytes)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise AnthropicRunnerError("Anthropic API returned invalid JSON") from exc
-    return parse_anthropic_response(raw_response)
+    return parse_anthropic_response(raw_response, allowed_labels=allowed_labels)
 
 
 def run_stdin_stdout(
@@ -317,6 +389,8 @@ def _safe_runner_error_code(exc: AnthropicRunnerError) -> str:
         return "ANTHROPIC_STOP_MAX_TOKENS"
     if message == "Anthropic response stopped with refusal":
         return "ANTHROPIC_STOP_REFUSAL"
+    if message == "predicted_label is outside frozen taxonomy":
+        return "ANTHROPIC_LABEL_OUTSIDE_TAXONOMY"
     return "ANTHROPIC_RUNNER_CONTRACT_ERROR"
 
 
