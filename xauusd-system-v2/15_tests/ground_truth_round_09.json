@@ -1,0 +1,50 @@
+{
+  "dataset": "XAUUSD V2 Ground Truth Round 09",
+  "date": "2026-09-02",
+  "status": "candidate_not_verified",
+  "source_episode": "approved primary Mr Casino top-down sequence 2023-11-08",
+  "promotion_allowed": false,
+  "test_vectors": [
+    {
+      "id": "GT-R09-001",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-08#image:IMG_20231108_124655_292.jpg",
+      "expected_label": "zones_can_be_adjusted_as_price_action_develops",
+      "expected_class": "valid",
+      "evidence": [
+        "primary chart explicitly states 'Adjustments to zones as PA develops'"
+      ],
+      "forbidden_inference": "Do not invent a universal automatic zone-adjustment algorithm from this contextual annotation alone."
+    },
+    {
+      "id": "GT-R09-002",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-08#image:IMG_20231108_124655_292.jpg",
+      "expected_label": "last_htf_reaction_can_be_tracked_as_ltf_break_retest_context",
+      "expected_class": "valid",
+      "evidence": [
+        "primary chart explicitly labels the area 'Last HTF reaction - LTF break retest'"
+      ],
+      "forbidden_inference": "Do not assume every HTF reaction automatically becomes a valid LTF entry or define exact break/retest geometry from this label alone."
+    },
+    {
+      "id": "GT-R09-003",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-08#image:IMG_20231108_124655_292.jpg",
+      "expected_label": "unresolved_15m_doji_can_remain_a_major_target_in_current_context",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary chart explicitly marks a major target at 1940 and notes that the 15-minute doji still resides"
+      ],
+      "forbidden_inference": "Do not convert the specific 1940 target or this single 15m doji into a universal target-selection rule."
+    },
+    {
+      "id": "GT-R09-004",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-08#image:IMG_20231108_124656_675.jpg",
+      "expected_label": "monthly_zone_can_be_removed_while_other_key_untested_hcs_and_extended_areas_remain_tracked",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary 12H chart explicitly labels '(monthly zone removed)'",
+        "the same chart separately retains a 'Key untested' area, a '12hr HCS' label, and 'Extended areas'"
+      ],
+      "forbidden_inference": "Do not infer why the Monthly zone was removed or that all zones must be removed under the same conditions; the removal rule is not specified here."
+    }
+  ]
+}
