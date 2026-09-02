@@ -29,9 +29,13 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-dir", required=True)
     parser.add_argument(
         "--command",
-        nargs="+",
+        nargs=argparse.REMAINDER,
         required=True,
-        help="External model wrapper command. Supply credentials only through environment/secrets.",
+        help=(
+            "External model wrapper command. This must be the final Agent-06 CLI option so wrapper "
+            "arguments such as '-m' remain part of the command. Supply credentials only through "
+            "environment/secrets."
+        ),
     )
     return parser
 
@@ -45,6 +49,8 @@ def _write_json(path: Path, payload: object) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    if not args.command:
+        raise SystemExit("external model wrapper command is required")
     packet = load_blind_packet(args.packet)
     resolver = FileSystemPrimaryContextBundleResolver(
         bundle_root=args.bundle_root,
