@@ -55,7 +55,16 @@ ROUND_03_COVERAGE: tuple[GroundTruthCoverage, ...] = (
     GroundTruthCoverage("GT-R03-007", CoverageState.PARTIAL, ("imbalance_observables",), "classic imbalance is explicitly separate, but exact classic-zone raw boundaries still need dedicated primary/broker fixture certification"),
 )
 
-ALL_COVERAGE: tuple[GroundTruthCoverage, ...] = ROUND_02_COVERAGE + ROUND_03_COVERAGE
+ROUND_04_COVERAGE: tuple[GroundTruthCoverage, ...] = (
+    GroundTruthCoverage("GT-R04-001", CoverageState.PARTIAL, ("hcs_semantic", "fu_completion"), "explicit H4 FU-retest visual lacks a machine-labelled retest boundary and does not resolve R-54 fib orientation"),
+    GroundTruthCoverage("GT-R04-002", CoverageState.PARTIAL, ("zone_geometry", "candidate_detectors.zone_lifecycle"), "older classic OB+ATT-FU+real-FU baseline must remain distinct from later Reflection zone geometry until cross-version certification"),
+    GroundTruthCoverage("GT-R04-003", CoverageState.PARTIAL, ("candidate_detectors.zone_lifecycle",), "FU-wick respected visual is explicit but exact raw reaction/rejection boundary is not machine-labelled"),
+    GroundTruthCoverage("GT-R04-004", CoverageState.PARTIAL, ("hcs_semantic",), "source gives qualitative HCS > ordinary OB+FU ordering; no numeric zone-strength model is certified"),
+    GroundTruthCoverage("GT-R04-005", CoverageState.PARTIAL, ("candidate_detectors.zone_lifecycle",), "zone-of-manipulation transition is explicit but requires contextual HCS/reaction/refinement identity"),
+    GroundTruthCoverage("GT-R04-006", CoverageState.PARTIAL, ("hcs_semantic", "candidate_detectors.zone_lifecycle"), "ATT-FU/HCS respected-once visual is explicit but does not define universal ATT-FU strength or future reaction behavior"),
+)
+
+ALL_COVERAGE: tuple[GroundTruthCoverage, ...] = ROUND_02_COVERAGE + ROUND_03_COVERAGE + ROUND_04_COVERAGE
 
 
 def coverage_by_id() -> dict[str, GroundTruthCoverage]:
@@ -74,6 +83,14 @@ def round_03_coverage_by_id() -> dict[str, GroundTruthCoverage]:
 
 def round_03_coverage_counts() -> dict[CoverageState, int]:
     return _count(ROUND_03_COVERAGE)
+
+
+def round_04_coverage_by_id() -> dict[str, GroundTruthCoverage]:
+    return {item.ground_truth_id: item for item in ROUND_04_COVERAGE}
+
+
+def round_04_coverage_counts() -> dict[CoverageState, int]:
+    return _count(ROUND_04_COVERAGE)
 
 
 def all_coverage_by_id() -> dict[str, GroundTruthCoverage]:
