@@ -18,17 +18,6 @@ class PipelineReadinessState(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class ResearchReadinessInput:
-    source_approved: bool
-    strategy_version_frozen: bool
-    ground_truth_ready: bool
-    blind_validation_passed: bool
-    historical_reproducible: bool
-    market_data_validated: bool
-    research_design_approved: bool
-
-
-@dataclass(frozen=True, slots=True)
 class StrategyCandidateReadinessInput:
     market_data_validated: bool
     market_context_unambiguous: bool
@@ -36,6 +25,15 @@ class StrategyCandidateReadinessInput:
     ltf_execution_state: LTFExecutionState
     blind_validation_report: BlindValidationComparisonReport | None
     historical_replay_report: HistoricalReplayGateReport | None
+
+
+@dataclass(frozen=True, slots=True)
+class ResearchReadinessInput:
+    source_approved: bool
+    strategy_version_frozen: bool
+    ground_truth_ready: bool
+    research_design_approved: bool
+    strategy: StrategyCandidateReadinessInput
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,22 +59,7 @@ class AgentPipelineCoordinator:
     evidence always blocks progression.
     """
 
-    version = "0.3.0"
-
-    def research_readiness(self, inputs: ResearchReadinessInput) -> PipelineReadinessReport:
-        blockers: list[str] = []
-        checks = (
-            (inputs.source_approved, "source approval missing"),
-            (inputs.strategy_version_frozen, "strategy version is not frozen"),
-            (inputs.ground_truth_ready, "ground-truth dataset is not ready"),
-            (inputs.blind_validation_passed, "blind independent validation has not passed"),
-            (inputs.historical_reproducible, "historical reproducibility has not passed"),
-            (inputs.market_data_validated, "market-data validation has not passed"),
-            (inputs.research_design_approved, "quant research design has not passed"),
-        )
-        blockers.extend(message for passed, message in checks if not passed)
-        state = PipelineReadinessState.RESEARCH_READY if not blockers else PipelineReadinessState.BLOCKED
-        return PipelineReadinessReport(state=state, blockers=tuple(blockers))
+    version = "0.4.0"
 
     def strategy_candidate_readiness(
         self,
@@ -114,6 +97,27 @@ class AgentPipelineCoordinator:
             if not blockers
             else PipelineReadinessState.BLOCKED
         )
+        return PipelineReadinessReport(
+            state=state,
+            blockers=tuple(blockers),
+            live_execution_authorized=False,
+        )
+
+    def research_readiness(self, inputs: ResearchReadinessInput) -> PipelineReadinessReport:
+        blockers: list[str] = []
+        checks = (
+            (inputs.source_approved, "source approval missing"),
+            (inputs.strategy_version_frozen, "strategy version is not frozen"),
+            (inputs.ground_truth_ready, "ground-truth dataset is not ready"),
+            (inputs.research_design_approved, "quant research design has not passed"),
+        )
+        blockers.extend(message for passed, message in checks if not passed)
+
+        strategy_report = self.strategy_candidate_readiness(inputs.strategy)
+        if strategy_report.state is not PipelineReadinessState.STRATEGY_CANDIDATE_READY:
+            blockers.extend(f"strategy gate: {reason}" for reason in strategy_report.blockers)
+
+        state = PipelineReadinessState.RESEARCH_READY if not blockers else PipelineReadinessState.BLOCKED
         return PipelineReadinessReport(
             state=state,
             blockers=tuple(blockers),
