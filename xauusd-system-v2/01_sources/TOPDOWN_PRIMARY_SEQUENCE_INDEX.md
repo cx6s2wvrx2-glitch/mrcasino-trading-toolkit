@@ -51,13 +51,13 @@ A screenshot is not converted into a rule merely because it exists.
 | 2023-08-21 | 9 | pending | — |
 | 2023-11-01 | 12 | processed | Round 06 |
 | 2023-11-06 | 10 | processed | Round 07 |
-| 2023-11-08 | 2 | reviewing | Round 09 candidate |
+| 2023-11-08 | 2 | processed | Round 09 |
 | 2023-11-20 | 12 | processed | Round 08 |
 | 2024-07-16 | 11 | pending | — |
 | 2024-07-24 | 7 | pending | — |
 | 2024-07-29 | 8 | pending | — |
 | 2024-07-30 | 6 | pending | — |
 
-Current processed before Round 09 completion: **34 / 188 images across 3 / 29 fully processed sequences**.
+Current processed: **36 / 188 images across 4 / 29 fully processed sequences**.
 
 This index tracks source exhaustion only. `processed` does **not** mean strategy-verified or detector-certified.
