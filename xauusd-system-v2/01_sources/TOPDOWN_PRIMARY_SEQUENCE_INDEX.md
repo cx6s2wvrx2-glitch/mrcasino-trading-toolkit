@@ -23,16 +23,17 @@ Each dated sequence is processed in this order:
 9. require green CI before moving on.
 
 A screenshot is not converted into a rule merely because it exists.
+A non-XAUUSD sequence can be inspected for source inventory, but is excluded from XAUUSD strategy ground truth unless the user explicitly approves cross-instrument evidence.
 
 ## Sequence inventory
 
 | Date | Images | Status | Ground-truth round |
 |---|---:|---|---|
-| 2021-11-21 | 5 | pending | — |
-| 2021-11-28 | 4 | pending | — |
-| 2021-11-30 | 2 | pending | — |
-| 2021-12-06 | 4 | pending | — |
-| 2021-12-12 | 7 | pending | — |
+| 2021-11-21 | 5 | processed | Round 10 |
+| 2021-11-28 | 4 | processed | Round 10 |
+| 2021-11-30 | 2 | inspected_non_xauusd_excluded | — |
+| 2021-12-06 | 4 | processed | Round 10 |
+| 2021-12-12 | 7 | processed | Round 10 |
 | 2022-01-10 | 4 | pending | — |
 | 2022-03-14 | 4 | pending | — |
 | 2022-04-03 | 5 | pending | — |
@@ -58,6 +59,7 @@ A screenshot is not converted into a rule merely because it exists.
 | 2024-07-29 | 8 | pending | — |
 | 2024-07-30 | 6 | pending | — |
 
-Current processed: **36 / 188 images across 4 / 29 fully processed sequences**.
+Current inspected/exhausted: **58 / 188 images across 9 / 29 sequences**.
+Of those 9 sequences, **8 are XAUUSD processed sequences** and **1 is a non-XAUUSD sequence inspected and excluded**.
 
 This index tracks source exhaustion only. `processed` does **not** mean strategy-verified or detector-certified.
