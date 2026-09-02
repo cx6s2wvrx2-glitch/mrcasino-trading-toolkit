@@ -6,6 +6,7 @@ from enum import StrEnum
 from .agents.data_agent import MarketDataValidationReport
 from .agents.quant_agent import QuantitativeResearchAgent, ResearchDesignReport, ResearchExperimentSpec
 from .data_snapshot import DataSnapshotManifest
+from .evidence_gate import EvidenceGateReport
 
 
 class ResearchRuntimeStatus(StrEnum):
@@ -23,6 +24,17 @@ class ResearchRuntimeReport:
     warnings: tuple[str, ...]
     data_ready: bool
     strategy_certification_ready: bool
+    strategy_certification_evidence_refs: tuple[str, ...]
+
+
+def _strategy_certification_ready(gate: EvidenceGateReport | None) -> bool:
+    return bool(
+        gate
+        and gate.gate_name == "strategy_certification"
+        and gate.passed
+        and gate.evidence_refs
+        and all(ref.strip() for ref in gate.evidence_refs)
+    )
 
 
 def prepare_research_runtime(
@@ -30,7 +42,7 @@ def prepare_research_runtime(
     spec: ResearchExperimentSpec,
     snapshot: DataSnapshotManifest,
     data_report: MarketDataValidationReport,
-    strategy_certification_ready: bool,
+    strategy_certification_gate: EvidenceGateReport | None,
     quant_agent: QuantitativeResearchAgent | None = None,
 ) -> tuple[ResearchRuntimeReport, ResearchDesignReport]:
     agent = quant_agent or QuantitativeResearchAgent()
@@ -57,15 +69,22 @@ def prepare_research_runtime(
     if snapshot.coverage_end < spec.test.end:
         blockers.append("data snapshot does not cover the end of the locked test window")
 
+    certification_ready = _strategy_certification_ready(strategy_certification_gate)
+    certification_refs = (
+        strategy_certification_gate.evidence_refs
+        if certification_ready and strategy_certification_gate is not None
+        else ()
+    )
+
     data_ready = not blockers
     if blockers:
         status = ResearchRuntimeStatus.BLOCKED
-    elif strategy_certification_ready:
+    elif certification_ready:
         status = ResearchRuntimeStatus.BACKTEST_READY
     else:
         status = ResearchRuntimeStatus.DATA_READY
         warnings.append(
-            "Data/research design is ready, but strategy certification is not ready; performance backtest remains gated."
+            "Data/research design is ready, but a provenance-bearing strategy-certification gate has not passed; performance backtest remains gated."
         )
 
     report = ResearchRuntimeReport(
@@ -75,6 +94,7 @@ def prepare_research_runtime(
         blockers=tuple(blockers),
         warnings=tuple(warnings),
         data_ready=data_ready,
-        strategy_certification_ready=strategy_certification_ready,
+        strategy_certification_ready=certification_ready,
+        strategy_certification_evidence_refs=tuple(certification_refs),
     )
     return report, design
