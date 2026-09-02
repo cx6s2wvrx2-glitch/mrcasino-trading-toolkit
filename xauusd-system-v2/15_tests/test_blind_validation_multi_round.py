@@ -17,7 +17,7 @@ class BlindValidationMultiRoundTests(unittest.TestCase):
         base = Path(__file__).parent
         cls.datasets = tuple(
             load_ground_truth(base / f"ground_truth_round_{round_no:02d}.json")
-            for round_no in (2, 3, 4, 5, 6, 7, 8)
+            for round_no in (2, 3, 4, 5, 6, 7, 8, 9)
         )
         cls.packet = build_blind_packet_multi(cls.datasets)
 
@@ -32,10 +32,10 @@ class BlindValidationMultiRoundTests(unittest.TestCase):
             ambiguities=() if label else ("abstain",),
         )
 
-    def test_rounds_02_to_08_create_exactly_66_blind_cases(self) -> None:
-        self.assertEqual([len(dataset.vectors) for dataset in self.datasets], [20, 7, 6, 5, 8, 10, 10])
-        self.assertEqual(len(self.packet.cases), 66)
-        self.assertEqual(len({case.vector_id for case in self.packet.cases}), 66)
+    def test_rounds_02_to_09_create_exactly_70_blind_cases(self) -> None:
+        self.assertEqual([len(dataset.vectors) for dataset in self.datasets], [20, 7, 6, 5, 8, 10, 10, 4])
+        self.assertEqual(len(self.packet.cases), 70)
+        self.assertEqual(len({case.vector_id for case in self.packet.cases}), 70)
 
     def test_case_schema_contains_no_answer_or_analyst_fields(self) -> None:
         fields = {field.name for field in dataclasses.fields(self.packet.cases[0])}
@@ -61,7 +61,7 @@ class BlindValidationMultiRoundTests(unittest.TestCase):
         self.assertEqual(self.packet.taxonomy, expected)
         self.assertGreater(len(self.packet.taxonomy), 2)
 
-    def test_clean_66_case_predictions_compare_as_all_agree_but_never_promote(self) -> None:
+    def test_clean_70_case_predictions_compare_as_all_agree_but_never_promote(self) -> None:
         decisions = tuple(
             self._decision(vector.id, vector.source_locator, vector.expected_label)
             for dataset in self.datasets
@@ -71,8 +71,8 @@ class BlindValidationMultiRoundTests(unittest.TestCase):
             datasets=self.datasets,
             batch=BlindValidationBatchResult(decisions=decisions),
         )
-        self.assertEqual(report.total, 66)
-        self.assertEqual(report.agree, 66)
+        self.assertEqual(report.total, 70)
+        self.assertEqual(report.agree, 70)
         self.assertEqual(report.disagree, 0)
         self.assertEqual(report.ambiguous, 0)
         self.assertTrue(report.all_agree)
@@ -88,8 +88,8 @@ class BlindValidationMultiRoundTests(unittest.TestCase):
             datasets=self.datasets,
             batch=BlindValidationBatchResult(decisions=decisions),
         )
-        self.assertEqual(report.total, 66)
-        self.assertEqual(report.agree, 65)
+        self.assertEqual(report.total, 70)
+        self.assertEqual(report.agree, 69)
         self.assertEqual(report.ambiguous, 1)
         self.assertFalse(report.all_agree)
 
