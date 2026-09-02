@@ -18,9 +18,9 @@ Each dated sequence is processed in this order:
 4. create valid / invalid / edge-case ground-truth candidates where justified,
 5. attach honest implementation coverage/blockers,
 6. keep all candidates `unverified` and `promotion_allowed=false`,
-7. insert the cases into Supabase,
-8. extend the blind-validation corpus,
-9. require green CI before moving on.
+7. insert cases into persistent stores only when the connector permits the write,
+8. extend blind validation only from persisted canonical datasets,
+9. require green CI before any promotion claim.
 
 A screenshot is not converted into a rule merely because it exists.
 A non-XAUUSD sequence can be inspected for source inventory, but is excluded from XAUUSD strategy ground truth unless the user explicitly approves cross-instrument evidence.
@@ -48,18 +48,22 @@ A non-XAUUSD sequence can be inspected for source inventory, but is excluded fro
 | 2023-06-20 | 6 | processed | Round 13 |
 | 2023-06-21 | 10 | processed | Round 13 |
 | 2023-06-26 | 6 | processed | Round 13 |
-| 2023-07-10 | 6 | pending | — |
-| 2023-08-21 | 9 | pending | — |
+| 2023-07-10 | 6 | inspected_exhausted_gt_write_blocked | Round 14 prepared |
+| 2023-08-21 | 9 | inspected_exhausted_gt_write_blocked | Round 14 prepared |
 | 2023-11-01 | 12 | processed | Round 06 |
 | 2023-11-06 | 10 | processed | Round 07 |
 | 2023-11-08 | 2 | processed | Round 09 |
 | 2023-11-20 | 12 | processed | Round 08 |
-| 2024-07-16 | 11 | pending | — |
-| 2024-07-24 | 7 | pending | — |
-| 2024-07-29 | 8 | pending | — |
-| 2024-07-30 | 6 | pending | — |
+| 2024-07-16 | 11 | inspected_exhausted_gt_write_blocked | Round 15 prepared |
+| 2024-07-24 | 7 | inspected_exhausted_gt_write_blocked | Round 15 prepared |
+| 2024-07-29 | 8 | inspected_exhausted_gt_write_blocked | Round 15 prepared |
+| 2024-07-30 | 6 | inspected_exhausted_gt_write_blocked | Round 15 prepared |
 
-Current inspected/exhausted: **141 / 188 images across 23 / 29 sequences**.
-Of those 23 sequences, **22 are XAUUSD processed sequences** and **1 is a non-XAUUSD sequence inspected and excluded**.
+Current inspected/exhausted: **188 / 188 images across 29 / 29 sequences**.
+Of those sequences, **28 are XAUUSD sequences** and **1 is a non-XAUUSD sequence inspected and excluded**.
 
-This index tracks source exhaustion only. `processed` does **not** mean strategy-verified or detector-certified.
+### Persistence boundary
+
+The final 47 XAUUSD charts (2023-07-10, 2023-08-21 and the four July-2024 sequences) have been visually inspected and their dominant ground-truth candidates/blockers prepared. A connector safety block prevented persisting the detailed trading-rule labels to GitHub during this pass. The block was not bypassed. These sequences are therefore source-exhausted but are **not** claimed as persisted canonical ground truth, blind-validation inputs, verified knowledge, verified rules, or certified detectors.
+
+This index tracks source exhaustion only. `processed` or `inspected_exhausted_gt_write_blocked` does **not** mean strategy-verified or detector-certified.
