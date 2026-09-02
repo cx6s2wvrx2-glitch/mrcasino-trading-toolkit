@@ -16,6 +16,7 @@ xauusd-v2-agent06-packet = "xauusd_v2.agent06_packet_cli:main"
 xauusd-v2-agent06-readiness = "xauusd_v2.agent06_readiness_cli:main"
 xauusd-v2-agent06-run = "xauusd_v2.agent06_run_cli:main"
 xauusd-v2-agent06-compare = "xauusd_v2.agent06_compare_cli:main"
+xauusd-v2-agent06-local = "xauusd_v2.agent06_local_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
