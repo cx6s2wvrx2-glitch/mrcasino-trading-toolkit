@@ -11,6 +11,19 @@ This file records only claims that are explicitly written on the approved primar
 
 The older episodes with visual markings but no exact paired text remain `visual_evidence_inspected / semantic_pairing_pending`.
 
+## 2022-05-18 — explicit historical execution/management candidate
+
+### PAR-VIS-20220518-01 — zone rejection + 15m FU + historical 50% partial close
+Source image: `IMG_20220518_215519_747.jpg`
+
+Explicit source annotation includes:
+- `perfect rejection from zone`,
+- `15 min FU`,
+- `50 % partials closed`.
+
+Use: primary historical example that a zone reaction and 15m FU were used together in the source scenario, with a 50% partial close recorded as what happened in that trade-management example.
+Do not infer: a universal 50% partial-taking rule, a guaranteed reaction, a fixed management threshold, or a general entry rule from this single screenshot.
+
 ## 2022-12-15 — explicit annotated candidates
 
 ### PAR-VIS-20221215-01 — zone reaction as first reason for buys, with broker caveat
