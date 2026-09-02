@@ -30,8 +30,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="xauusd-v2-replay-readiness",
         description=(
-            "Verify one persisted MT5 snapshot and evaluate one registered source episode "
-            "for historical component replay. No source metadata is inferred."
+            "Verify one persisted MT5 snapshot and evaluate broker/chart alignment for one "
+            "registered source episode. Stage timestamp certification is deliberately not "
+            "accepted as a bare CLI assertion, so readiness remains fail-closed until a "
+            "machine-verifiable certification artifact exists."
         ),
     )
     parser.add_argument("--candidate-id", required=True)
@@ -41,14 +43,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--timeframe-seconds", required=True, type=int, help="Explicit source-chart timeframe")
     parser.add_argument("--window-start", required=True, type=_aware_datetime)
     parser.add_argument("--window-end", required=True, type=_aware_datetime)
-    parser.add_argument(
-        "--stage-timestamps-certified",
-        action="store_true",
-        help=(
-            "Assert only when each required R-143 stage has independently certified "
-            "occurred_at/available_at timestamps. Omit to fail closed."
-        ),
-    )
     return parser
 
 
@@ -103,7 +97,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         readiness = evaluate_replay_candidate_readiness(
             candidate=candidate,
             alignment=alignment,
-            stage_timestamps_certified=True if args.stage_timestamps_certified else None,
+            stage_timestamps_certified=None,
         )
     except (MT5SnapshotLoadError, OSError, ValueError) as exc:
         print(
@@ -134,7 +128,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "alignment_state": alignment.state.value,
         "aligned": alignment.aligned,
         "alignment_reason": alignment.reason,
-        "stage_timestamps_certified": bool(args.stage_timestamps_certified),
+        "stage_timestamps_certified": False,
+        "stage_timestamp_certification_source": None,
         "readiness_state": readiness.state.value,
         "replay_ready": readiness.replay_ready,
         "readiness_reason": readiness.reason,
