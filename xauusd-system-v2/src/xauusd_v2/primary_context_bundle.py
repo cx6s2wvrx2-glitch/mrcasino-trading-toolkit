@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,9 @@ _FORBIDDEN_KEYS = {
     "ground_truth_answer",
     "promotion_allowed",
 }
+_PAGE_LOCATOR = re.compile(
+    r"^(v2_sources:[0-9a-fA-F-]{36}#page:[1-9][0-9]*)(?:#.+)?$"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,6 +108,22 @@ def load_primary_context_bundle(path: str | Path) -> PrimaryContextBundle:
     return PrimaryContextBundle(version=version, entries=tuple(entries))
 
 
+def _canonical_page_locator(locator: str) -> str | None:
+    """Return the exact page-scoped source locator for safe full-page fallback.
+
+    A case may point at a visual/text/exercise fragment on a PDF page. If the bundle
+    contains the full original page but not a cropped fragment, resolving the full page
+    is source-preserving and does not infer any answer. Fallback is deliberately limited
+    to UUID-backed `v2_sources:#page:` locators; all other locator families remain exact.
+    """
+
+    match = _PAGE_LOCATOR.fullmatch(locator)
+    if match is None:
+        return None
+    canonical = match.group(1)
+    return None if canonical == locator else canonical
+
+
 class FileSystemPrimaryContextBundleResolver:
     """Resolve primary source payloads from a local immutable-ish evidence bundle.
 
@@ -130,6 +150,10 @@ class FileSystemPrimaryContextBundleResolver:
     def resolve_payload(self, source_locator: str) -> PrimaryContextPayload:
         locator = source_locator.strip()
         entry = self.entries.get(locator)
+        if entry is None:
+            page_locator = _canonical_page_locator(locator)
+            if page_locator is not None:
+                entry = self.entries.get(page_locator)
         if entry is None:
             raise LookupError(f"primary context bundle has no entry for {locator}")
 
