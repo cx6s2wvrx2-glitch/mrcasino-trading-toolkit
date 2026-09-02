@@ -65,6 +65,13 @@ class AnthropicModelRunnerTests(unittest.TestCase):
             AnthropicRunnerConfig.from_environment({})
         with self.assertRaisesRegex(AnthropicRunnerError, "XAUUSD_AGENT06_ANTHROPIC_MODEL"):
             AnthropicRunnerConfig.from_environment({"ANTHROPIC_API_KEY": "key"})
+        default_config = AnthropicRunnerConfig.from_environment(
+            {
+                "ANTHROPIC_API_KEY": "key",
+                "XAUUSD_AGENT06_ANTHROPIC_MODEL": "model-name",
+            }
+        )
+        self.assertEqual(default_config.max_tokens, 16384)
         config = AnthropicRunnerConfig.from_environment(
             {
                 "ANTHROPIC_API_KEY": "key",
@@ -97,7 +104,7 @@ class AnthropicModelRunnerTests(unittest.TestCase):
         self.assertNotIn("minimum", confidence_schema)
         self.assertNotIn("maximum", confidence_schema)
 
-    def test_173_allowed_labels_use_compact_index_schema_not_large_enum(self) -> None:
+    def test_173_allowed_labels_use_compact_code_schema_not_large_enum(self) -> None:
         labels = [f"taxonomy_label_{index:03d}_with_realistic_suffix" for index in range(173)]
         payload = build_anthropic_request(
             {
@@ -110,24 +117,26 @@ class AnthropicModelRunnerTests(unittest.TestCase):
         schema = payload["output_config"]["format"]["schema"]
         self.assertEqual(
             set(schema["required"]),
-            {"predicted_label_index", "confidence", "evidence", "ambiguities"},
+            {"predicted_label_code", "confidence", "evidence", "ambiguities"},
         )
-        index_schema = schema["properties"]["predicted_label_index"]
-        self.assertEqual(index_schema["type"], ["integer", "null"])
-        self.assertNotIn("enum", index_schema)
+        code_schema = schema["properties"]["predicted_label_code"]
+        self.assertEqual(code_schema["type"], ["string", "null"])
+        self.assertNotIn("enum", code_schema)
         self.assertNotIn("predicted_label", schema["properties"])
         schema_text = json.dumps(schema)
         self.assertNotIn(labels[0], schema_text)
         self.assertNotIn(labels[-1], schema_text)
-        content = payload["messages"][0]["content"]
-        self.assertIn("ZERO-BASED", content[-1]["text"])
-        self.assertIn("predicted_label_index", content[-1]["text"])
+        transport = payload["messages"][0]["content"][-1]["text"]
+        self.assertIn("predicted_label_code", transport)
+        self.assertIn(f"L001 => \"{labels[0]}\"", transport)
+        self.assertIn(f"L173 => \"{labels[-1]}\"", transport)
+        self.assertIn("Do not count positions", transport)
 
-    def test_indexed_response_maps_back_to_exact_taxonomy_label(self) -> None:
+    def test_coded_response_maps_back_to_exact_taxonomy_label(self) -> None:
         labels = ("att_fu_hcs", "hcs_zone_respected_once", "no_trade")
         text = json.dumps(
             {
-                "predicted_label_index": 1,
+                "predicted_label_code": "L002",
                 "confidence": 0.8,
                 "evidence": ["source evidence"],
                 "ambiguities": [],
@@ -137,22 +146,35 @@ class AnthropicModelRunnerTests(unittest.TestCase):
         self.assertEqual(result["predicted_label"], "hcs_zone_respected_once")
         self.assertNotEqual(result["predicted_label"], "att_fu_hcs_hcs_zone_respected_once")
 
-    def test_out_of_range_taxonomy_index_is_rejected_fail_closed(self) -> None:
-        labels = ("att_fu_hcs", "hcs_zone_respected_once", "no_trade")
+    def test_out_of_range_taxonomy_code_becomes_fail_closed_abstention(self) -> None:
+        labels = tuple(f"label_{index:03d}" for index in range(173))
         text = json.dumps(
             {
-                "predicted_label_index": 3,
+                "predicted_label_code": "L174",
                 "confidence": 0.8,
                 "evidence": ["source evidence"],
                 "ambiguities": [],
             }
         )
-        with self.assertRaisesRegex(AnthropicRunnerError, "outside frozen taxonomy") as raised:
-            parse_anthropic_response(self.decision_response(text=text), allowed_labels=labels)
-        self.assertEqual(
-            _safe_runner_error_code(raised.exception),
-            "ANTHROPIC_LABEL_INDEX_OUTSIDE_TAXONOMY",
+        result = parse_anthropic_response(self.decision_response(text=text), allowed_labels=labels)
+        self.assertIsNone(result["predicted_label"])
+        self.assertEqual(result["confidence"], 0.0)
+        self.assertIn("fail-closed abstention", result["ambiguities"][-1])
+
+    def test_malformed_taxonomy_code_becomes_fail_closed_abstention(self) -> None:
+        labels = ("att_fu_hcs", "hcs_zone_respected_once", "no_trade")
+        text = json.dumps(
+            {
+                "predicted_label_code": "2",
+                "confidence": 0.8,
+                "evidence": ["source evidence"],
+                "ambiguities": [],
+            }
         )
+        result = parse_anthropic_response(self.decision_response(text=text), allowed_labels=labels)
+        self.assertIsNone(result["predicted_label"])
+        self.assertEqual(result["confidence"], 0.0)
+        self.assertTrue(result["ambiguities"])
 
     def test_invalid_allowed_label_payload_fails_before_provider_call(self) -> None:
         with self.assertRaisesRegex(AnthropicRunnerError, "at least two"):
@@ -218,10 +240,10 @@ class AnthropicModelRunnerTests(unittest.TestCase):
         self.assertEqual(request.full_url, ANTHROPIC_MESSAGES_URL)
         self.assertNotIn("secret-test-key", json.dumps(result))
 
-    def test_call_anthropic_maps_indexed_provider_response_before_stdout_contract(self) -> None:
+    def test_call_anthropic_maps_coded_provider_response_before_stdout_contract(self) -> None:
         text = json.dumps(
             {
-                "predicted_label_index": 1,
+                "predicted_label_code": "L002",
                 "confidence": 0.75,
                 "evidence": ["source visual evidence"],
                 "ambiguities": [],
@@ -238,7 +260,7 @@ class AnthropicModelRunnerTests(unittest.TestCase):
                 self.config(),
             )
         self.assertEqual(result["predicted_label"], "candidate-c")
-        self.assertNotIn("predicted_label_index", result)
+        self.assertNotIn("predicted_label_code", result)
 
     def test_confidence_range_is_enforced_locally_after_provider_response(self) -> None:
         text = json.dumps(
