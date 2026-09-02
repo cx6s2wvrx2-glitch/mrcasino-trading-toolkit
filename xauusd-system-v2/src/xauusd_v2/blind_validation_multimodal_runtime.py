@@ -3,9 +3,9 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Mapping
 
-from .agents.validation_agent import IndependentValidationAgent
+from .agents.validation_agent import IndependentValidationAgent, IndependentValidationDecision
 from .blind_validation_packet import BlindValidationPacket
 from .blind_validation_runner import BlindValidationBatchResult
 from .blind_validation_runtime import blind_packet_sha256
@@ -44,6 +44,38 @@ class MultimodalBlindValidationRuntimeManifest:
     promotion_allowed: bool = False
 
 
+@dataclass(frozen=True, slots=True)
+class ResumableBlindCase:
+    decision: IndependentValidationDecision
+    audit: MultimodalRuntimeCaseAudit
+
+
+def _validate_resumed_case(
+    *,
+    resumed: ResumableBlindCase,
+    vector_id: str,
+    source_locator: str,
+    text_sha: str | None,
+    image_fingerprint: tuple[tuple[str, str, int], ...],
+    taxonomy: tuple[str, ...],
+) -> None:
+    decision = resumed.decision
+    audit = resumed.audit
+    if decision.vector_id != vector_id or audit.vector_id != vector_id:
+        raise ValueError(f"resume checkpoint vector mismatch for {vector_id}")
+    if decision.source_locator != source_locator or audit.source_locator != source_locator:
+        raise ValueError(f"resume checkpoint locator mismatch for {vector_id}")
+    if decision.predicted_label is not None and decision.predicted_label not in taxonomy:
+        raise ValueError(f"resume checkpoint label is outside frozen taxonomy for {vector_id}")
+    if audit.predicted_label != decision.predicted_label or audit.abstained != decision.abstained:
+        raise ValueError(f"resume checkpoint decision/audit mismatch for {vector_id}")
+    if audit.source_text_sha256 != text_sha:
+        raise ValueError(f"resume checkpoint primary text changed for {vector_id}")
+    checkpoint_images = tuple((item.mime_type, item.sha256, item.size_bytes) for item in audit.images)
+    if checkpoint_images != image_fingerprint:
+        raise ValueError(f"resume checkpoint primary images changed for {vector_id}")
+
+
 def execute_multimodal_blind_validation_runtime(
     *,
     run_id: str,
@@ -52,6 +84,9 @@ def execute_multimodal_blind_validation_runtime(
     packet: BlindValidationPacket,
     agent: IndependentValidationAgent,
     source_context_resolver: Callable[[str], PrimaryContextPayload],
+    resume_cases: Mapping[str, ResumableBlindCase] | None = None,
+    on_case_completed: Callable[[int, int, IndependentValidationDecision, MultimodalRuntimeCaseAudit], None]
+    | None = None,
 ) -> tuple[BlindValidationBatchResult, MultimodalBlindValidationRuntimeManifest]:
     normalized_run_id = run_id.strip()
     provider = model_provider.strip()
@@ -65,11 +100,18 @@ def execute_multimodal_blind_validation_runtime(
     if not packet.cases:
         raise ValueError("blind packet must contain cases")
 
+    resume = dict(resume_cases or {})
+    packet_ids = {case.vector_id for case in packet.cases}
+    unknown_resume_ids = set(resume) - packet_ids
+    if unknown_resume_ids:
+        raise ValueError("resume checkpoint contains vector IDs outside frozen packet")
+
     decisions = []
     audits: list[MultimodalRuntimeCaseAudit] = []
     fingerprints: dict[str, tuple[str | None, tuple[tuple[str, str, int], ...]]] = {}
+    total = len(packet.cases)
 
-    for case in packet.cases:
+    for position, case in enumerate(packet.cases, start=1):
         payload = source_context_resolver(case.source_locator).normalized()
         text_sha = hashlib.sha256(payload.text.encode("utf-8")).hexdigest() if payload.text else None
         image_fingerprint = tuple(
@@ -81,15 +123,26 @@ def execute_multimodal_blind_validation_runtime(
             raise ValueError(f"primary context changed within blind run for {case.source_locator}")
         fingerprints[case.source_locator] = fingerprint
 
-        decision, _ = agent.validate_multimodal(
-            vector_id=case.vector_id,
-            source_locator=case.source_locator,
-            source_context=payload,
-            allowed_labels=packet.taxonomy,
-        )
-        decisions.append(decision)
-        audits.append(
-            MultimodalRuntimeCaseAudit(
+        resumed = resume.get(case.vector_id)
+        if resumed is not None:
+            _validate_resumed_case(
+                resumed=resumed,
+                vector_id=case.vector_id,
+                source_locator=case.source_locator,
+                text_sha=text_sha,
+                image_fingerprint=image_fingerprint,
+                taxonomy=packet.taxonomy,
+            )
+            decision = resumed.decision
+            audit = resumed.audit
+        else:
+            decision, _ = agent.validate_multimodal(
+                vector_id=case.vector_id,
+                source_locator=case.source_locator,
+                source_context=payload,
+                allowed_labels=packet.taxonomy,
+            )
+            audit = MultimodalRuntimeCaseAudit(
                 vector_id=case.vector_id,
                 source_locator=case.source_locator,
                 source_text_sha256=text_sha,
@@ -104,7 +157,11 @@ def execute_multimodal_blind_validation_runtime(
                 predicted_label=decision.predicted_label,
                 abstained=decision.abstained,
             )
-        )
+            if on_case_completed is not None:
+                on_case_completed(position, total, decision, audit)
+
+        decisions.append(decision)
+        audits.append(audit)
 
     taxonomy_encoded = json.dumps(
         list(packet.taxonomy), sort_keys=True, separators=(",", ":"), ensure_ascii=False
