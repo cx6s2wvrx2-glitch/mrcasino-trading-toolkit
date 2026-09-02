@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from xauusd_v2.agent06_run_cli import main
+from xauusd_v2.agent06_run_cli import _parser, main
 from xauusd_v2.blind_validation_packet import BlindValidationCase, BlindValidationPacket
 from xauusd_v2.blind_validation_packet_io import write_blind_packet
 
@@ -53,6 +53,22 @@ class Agent06RunCliTests(unittest.TestCase):
             "assert 'expected_label' not in json.dumps(request)\n"
             "json.dump({'predicted_label':'label_a','confidence':0.75,'evidence':['primary'],'ambiguities':[]},sys.stdout)\n",
             encoding="utf-8",
+        )
+
+    def test_command_remainder_preserves_python_module_flags(self) -> None:
+        args = _parser().parse_args([
+            "--packet", "packet.json",
+            "--bundle-root", "bundle",
+            "--manifest", "manifest.json",
+            "--provider", "anthropic",
+            "--model", "claude-sonnet-5",
+            "--run-id", "run-module",
+            "--output-dir", "output",
+            "--command", sys.executable, "-m", "xauusd_v2.anthropic_model_runner",
+        ])
+        self.assertEqual(
+            args.command,
+            [sys.executable, "-m", "xauusd_v2.anthropic_model_runner"],
         )
 
     def test_blind_run_writes_outputs_without_ground_truth_or_comparison(self) -> None:
