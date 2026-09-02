@@ -1,0 +1,65 @@
+{
+  "dataset": "XAUUSD V2 Ground Truth Round 03",
+  "date": "2026-09-02",
+  "status": "candidate_not_verified",
+  "source_episode": "approved primary Mr Casino PDFs with explicit visual labels",
+  "promotion_allowed": false,
+  "test_vectors": [
+    {
+      "id": "GT-R03-001",
+      "source_locator": "v2_sources:a338728f-1796-4665-b678-774ea9f9f031#page:4",
+      "expected_label": "ideal_strong_fu_qualitative",
+      "expected_class": "valid",
+      "evidence": ["page explicitly labels the chart as an ideal FU example", "source text identifies the example as Strong FU", "source describes strong close with little/no rejection"],
+      "forbidden_inference": "Do not derive a universal numeric Strong-FU body/rejection threshold from this single ideal chart."
+    },
+    {
+      "id": "GT-R03-002",
+      "source_locator": "v2_sources:ec297fcb-5693-4aa6-857b-d27ae1dd1143#page:2#visual:weekly",
+      "expected_label": "fu_negation_visual_weekly",
+      "expected_class": "valid",
+      "evidence": ["primary page explicitly captions the upper chart Negation on Weekly XAUUSD W1"],
+      "forbidden_inference": "Do not infer a complete universal raw negation geometry from one weekly visual."
+    },
+    {
+      "id": "GT-R03-003",
+      "source_locator": "v2_sources:ec297fcb-5693-4aa6-857b-d27ae1dd1143#page:2#visual:h1",
+      "expected_label": "fu_negation_visual_h1",
+      "expected_class": "valid",
+      "evidence": ["primary page explicitly captions the lower chart Negation on 1hr XAUUSD H1"],
+      "forbidden_inference": "Do not assume the same raw candle distances/tolerances apply to every timeframe."
+    },
+    {
+      "id": "GT-R03-004",
+      "source_locator": "v2_sources:2c5fc1ca-e581-4c28-83c3-2843e227af68#page:2#visual:m5",
+      "expected_label": "hcs_visual_m5",
+      "expected_class": "valid",
+      "evidence": ["primary page explicitly captions the upper chart HCS on 5min XAUUSD M5"],
+      "forbidden_inference": "Do not label the individual circled HCS components Strong/ATT/negation unless the source explicitly identifies their component classes."
+    },
+    {
+      "id": "GT-R03-005",
+      "source_locator": "v2_sources:2c5fc1ca-e581-4c28-83c3-2843e227af68#page:2#visual:h1",
+      "expected_label": "hcs_visual_h1",
+      "expected_class": "valid",
+      "evidence": ["primary page explicitly captions the lower chart HCS on 1hr XAUUSD H1"],
+      "forbidden_inference": "Do not label the individual circled HCS components Strong/ATT/negation unless the source explicitly identifies their component classes."
+    },
+    {
+      "id": "GT-R03-006",
+      "source_locator": "v2_sources:47c7d97d-a873-43f9-b4fc-b0fabbd47ba2#page:2#visual:h1",
+      "expected_label": "imbalanced_candle_visual_h1",
+      "expected_class": "valid",
+      "evidence": ["primary page explicitly captions the upper chart Imbalance 1hr XAUUSD H1", "same source states the main type traded is an imbalanced candle"],
+      "forbidden_inference": "Do not promote helper open==low/open==high equality to canonical geometry until broker-quality precision validation supports it."
+    },
+    {
+      "id": "GT-R03-007",
+      "source_locator": "v2_sources:47c7d97d-a873-43f9-b4fc-b0fabbd47ba2#page:2#visual:m5",
+      "expected_label": "classic_imbalance_visual_m5",
+      "expected_class": "valid",
+      "evidence": ["primary page explicitly captions the lower chart Classic imbalance 5min XAUUSD M5", "the source presents it separately from the H1 Imbalance example"],
+      "forbidden_inference": "Do not merge classic imbalance/FVG geometry with the imbalanced-candle construct."
+    }
+  ]
+}
