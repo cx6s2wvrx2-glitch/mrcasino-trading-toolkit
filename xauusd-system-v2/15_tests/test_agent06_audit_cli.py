@@ -28,7 +28,7 @@ class Agent06AuditCliTests(unittest.TestCase):
     def _sha(path: Path) -> str:
         return hashlib.sha256(path.read_bytes()).hexdigest()
 
-    def _build_valid_run(self) -> None:
+    def _build_valid_run(self, *, resumed: bool = False) -> None:
         decisions = [
             {
                 "vector_id": "GT-T-001",
@@ -180,6 +180,7 @@ class Agent06AuditCliTests(unittest.TestCase):
             "comparison_path": str(comparison_path.resolve()),
             "api_key_written_to_disk": False,
             "blind_process_loaded_ground_truth": False,
+            "resumed": resumed,
             "promotion_allowed": False,
         }
         self._write(self.root / "agent06_local_pipeline_summary.json", summary)
@@ -198,6 +199,18 @@ class Agent06AuditCliTests(unittest.TestCase):
         self.assertEqual(report["runtime_abstained_count"], 1)
         self.assertEqual(report["runtime_image_case_count"], 2)
         self.assertEqual(report["ambiguous"], 1)
+        self.assertEqual(report["blockers"], [])
+
+    def test_complete_resumed_run_is_audited_by_final_artifacts(self) -> None:
+        self._build_valid_run(resumed=True)
+        report = agent06_audit_cli.audit_agent06_run(
+            run_root=self.root,
+            expected_case_count=3,
+            expected_repo_commit=self.repo_commit,
+        )
+        self.assertEqual(report["status"], "AUDIT_PASS")
+        self.assertTrue(report["artifact_integrity_passed"])
+        self.assertFalse(report["promotion_allowed"])
         self.assertEqual(report["blockers"], [])
 
     def test_tampered_predictions_are_detected_against_frozen_hash(self) -> None:
@@ -271,9 +284,7 @@ class Agent06AuditCliTests(unittest.TestCase):
         self._write(path, payload)
         report = agent06_audit_cli.audit_agent06_run(run_root=self.root, expected_case_count=3)
         self.assertEqual(report["status"], "AUDIT_FAIL")
-        self.assertTrue(
-            any("leaks path-like fields" in blocker for blocker in report["blockers"])
-        )
+        self.assertTrue(any("leaks path-like fields" in blocker for blocker in report["blockers"]))
 
     def test_runtime_image_hash_and_size_are_validated(self) -> None:
         self._build_valid_run()
