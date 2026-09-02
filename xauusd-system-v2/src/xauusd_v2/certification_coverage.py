@@ -56,7 +56,7 @@ ROUND_03_COVERAGE: tuple[GroundTruthCoverage, ...] = (
 )
 
 ROUND_04_COVERAGE: tuple[GroundTruthCoverage, ...] = (
-    GroundTruthCoverage("GT-R04-001", CoverageState.PARTIAL, ("hcs_semantic", "fu_completion"), "explicit H4 FU-retest visual lacks a machine-labelled retest boundary and does not resolve R-54 fib orientation"),
+    GroundTruthCoverage("GT-R04-001", CoverageState.PARTIAL, ("hcs_semantic", "fu_completion", "fu_retest_quality"), "explicit H4 FU-retest visual now has source-backed wick-quality semantics, but the numeric >70% full-FU branch remains blocked because R-75 does not resolve the fib 0/100 orientation"),
     GroundTruthCoverage("GT-R04-002", CoverageState.PARTIAL, ("zone_geometry", "candidate_detectors.zone_lifecycle"), "older classic OB+ATT-FU+real-FU baseline must remain distinct from later Reflection zone geometry until cross-version certification"),
     GroundTruthCoverage("GT-R04-003", CoverageState.PARTIAL, ("candidate_detectors.zone_lifecycle",), "FU-wick respected visual is explicit but exact raw reaction/rejection boundary is not machine-labelled"),
     GroundTruthCoverage("GT-R04-004", CoverageState.PARTIAL, ("hcs_semantic",), "source gives qualitative HCS > ordinary OB+FU ordering; no numeric zone-strength model is certified"),
