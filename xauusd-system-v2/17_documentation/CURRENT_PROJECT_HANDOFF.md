@@ -21,14 +21,14 @@ Supabase project: `mr-casino` (`wuhrhlzabiuudswktcvk`)
 
 ## Current verified technical checkpoint
 
-Latest fully verified code checkpoint before this documentation update:
-- branch head: `ac7932b154ce9b83d23e26e256ed20b2051622e3`
-- GitHub Actions run: `33651211458`
-- job: `100318394777`
+Latest fully verified code checkpoint before these documentation-only commits:
+- branch head: `7ab43d2d3d9fce430df789d14764de277a08c120`
+- GitHub Actions run: `33652428144`
+- job: `100322518837`
 - Python: 3.12
-- result: **614 / 614 tests PASS**
+- result: **618 / 618 tests PASS**
 
-This handoff update itself creates a newer documentation commit and therefore another CI run. In every fresh continuation, verify the live branch head and latest XAUUSD V2 CI before modifying anything.
+The subsequent runbook/handoff documentation commits trigger newer CI runs. In every fresh continuation, verify the live branch head and latest XAUUSD V2 CI before modifying anything.
 
 ## Live Supabase snapshot checked 2026-09-02
 
@@ -90,7 +90,8 @@ Implemented:
 - Agent-06 readiness gate;
 - direct Anthropic Messages API multimodal runner behind the provider-neutral command boundary;
 - strict loader for frozen blind prediction files;
-- deterministic post-run comparison pipeline.
+- deterministic post-run comparison pipeline;
+- secure one-command local orchestration path that keeps private evidence/secrets outside the public repository.
 
 ### Strong blind-process separation
 
@@ -119,6 +120,26 @@ The provider process is no longer merely prevented from receiving answer fields 
 
 This materially strengthens independence/leakage control. Unit/infrastructure tests still do **not** count as a real independent validation run.
 
+### One-command local orchestration
+
+`xauusd-v2-agent06-local` is the preferred first real-run entry point for a user-controlled machine with provider network access.
+
+It:
+- requires the private bundle outside the public Git repository;
+- requires its private work root outside the public repository;
+- verifies the exact canonical ZIP SHA-256 and primary-context manifest SHA-256;
+- safely extracts the ZIP and rejects path traversal/symlinks;
+- strips Anthropic secret/model environment variables from packet-build and comparison subprocesses;
+- obtains the API key from a secure environment variable or hidden terminal prompt;
+- exposes the credential only to the isolated blind-provider subprocess;
+- freezes/hashes predictions and runtime manifest before comparison;
+- runs deterministic ground-truth comparison only afterward;
+- never writes the API key to disk;
+- cleans temporary extracted source staging;
+- defaults private output to `~/.xauusd-agent06`.
+
+Regression tests prove the secret is absent from packet-build/comparison subprocess environments and persisted summaries. The initial orchestration-test mock bug was fixed without weakening any safety gate; final suite is 618/618 PASS.
+
 Relevant code:
 - `src/xauusd_v2/blind_validation_packet.py`
 - `src/xauusd_v2/blind_validation_packet_io.py`
@@ -128,6 +149,7 @@ Relevant code:
 - `src/xauusd_v2/agent06_run_cli.py`
 - `src/xauusd_v2/blind_validation_results_io.py`
 - `src/xauusd_v2/agent06_compare_cli.py`
+- `src/xauusd_v2/agent06_local_cli.py`
 - `src/xauusd_v2/primary_context_payload.py`
 - `src/xauusd_v2/primary_context_bundle.py`
 - `src/xauusd_v2/topdown_primary_archive.py`
@@ -145,6 +167,7 @@ Package CLIs:
 - `xauusd-v2-agent06-readiness`
 - `xauusd-v2-agent06-run`
 - `xauusd-v2-agent06-compare`
+- `xauusd-v2-agent06-local`
 - `xauusd-v2-ingest-mt5`
 
 Canonical secure run procedure:
@@ -252,28 +275,39 @@ Do **not** commit this binary evidence bundle to the public GitHub repository.
 
 ## Current real Agent-06 blocker
 
-Source recovery, persistent private evidence, provider-wrapper engineering, readiness, blind-process isolation and post-run comparator are implemented.
+Source recovery, persistent private evidence, provider-wrapper engineering, readiness, blind-process isolation, post-run comparator and the one-command local runner are implemented.
 
-The remaining hard blocker is now a **real secure execution environment** containing all of the following at the same time:
+The remaining hard blocker is now the unavoidable external ingredient: a **real secure execution environment** containing all of the following at the same time:
 1. the exact tested XAUUSD V2 code;
 2. the private evidence bundle kept outside the public repo;
 3. network access to the real Anthropic API;
-4. a real Anthropic credential supplied securely as `ANTHROPIC_API_KEY`;
-5. explicit model metadata `XAUUSD_AGENT06_ANTHROPIC_MODEL=claude-sonnet-5` (after final model-status recheck).
+4. a real Anthropic credential supplied securely as `ANTHROPIC_API_KEY` or entered into the local runner's hidden prompt;
+5. explicit model metadata `claude-sonnet-5` after final model-status recheck.
 
 The current ChatGPT execution environment does not expose `ANTHROPIC_API_KEY`, and no Anthropic/Claude connector/plugin is available. GitHub Actions cannot consume the ChatGPT private Library bundle without deliberately moving that private source material into another secure store, and the bundle must not be uploaded to this public repository.
 
 Therefore the next real provider call must not be faked or simulated here.
 
-When a secure runtime has the bundle + key + provider network:
-1. verify source bundle and manifest SHA-256;
-2. build/freeze the answer-free packet;
-3. run readiness;
-4. execute the 173-case isolated blind run;
-5. freeze/hash predictions and runtime manifest;
-6. only afterward run deterministic comparison;
-7. log actual provider/model/run metadata and disagreement/abstention counts;
-8. keep `promotion_allowed=false`.
+Preferred user-side execution after pulling the branch and installing the package:
+
+```bash
+xauusd-v2-agent06-local \
+  --bundle "/absolute/path/xauusd_agent06_primary_bundle_2026_09_02.zip" \
+  --model claude-sonnet-5
+```
+
+If `ANTHROPIC_API_KEY` is not already in the user's environment, the command asks for it via hidden terminal input. Never paste the key into ChatGPT.
+
+The local orchestrator automatically:
+1. verifies source hashes;
+2. builds/freezes the answer-free packet;
+3. runs readiness;
+4. executes the 173-case isolated blind provider run;
+5. freezes/hashes predictions and runtime manifest;
+6. only afterward runs deterministic comparison;
+7. keeps `promotion_allowed=false`.
+
+After an actual run completes, persist truthful provider/model/run metadata and disagreement/abstention counts. Never persist the API secret.
 
 ## Broker historical-data path
 
@@ -417,7 +451,8 @@ Facts:
 - 173 canonical blind cases exist;
 - real Anthropic multimodal wrapper exists and is fail-closed;
 - blind provider process is isolated from ground-truth loading/comparison;
-- latest verified pre-handoff regression suite is **614 / 614 PASS**;
+- secure one-command user-side orchestrator exists;
+- latest verified pre-documentation regression suite is **618 / 618 PASS**;
 - VERIFIED knowledge = 0;
 - VERIFIED rules = 0;
 - no real independent external blind-model run has occurred;
@@ -428,17 +463,16 @@ Facts:
 ## Immediate next work
 
 Priority:
-1. Verify this documentation commit with CI and always resume from the live branch head.
-2. Run the first real Agent-06 validation only in a secure environment containing private bundle + Anthropic credential + provider network, following `AGENT06_REAL_INDEPENDENT_RUN_RUNBOOK.md`.
-3. Freeze predictions/runtime manifest before ground-truth comparison.
-4. Compare deterministically only afterward; disagreement/abstention stays unverified.
-5. Persist truthful real-run metadata only after an actual provider run.
-6. After/alongside independent validation, ingest real broker-quality XAUUSD MT5 history into the immutable snapshot store.
-7. Turn replay candidates READY only with proven broker/time/timestamp alignment; never invent timestamps.
-8. Keep helpers in shadow mode only.
-9. Keep connector-blocked candidate material noncanonical unless a compliant persistence path exists.
-10. Ingest future Discord material gradually with chronology/source authority preserved.
-11. Only after sufficient certification: OOS -> walk-forward -> costs/slippage -> sensitivity -> Monte Carlo -> paper/demo -> shadow -> tiny live -> production.
+1. Verify the latest documentation commits with CI and always resume from the live branch head.
+2. User supplies the unavoidable external execution capability by running `xauusd-v2-agent06-local` on a secure machine with the private ZIP, provider network and an Anthropic API credential entered securely; never paste the key into chat.
+3. After the real run, inspect/freeze actual predictions/runtime manifest and deterministic comparison outputs.
+4. Persist truthful real-run metadata only after an actual provider run; disagreement/abstention stays unverified.
+5. After/alongside independent validation, ingest real broker-quality XAUUSD MT5 history into the immutable snapshot store.
+6. Turn replay candidates READY only with proven broker/time/timestamp alignment; never invent timestamps.
+7. Keep helpers in shadow mode only.
+8. Keep connector-blocked candidate material noncanonical unless a compliant persistence path exists.
+9. Ingest future Discord material gradually with chronology/source authority preserved.
+10. Only after sufficient certification: OOS -> walk-forward -> costs/slippage -> sensitivity -> Monte Carlo -> paper/demo -> shadow -> tiny live -> production.
 
 ## Workflow discipline
 
