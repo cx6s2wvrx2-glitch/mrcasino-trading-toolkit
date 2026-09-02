@@ -50,6 +50,18 @@ class ResearchDesignReport:
     test_window: tuple[datetime, datetime]
 
 
+def _is_hex(value: str, length: int) -> bool:
+    text = value.strip().lower()
+    return len(text) == length and all(ch in "0123456789abcdef" for ch in text)
+
+
+def _is_sha256_ref(value: str) -> bool:
+    text = value.strip().lower()
+    if not text.startswith("sha256:"):
+        return False
+    return _is_hex(text.removeprefix("sha256:"), 64)
+
+
 class QuantitativeResearchAgent:
     """Deterministic research-design gate.
 
@@ -59,7 +71,7 @@ class QuantitativeResearchAgent:
     """
 
     name = "quant_research_agent_05"
-    version = "0.1.0"
+    version = "0.2.0"
 
     def validate_experiment(
         self,
@@ -80,6 +92,18 @@ class QuantitativeResearchAgent:
         for field_name, value in required_text.items():
             if not value.strip():
                 blockers.append(f"{field_name} is required for reproducibility")
+
+        if spec.strategy_commit_sha.strip() and not _is_hex(spec.strategy_commit_sha, 40):
+            blockers.append("strategy_commit_sha must be an exact 40-character Git commit SHA")
+
+        content_addressed_refs = {
+            "data_snapshot_ref": spec.data_snapshot_ref,
+            "parameter_set_ref": spec.parameter_set_ref,
+            "cost_model_ref": spec.cost_model_ref,
+        }
+        for field_name, value in content_addressed_refs.items():
+            if value.strip() and not _is_sha256_ref(value):
+                blockers.append(f"{field_name} must be a content-addressed sha256:<64-hex> reference")
 
         if spec.symbol.upper().strip() != "XAUUSD":
             blockers.append("research scope is canonical XAUUSD only")
@@ -137,6 +161,7 @@ class QuantitativeResearchAgent:
                 "warnings": list(report.warnings),
                 "symbol": "XAUUSD",
                 "timeframe_seconds": spec.timeframe_seconds,
+                "content_addressed_inputs_required": True,
                 "authority": {
                     "may_modify_strategy": False,
                     "may_select_live_risk": False,
