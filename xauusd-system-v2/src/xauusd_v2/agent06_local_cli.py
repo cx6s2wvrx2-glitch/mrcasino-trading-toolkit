@@ -5,6 +5,7 @@ import getpass
 import hashlib
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -17,6 +18,7 @@ from pathlib import Path, PurePosixPath
 _EXPECTED_BUNDLE_SHA256 = "6d3dea44ab528c240b05458628c93e38e8582a53d356bb5414aad4730aab9daf"
 _EXPECTED_MANIFEST_SHA256 = "e73568e4af896c4e4ffcb9bee7cbd694902d706003e2e594babeaa5faa422a37"
 _MANIFEST_NAME = "primary_context_bundle.json"
+_RUN_ID_RE = re.compile(r"agent06-anthropic-\d{8}T\d{6}Z")
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -37,6 +39,14 @@ def _parser() -> argparse.ArgumentParser:
         "--work-root",
         default=str(Path.home() / ".xauusd-agent06"),
         help="Private working directory outside the Git repository.",
+    )
+    parser.add_argument(
+        "--resume-run-id",
+        default="",
+        help=(
+            "Resume one interrupted run from its private per-case checkpoint. The current Git commit, "
+            "packet, taxonomy, provider/model and primary evidence must match the checkpoint exactly."
+        ),
     )
     return parser
 
@@ -128,6 +138,7 @@ def main(argv: list[str] | None = None) -> int:
     repo_root = Path(args.repo_root).expanduser().resolve()
     work_root = Path(args.work_root).expanduser().resolve()
     model = args.model.strip()
+    resume_run_id = args.resume_run_id.strip()
 
     if not model:
         raise SystemExit("explicit Anthropic model is required")
@@ -149,14 +160,27 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     repo_commit = _git_head(repo_root)
-    run_id = f"agent06-anthropic-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}"
+    if resume_run_id:
+        if _RUN_ID_RE.fullmatch(resume_run_id) is None:
+            raise SystemExit("resume-run-id has invalid Agent-06 run identifier format")
+        run_id = resume_run_id
+    else:
+        run_id = f"agent06-anthropic-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}"
+
     run_root = work_root / "runs" / run_id
     staging_root = work_root / "staging" / run_id
     evidence_root = staging_root / "evidence"
     packet_path = staging_root / "blind_packet.json"
-    if run_root.exists() or staging_root.exists():
-        raise SystemExit("generated run ID already exists; refusing to overwrite")
     work_root.mkdir(parents=True, exist_ok=True)
+
+    if resume_run_id:
+        if not run_root.is_dir() or not (run_root / "agent06_blind_checkpoint.json").is_file():
+            raise SystemExit("resume-run-id does not contain a resumable private checkpoint")
+        if staging_root.exists():
+            raise SystemExit("resume staging directory already exists; refusing ambiguous resume")
+    else:
+        if run_root.exists() or staging_root.exists():
+            raise SystemExit("generated run ID already exists; refusing to overwrite")
     staging_root.mkdir(parents=True, exist_ok=False)
 
     try:
@@ -192,30 +216,39 @@ def main(argv: list[str] | None = None) -> int:
         blind_env = dict(sanitized_env)
         blind_env["ANTHROPIC_API_KEY"] = api_key
         blind_env["XAUUSD_AGENT06_ANTHROPIC_MODEL"] = model
-        _run_stage(
+        blind_command = [
+            python,
+            "-m",
+            "xauusd_v2.agent06_run_cli",
+            "--packet",
+            str(packet_path),
+            "--bundle-root",
+            str(evidence_root),
+            "--manifest",
+            str(manifest),
+            "--provider",
+            "anthropic",
+            "--model",
+            model,
+            "--run-id",
+            run_id,
+            "--output-dir",
+            str(run_root),
+            "--repo-commit",
+            repo_commit,
+        ]
+        if resume_run_id:
+            blind_command.append("--resume-existing")
+        blind_command.extend(
             [
-                python,
-                "-m",
-                "xauusd_v2.agent06_run_cli",
-                "--packet",
-                str(packet_path),
-                "--bundle-root",
-                str(evidence_root),
-                "--manifest",
-                str(manifest),
-                "--provider",
-                "anthropic",
-                "--model",
-                model,
-                "--run-id",
-                run_id,
-                "--output-dir",
-                str(run_root),
                 "--command",
                 python,
                 "-m",
                 "xauusd_v2.anthropic_model_runner",
-            ],
+            ]
+        )
+        _run_stage(
+            blind_command,
             cwd=staging_root,
             environment=blind_env,
             stage="2/4 execute 173-case isolated blind provider run",
@@ -278,6 +311,7 @@ def main(argv: list[str] | None = None) -> int:
         final_summary = {
             "status": "LOCAL_AGENT06_PIPELINE_COMPLETE",
             "run_id": run_id,
+            "resumed": bool(resume_run_id),
             "repo_commit": repo_commit,
             "provider": "anthropic",
             "model": model,
@@ -297,10 +331,6 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(final_summary, ensure_ascii=False, sort_keys=True))
         return 0
-    except BaseException:
-        # Keep completed run outputs for audit/debugging, but delete temporary extracted
-        # source evidence and packet staging if the pipeline did not need them anymore.
-        raise
     finally:
         shutil.rmtree(staging_root, ignore_errors=True)
 
