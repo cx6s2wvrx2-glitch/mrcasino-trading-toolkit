@@ -104,6 +104,38 @@ class ComponentReplayDatasetTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             load_historical_replay_dataset(self.write_payload(payload))
 
+    def test_promotion_allowed_true_is_rejected(self) -> None:
+        payload = self.valid_payload()
+        payload["promotion_allowed"] = True
+        with self.assertRaisesRegex(ValueError, "promotion_allowed=false"):
+            load_historical_replay_dataset(self.write_payload(payload))
+
+    def test_extra_dataset_field_is_rejected(self) -> None:
+        payload = self.valid_payload()
+        payload["verified"] = True
+        with self.assertRaisesRegex(ValueError, "schema mismatch"):
+            load_historical_replay_dataset(self.write_payload(payload))
+
+    def test_extra_session_field_is_rejected(self) -> None:
+        payload = self.valid_payload()
+        session = payload["sessions"][0]
+        assert isinstance(session, dict)
+        session["expected_trade"] = "buy"
+        with self.assertRaisesRegex(ValueError, "schema mismatch"):
+            load_historical_replay_dataset(self.write_payload(payload))
+
+    def test_extra_confirmation_field_is_rejected(self) -> None:
+        payload = self.valid_payload()
+        session = payload["sessions"][0]
+        assert isinstance(session, dict)
+        confirmations = session["confirmations"]
+        assert isinstance(confirmations, list)
+        confirmation = confirmations[0]
+        assert isinstance(confirmation, dict)
+        confirmation["future_known"] = True
+        with self.assertRaisesRegex(ValueError, "schema mismatch"):
+            load_historical_replay_dataset(self.write_payload(payload))
+
     def test_event_available_before_occurrence_is_rejected(self) -> None:
         payload = self.valid_payload()
         session = payload["sessions"][0]
