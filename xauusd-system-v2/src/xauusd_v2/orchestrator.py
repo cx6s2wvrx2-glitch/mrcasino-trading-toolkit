@@ -9,6 +9,7 @@ from .agents.quant_agent import ResearchDesignReport
 from .agents.risk_agent import RiskDecision, RiskDecisionState
 from .backtest_sequence import SequenceState
 from .blind_validation_compare import BlindValidationComparisonReport
+from .evidence_gate import EvidenceGateReport
 from .historical_replay_gate import HistoricalReplayGateReport
 from .ltf_execution import LTFExecutionState
 
@@ -25,23 +26,6 @@ class PipelineReadinessReport:
     state: PipelineReadinessState
     blockers: tuple[str, ...]
     live_execution_authorized: bool = False
-
-
-@dataclass(frozen=True, slots=True)
-class EvidenceGateReport:
-    """Minimal provenance-bearing gate for upstream approvals without a richer report type."""
-
-    gate_name: str
-    passed: bool
-    evidence_refs: tuple[str, ...]
-
-    def __post_init__(self) -> None:
-        if not self.gate_name.strip():
-            raise ValueError("evidence gate name cannot be empty")
-        if any(not ref.strip() for ref in self.evidence_refs):
-            raise ValueError("evidence gate refs cannot contain empty values")
-        if self.passed and not self.evidence_refs:
-            raise ValueError("a passed evidence gate requires at least one provenance reference")
 
 
 @dataclass(frozen=True, slots=True)
@@ -220,3 +204,14 @@ class AgentPipelineCoordinator:
             blockers=tuple(blockers),
             live_execution_authorized=False,
         )
+
+
+__all__ = [
+    "AgentPipelineCoordinator",
+    "EvidenceGateReport",
+    "ExecutionReadinessInput",
+    "PipelineReadinessReport",
+    "PipelineReadinessState",
+    "ResearchReadinessInput",
+    "StrategyCandidateReadinessInput",
+]
