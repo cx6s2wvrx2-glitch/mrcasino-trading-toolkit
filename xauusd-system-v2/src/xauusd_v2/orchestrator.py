@@ -5,6 +5,8 @@ from enum import StrEnum
 
 from .agents.risk_agent import RiskDecisionState
 from .backtest_sequence import SequenceState
+from .blind_validation_compare import BlindValidationComparisonReport
+from .historical_replay_gate import HistoricalReplayGateReport
 from .ltf_execution import LTFExecutionState
 
 
@@ -32,8 +34,8 @@ class StrategyCandidateReadinessInput:
     market_context_unambiguous: bool
     r143_sequence_state: SequenceState
     ltf_execution_state: LTFExecutionState
-    blind_validation_passed: bool
-    historical_reproducible: bool
+    blind_validation_report: BlindValidationComparisonReport | None
+    historical_replay_report: HistoricalReplayGateReport | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,12 +56,12 @@ class PipelineReadinessReport:
 class AgentPipelineCoordinator:
     """Deterministic coordinator for cross-agent gates.
 
-    The coordinator connects certified strategy state to research/risk layers but
+    The coordinator connects source-backed strategy state to research/risk layers but
     intentionally has no live-execution authorization path. Missing or ambiguous
     evidence always blocks progression.
     """
 
-    version = "0.2.0"
+    version = "0.3.0"
 
     def research_readiness(self, inputs: ResearchReadinessInput) -> PipelineReadinessReport:
         blockers: list[str] = []
@@ -80,12 +82,7 @@ class AgentPipelineCoordinator:
         self,
         inputs: StrategyCandidateReadinessInput,
     ) -> PipelineReadinessReport:
-        """Connect market/context + R-143 + R-145 + validation gates.
-
-        This is the deterministic bridge that was missing in v0.1. A complete
-        R-143 sequence is necessary but not sufficient: the LTF execution model,
-        blind validation and historical reproducibility must also pass.
-        """
+        """Connect market/context + R-143 + R-145 + evidence-bearing validation gates."""
         blockers: list[str] = []
         if not inputs.market_data_validated:
             blockers.append("market-data validation has not passed")
@@ -95,10 +92,22 @@ class AgentPipelineCoordinator:
             blockers.append(f"R-143 sequence state is {inputs.r143_sequence_state.value}")
         if inputs.ltf_execution_state is not LTFExecutionState.ENTRY_CANDIDATE:
             blockers.append(f"R-145 LTF execution state is {inputs.ltf_execution_state.value}")
-        if not inputs.blind_validation_passed:
-            blockers.append("blind independent validation has not passed")
-        if not inputs.historical_reproducible:
-            blockers.append("historical reproducibility has not passed")
+
+        validation = inputs.blind_validation_report
+        validation_passed = bool(
+            validation
+            and validation.total > 0
+            and validation.all_agree
+            and validation.agree == validation.total
+            and validation.disagree == 0
+            and validation.ambiguous == 0
+        )
+        if not validation_passed:
+            blockers.append("blind independent validation report has not passed cleanly")
+
+        replay = inputs.historical_replay_report
+        if replay is None or not replay.historical_reproducible:
+            blockers.append("historical replay report has not passed reproducibility gate")
 
         state = (
             PipelineReadinessState.STRATEGY_CANDIDATE_READY
