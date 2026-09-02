@@ -1,0 +1,169 @@
+{
+  "dataset": "XAUUSD V2 Ground Truth Round 10",
+  "date": "2026-09-02",
+  "status": "candidate_not_verified",
+  "source_episode": "approved primary Mr Casino XAUUSD top-down sequences from 2021-11-21, 2021-11-28, 2021-12-06, 2021-12-12; temporal 2021 method state",
+  "promotion_allowed": false,
+  "test_vectors": [
+    {
+      "id": "GT-R10-001",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-11-21#image:IMG_20211121_211457_888.jpg",
+      "expected_label": "partially_retested_monthly_doji_can_remain_future_liquidity_while_price_moves_elsewhere_first",
+      "expected_class": "edge_case",
+      "evidence": ["primary Monthly chart says the doji was retested but not fully taken, so price can return in the future while possibly going higher first"],
+      "forbidden_inference": "Do not turn this single 2021 scenario into a universal timing rule for every partially taken doji."
+    },
+    {
+      "id": "GT-R10-002",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-11-21#image:IMG_20211121_211457_888.jpg",
+      "expected_label": "monthly_attempted_fu_area_is_conditional_on_prior_major_liquidity_take_and_subsequent_drop",
+      "expected_class": "edge_case",
+      "evidence": ["primary chart calls the Monthly attempted-FU area important only if gold drops after taking the marked 2040 liquidity"],
+      "forbidden_inference": "Do not promote the area without the stated liquidity-and-drop condition or preserve the historic 2040 level outside this chart."
+    },
+    {
+      "id": "GT-R10-003",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-11-21#image:IMG_20211121_211459_286.jpg",
+      "expected_label": "breaking_major_weekly_fu_can_temporarily_defer_lower_liquidity_in_source_scenario",
+      "expected_class": "edge_case",
+      "evidence": ["primary Weekly chart says that if the major weekly FU is broken, the scenario shifts to a new high and lower liquidity is forgotten for now"],
+      "forbidden_inference": "Treat 'for sure' language as a source scenario, not statistical certainty or a universal forecasting law."
+    },
+    {
+      "id": "GT-R10-004",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-11-21#image:IMG_20211121_211459_286.jpg",
+      "expected_label": "liquidity_take_while_remaining_within_previous_fu_can_support_swing_reaction_context",
+      "expected_class": "valid",
+      "evidence": ["primary Weekly chart states that taking the marked liquidity while staying within the previous FU can produce a swing reaction"],
+      "forbidden_inference": "Do not infer exact containment geometry or guaranteed swing magnitude from this chart alone."
+    },
+    {
+      "id": "GT-R10-005",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-11-21#image:IMG_20211121_211504_041.jpg",
+      "expected_label": "fu_retest_in_important_area_does_not_override_equal_lows_liquidity_target",
+      "expected_class": "invalid",
+      "evidence": ["primary 1H chart says FU plus retest occurred in an important area, but equal lows / an almost perfect double bottom are expected to be taken"],
+      "forbidden_inference": "The invalid class rejects taking the FU-retest context as sufficient by itself; it does not invalidate FU retests generally."
+    },
+    {
+      "id": "GT-R10-006",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-11-28#image:IMG_20211128_213719_791.jpg",
+      "expected_label": "weekly_fu_take_and_retest_rejection_define_conditional_continuation_branches",
+      "expected_class": "edge_case",
+      "evidence": ["primary Weekly chart gives two branches: rejection on retest for higher continuation, or a lower target branch if the weekly FU is taken"],
+      "forbidden_inference": "Do not retain the historic 1717 target as a universal level or infer exhaustive branching beyond the source scenario."
+    },
+    {
+      "id": "GT-R10-007",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-11-28#image:IMG_20211128_213721_800.jpg",
+      "expected_label": "held_daily_fu_retest_can_support_strong_swing_potential_in_source_context",
+      "expected_class": "valid",
+      "evidence": ["primary Daily chart explicitly calls the held daily FU plus retest 'very strong swing potential'"],
+      "forbidden_inference": "Do not convert the qualitative 'very strong' phrase into a numeric probability or universal strength score."
+    },
+    {
+      "id": "GT-R10-008",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-11-28#image:IMG_20211128_213721_800.jpg",
+      "expected_label": "daily_attempted_fu_after_large_drop_can_be_selling_pressure_context",
+      "expected_class": "edge_case",
+      "evidence": ["primary Daily chart labels an attempted FU after the large drop as a very good sign of selling pressure"],
+      "forbidden_inference": "Do not promote every Daily Attempted FU after a drop to an automatic sell signal; this is temporal 2021 context."
+    },
+    {
+      "id": "GT-R10-009",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-11-28#image:IMG_20211128_213726_097.jpg",
+      "expected_label": "obvious_liquidity_can_be_targeted_before_attempted_fu_buy_poi_becomes_relevant",
+      "expected_class": "valid",
+      "evidence": ["primary 4H chart marks obvious liquidity expected to be hunted and places the buy POI after attempted-FU liquidity is taken"],
+      "forbidden_inference": "Do not infer a universal mandatory ordering for all attempted-FU buy POIs without later-source confirmation."
+    },
+    {
+      "id": "GT-R10-010",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-11-28#image:IMG_20211128_213729_546.jpg",
+      "expected_label": "daily_attempted_fu_can_add_context_to_sell_poi_without_being_standalone_entry",
+      "expected_class": "valid",
+      "evidence": ["primary 1H chart calls the sell POI especially good because Daily has made an attempted FU and the area is right for a rejection"],
+      "forbidden_inference": "Do not treat Daily Attempted FU alone as the entry; the source combines it with location and POI context."
+    },
+    {
+      "id": "GT-R10-011",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-12-06#image:IMG_20211206_212957_571.jpg",
+      "expected_label": "strong_fu_can_form_while_liquidity_is_left_behind_and_continuation_context_remains",
+      "expected_class": "edge_case",
+      "evidence": ["primary Daily/4H context notes another Daily FU formed after a large drop and lower chart later states strong 4H plus Daily FU formed despite liquidity left behind"],
+      "forbidden_inference": "Do not conclude that leftover liquidity is irrelevant or permanently abandoned."
+    },
+    {
+      "id": "GT-R10-012",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-12-06#image:IMG_20211206_213000_678.jpg",
+      "expected_label": "daily_4h_1h_refinement_can_define_sell_area_before_entry_search",
+      "expected_class": "valid",
+      "evidence": ["primary 1H chart explicitly says the Daily/4H/1H FU has been refined down and identifies a possible sell opportunity if price returns there first"],
+      "forbidden_inference": "Do not infer the exact refinement algorithm or direct entry trigger from the drawn zones alone."
+    },
+    {
+      "id": "GT-R10-013",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-12-06#image:IMG_20211206_213000_678.jpg",
+      "expected_label": "nearby_liquidity_can_veto_attempted_fu_limit_setup",
+      "expected_class": "invalid",
+      "evidence": ["primary 1H chart explicitly says 'liquidity lies close beneath so I will not take this attempted fu limit setup'"],
+      "forbidden_inference": "Do not reject Attempted FU setups universally; this is a direct negative example where nearby liquidity overrules the limit setup."
+    },
+    {
+      "id": "GT-R10-014",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-12-06#image:IMG_20211206_212958_821.jpg",
+      "expected_label": "liquidity_can_be_generated_and_left_behind_while_strong_multitf_fu_supports_continuation",
+      "expected_class": "edge_case",
+      "evidence": ["primary 4H chart states liquidity was generated, yet a strong 4H plus Daily FU formed and selling continued with that liquidity left behind"],
+      "forbidden_inference": "Do not infer that generated liquidity will never be revisited or that FU always overpowers liquidity."
+    },
+    {
+      "id": "GT-R10-015",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-12-12#image:IMG_20211212_205345_803.jpg",
+      "expected_label": "respected_weekly_fu_and_doji_consolidation_can_support_buys_before_higher_sell_poi",
+      "expected_class": "edge_case",
+      "evidence": ["primary Weekly chart says the weekly retest formed a doji and consolidated, price respected the Weekly FU, and buys are sought before a possible higher sell POI"],
+      "forbidden_inference": "Do not collapse the interim buy phase and later possible sell phase into one global direction."
+    },
+    {
+      "id": "GT-R10-016",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-12-12#image:IMG_20211212_205347_367.jpg",
+      "expected_label": "institutional_buy_poi_reaction_can_shift_orderflow_toward_sellside_liquidity_even_with_other_liquidity_left_behind",
+      "expected_class": "edge_case",
+      "evidence": ["primary Daily chart states a reaction from an institutional buy POI can show a shift of order flow to target sell-side liquidity while other major liquidity remains left behind"],
+      "forbidden_inference": "Do not turn the chart's order-flow narrative into a universal deterministic rule without later-source certification."
+    },
+    {
+      "id": "GT-R10-017",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-12-12#image:IMG_20211212_205348_746.jpg",
+      "expected_label": "broker_feed_difference_can_change_whether_4h_candle_is_classified_as_doji",
+      "expected_class": "valid",
+      "evidence": ["primary 4H chart explicitly says the candle is a perfect doji on MT4 but is not a doji on TradingView, changing the liquidity-hunt interpretation"],
+      "forbidden_inference": "Do not choose one platform universally from this chart alone; preserve broker/feed provenance and compare the actual OHLC."
+    },
+    {
+      "id": "GT-R10-018",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-12-12#image:IMG_20211212_205348_746.jpg",
+      "expected_label": "reaction_from_4h_fu_plus_zone_can_signal_upside_orderflow_but_break_invalidates_that_branch",
+      "expected_class": "edge_case",
+      "evidence": ["primary 4H chart calls the FU-plus-zone reaction a strong sign of changed order flow to the upside and states that if broken the scenario moves lower"],
+      "forbidden_inference": "Do not interpret the reaction as guaranteed continuation or invent the exact failure tolerance."
+    },
+    {
+      "id": "GT-R10-019",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-12-12#image:IMG_20211212_205351_372.jpg",
+      "expected_label": "liquidity_can_be_left_for_later_when_higher_timeframe_fu_retest_context_dominates_current_move",
+      "expected_class": "edge_case",
+      "evidence": ["primary 30M chart says liquidity was left behind, a 30M Attempted FU formed, and the liquidity may be hunted later because the move is within Weekly/4H FU-retest context"],
+      "forbidden_inference": "Do not infer a fixed delay or assume higher-timeframe context always defers lower-timeframe liquidity."
+    },
+    {
+      "id": "GT-R10-020",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2021-12-12#image:IMG_20211212_205350_247.jpg",
+      "expected_label": "entry_area_can_require_liquidity_take_plus_other_confirmations_before_sell_reaction",
+      "expected_class": "valid",
+      "evidence": ["primary 1H chart identifies a sell-entry area but explicitly says the reaction is expected after liquidity has been taken and with many other confirmations"],
+      "forbidden_inference": "Do not treat the area alone as a valid sell entry or infer the unspecified confirmations."
+    }
+  ]
+}
