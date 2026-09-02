@@ -24,6 +24,44 @@ then, only after that process completes:
 
 The blind-run process itself never loads ground-truth dataset files and never performs comparison.
 
+## Recommended one-command local path
+
+The preferred first-run path is now the tested local orchestrator:
+
+```bash
+xauusd-v2-agent06-local \
+  --bundle "/absolute/path/xauusd_agent06_primary_bundle_2026_09_02.zip" \
+  --model claude-sonnet-5
+```
+
+Run it from the repository root after:
+
+```bash
+git checkout xauusd-v2-foundation
+git pull
+python3 -m pip install -e ./xauusd-system-v2
+```
+
+The local orchestrator performs the complete controlled sequence automatically:
+1. verifies the canonical private ZIP SHA-256;
+2. refuses to run if the private ZIP is inside the public Git repository;
+3. refuses a private work directory inside the public repository;
+4. safely extracts the ZIP and rejects traversal/symlink entries;
+5. verifies the primary-context manifest SHA-256;
+6. builds the frozen answer-free packet with Anthropic secrets stripped from that subprocess environment;
+7. obtains the API key from an existing `ANTHROPIC_API_KEY` environment variable or, if absent, prompts for it with hidden terminal input;
+8. exposes the key/model only to the blind-provider subprocess;
+9. executes the 173-case isolated blind run;
+10. freezes and hashes predictions/runtime manifest before comparison;
+11. removes Anthropic secret/model environment variables before the comparison subprocess;
+12. performs deterministic post-run comparison separately;
+13. writes audit outputs under a private work root, default `~/.xauusd-agent06`;
+14. deletes temporary extracted source staging when the command exits.
+
+The API key is never written to disk by the orchestrator. The command still makes real paid Anthropic API calls and therefore requires an active Anthropic API account/credits.
+
+The manual staged procedure below remains the audit/reference path and can be used to diagnose any fail-closed stop.
+
 ## Required private inputs
 
 1. XAUUSD V2 repository at the exact tested branch/commit.
@@ -44,14 +82,14 @@ Never:
 - upload the private source bundle into the public GitHub repository;
 - expose the key in Agent-06 output artifacts.
 
-Required environment variables for the Anthropic wrapper:
+Required environment variables for the Anthropic wrapper when using the manual staged path:
 
 ```bash
 export ANTHROPIC_API_KEY='set-securely-outside-repo'
 export XAUUSD_AGENT06_ANTHROPIC_MODEL='claude-sonnet-5'
 ```
 
-Prefer a local secret manager or a shell/session mechanism that does not persist the secret in command history.
+Prefer a local secret manager or the one-command runner's hidden prompt rather than persisting the secret in shell history.
 
 ## 0. Pin and verify the repository checkpoint
 
