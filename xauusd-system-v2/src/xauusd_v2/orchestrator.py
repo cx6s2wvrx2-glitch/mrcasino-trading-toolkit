@@ -3,7 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
-from .agents.risk_agent import RiskDecisionState
+from .agents.data_agent import MarketDataValidationReport
+from .agents.market_state_agent import ContextState, Direction, MarketContextReport
+from .agents.quant_agent import ResearchDesignReport
+from .agents.risk_agent import RiskDecision, RiskDecisionState
 from .backtest_sequence import SequenceState
 from .blind_validation_compare import BlindValidationComparisonReport
 from .historical_replay_gate import HistoricalReplayGateReport
@@ -25,9 +28,26 @@ class PipelineReadinessReport:
 
 
 @dataclass(frozen=True, slots=True)
+class EvidenceGateReport:
+    """Minimal provenance-bearing gate for upstream approvals without a richer report type."""
+
+    gate_name: str
+    passed: bool
+    evidence_refs: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if not self.gate_name.strip():
+            raise ValueError("evidence gate name cannot be empty")
+        if any(not ref.strip() for ref in self.evidence_refs):
+            raise ValueError("evidence gate refs cannot contain empty values")
+        if self.passed and not self.evidence_refs:
+            raise ValueError("a passed evidence gate requires at least one provenance reference")
+
+
+@dataclass(frozen=True, slots=True)
 class StrategyCandidateReadinessInput:
-    market_data_validated: bool
-    market_context_unambiguous: bool
+    market_data_report: MarketDataValidationReport | None
+    market_context_report: MarketContextReport | None
     r143_sequence_state: SequenceState
     ltf_execution_state: LTFExecutionState
     blind_validation_report: BlindValidationComparisonReport | None
@@ -36,41 +56,76 @@ class StrategyCandidateReadinessInput:
 
 @dataclass(frozen=True, slots=True)
 class ResearchReadinessInput:
-    source_approved: bool
-    strategy_version_frozen: bool
-    ground_truth_ready: bool
-    research_design_approved: bool
+    source_approval_report: EvidenceGateReport | None
+    strategy_freeze_report: EvidenceGateReport | None
+    ground_truth_report: EvidenceGateReport | None
+    research_design_report: ResearchDesignReport | None
     strategy: StrategyCandidateReadinessInput
 
 
 @dataclass(frozen=True, slots=True)
 class ExecutionReadinessInput:
-    market_data_validated: bool
-    market_context_unambiguous: bool
+    market_data_report: MarketDataValidationReport | None
+    market_context_report: MarketContextReport | None
     strategy_report: PipelineReadinessReport | None
-    risk_state: RiskDecisionState
+    risk_decision: RiskDecision | None
+
+
+def _market_data_ready(report: MarketDataValidationReport | None) -> bool:
+    return bool(
+        report
+        and report.canonical_symbol == "XAUUSD"
+        and report.timeframe_seconds > 0
+        and report.total_bars > 0
+        and report.closed_bars >= 0
+        and report.provisional_bars >= 0
+        and report.closed_bars + report.provisional_bars == report.total_bars
+        and len(report.source_names) == 1
+        and len(report.source_symbols) == 1
+        and all(value.strip() for value in report.source_names)
+        and all(value.strip() for value in report.source_symbols)
+    )
+
+
+def _market_context_ready(report: MarketContextReport | None) -> bool:
+    return bool(
+        report
+        and report.state in {ContextState.ALIGNED_BULLISH, ContextState.ALIGNED_BEARISH}
+        and report.aligned_direction in {Direction.BULLISH, Direction.BEARISH}
+        and report.known_direction_count > 0
+        and report.source_refs
+        and all(ref.strip() for ref in report.source_refs)
+    )
+
+
+def _evidence_gate_passed(report: EvidenceGateReport | None, *, expected_name: str) -> bool:
+    return bool(
+        report
+        and report.gate_name == expected_name
+        and report.passed
+        and report.evidence_refs
+        and all(ref.strip() for ref in report.evidence_refs)
+    )
 
 
 class AgentPipelineCoordinator:
-    """Deterministic coordinator for cross-agent gates.
+    """Deterministic cross-agent coordinator with no live-execution authority.
 
-    The coordinator connects source-backed strategy state to research/risk layers but
-    intentionally has no live-execution authorization path. Missing or ambiguous
-    evidence always blocks progression.
+    Readiness consumes provenance-bearing upstream reports rather than caller-supplied
+    success booleans. Missing, malformed, ambiguous or conflicting evidence blocks.
     """
 
-    version = "0.5.0"
+    version = "0.6.0"
 
     def strategy_candidate_readiness(
         self,
         inputs: StrategyCandidateReadinessInput,
     ) -> PipelineReadinessReport:
-        """Connect market/context + R-143 + R-145 + evidence-bearing validation gates."""
         blockers: list[str] = []
-        if not inputs.market_data_validated:
-            blockers.append("market-data validation has not passed")
-        if not inputs.market_context_unambiguous:
-            blockers.append("market context is ambiguous/conflicting")
+        if not _market_data_ready(inputs.market_data_report):
+            blockers.append("market-data validation report has not passed the evidence gate")
+        if not _market_context_ready(inputs.market_context_report):
+            blockers.append("market context report is absent, ambiguous, conflicting, or lacks provenance")
         if inputs.r143_sequence_state is not SequenceState.COMPLETE_CANDIDATE:
             blockers.append(f"R-143 sequence state is {inputs.r143_sequence_state.value}")
         if inputs.ltf_execution_state is not LTFExecutionState.ENTRY_CANDIDATE:
@@ -84,6 +139,7 @@ class AgentPipelineCoordinator:
             and validation.agree == validation.total
             and validation.disagree == 0
             and validation.ambiguous == 0
+            and validation.promotion_allowed is False
         )
         if not validation_passed:
             blockers.append("blind independent validation report has not passed cleanly")
@@ -105,13 +161,26 @@ class AgentPipelineCoordinator:
 
     def research_readiness(self, inputs: ResearchReadinessInput) -> PipelineReadinessReport:
         blockers: list[str] = []
-        checks = (
-            (inputs.source_approved, "source approval missing"),
-            (inputs.strategy_version_frozen, "strategy version is not frozen"),
-            (inputs.ground_truth_ready, "ground-truth dataset is not ready"),
-            (inputs.research_design_approved, "quant research design has not passed"),
+
+        evidence_checks = (
+            (
+                _evidence_gate_passed(inputs.source_approval_report, expected_name="source_approval"),
+                "source approval evidence report has not passed",
+            ),
+            (
+                _evidence_gate_passed(inputs.strategy_freeze_report, expected_name="strategy_freeze"),
+                "strategy freeze evidence report has not passed",
+            ),
+            (
+                _evidence_gate_passed(inputs.ground_truth_report, expected_name="ground_truth_ready"),
+                "ground-truth evidence report has not passed",
+            ),
         )
-        blockers.extend(message for passed, message in checks if not passed)
+        blockers.extend(message for passed, message in evidence_checks if not passed)
+
+        design = inputs.research_design_report
+        if design is None or not design.ready_for_research or design.blockers:
+            blockers.append("quant research design report has not passed")
 
         strategy_report = self.strategy_candidate_readiness(inputs.strategy)
         if strategy_report.state is not PipelineReadinessState.STRATEGY_CANDIDATE_READY:
@@ -126,17 +195,24 @@ class AgentPipelineCoordinator:
 
     def execution_readiness(self, inputs: ExecutionReadinessInput) -> PipelineReadinessReport:
         blockers: list[str] = []
-        if not inputs.market_data_validated:
-            blockers.append("market-data validation has not passed")
-        if not inputs.market_context_unambiguous:
-            blockers.append("market context is ambiguous/conflicting")
+        if not _market_data_ready(inputs.market_data_report):
+            blockers.append("market-data validation report has not passed the evidence gate")
+        if not _market_context_ready(inputs.market_context_report):
+            blockers.append("market context report is absent, ambiguous, conflicting, or lacks provenance")
 
         strategy = inputs.strategy_report
-        if strategy is None or strategy.state is not PipelineReadinessState.STRATEGY_CANDIDATE_READY:
+        if (
+            strategy is None
+            or strategy.state is not PipelineReadinessState.STRATEGY_CANDIDATE_READY
+            or strategy.blockers
+            or strategy.live_execution_authorized
+        ):
             blockers.append("strategy candidate report is not ready")
 
-        if inputs.risk_state is not RiskDecisionState.APPROVE_CANDIDATE:
-            blockers.append(f"risk gate state is {inputs.risk_state.value}")
+        risk = inputs.risk_decision
+        if risk is None or risk.state is not RiskDecisionState.APPROVE_CANDIDATE or risk.reasons:
+            risk_state = "missing" if risk is None else risk.state.value
+            blockers.append(f"risk decision has not passed cleanly: {risk_state}")
 
         state = PipelineReadinessState.EXECUTION_CANDIDATE if not blockers else PipelineReadinessState.BLOCKED
         return PipelineReadinessReport(
