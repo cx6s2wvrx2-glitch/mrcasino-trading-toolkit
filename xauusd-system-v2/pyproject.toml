@@ -9,5 +9,8 @@ description = "Clean-room XAUUSD strategy knowledge and validation system"
 requires-python = ">=3.12"
 dependencies = []
 
+[project.scripts]
+xauusd-v2-ingest-mt5 = "xauusd_v2.mt5_history_cli:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
