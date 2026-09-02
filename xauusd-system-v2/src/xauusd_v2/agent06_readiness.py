@@ -68,15 +68,18 @@ def assess_agent06_readiness(
     resolved_cases = 0
     image_required_cases = 0
 
-    entries = resolver.entries
+    # Resolve through the resolver itself instead of requiring an exact manifest key.
+    # This preserves the intentionally narrow full-PDF-page fallback supported by the
+    # bundle resolver and avoids declaring a valid fragment locator missing merely
+    # because the manifest stores the canonical physical page entry.
     for case in packet.cases:
         locator = case.source_locator
-        if locator not in entries:
-            missing.append(locator)
-            continue
         try:
             payload = resolver.resolve_payload(locator)
-        except (FileNotFoundError, LookupError, UnicodeDecodeError, ValueError, OSError):
+        except LookupError:
+            missing.append(locator)
+            continue
+        except (FileNotFoundError, UnicodeDecodeError, ValueError, OSError):
             invalid.append(locator)
             continue
 
