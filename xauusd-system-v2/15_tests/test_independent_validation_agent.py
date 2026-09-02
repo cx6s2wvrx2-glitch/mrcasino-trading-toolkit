@@ -18,6 +18,24 @@ class FakeClient:
         return self.payload
 
 
+class ConstrainedFakeClient(FakeClient):
+    def __init__(self, payload: dict) -> None:
+        super().__init__(payload)
+        self.last_allowed_labels: tuple[str, ...] | None = None
+
+    def generate_json_with_allowed_labels(
+        self,
+        *,
+        system: str,
+        user: str,
+        allowed_labels: tuple[str, ...],
+    ) -> dict:
+        self.last_system = system
+        self.last_user = user
+        self.last_allowed_labels = allowed_labels
+        return self.payload
+
+
 class IndependentValidationAgentTests(unittest.TestCase):
     def test_blind_contract_has_no_expected_label_input(self) -> None:
         client = FakeClient(
@@ -42,6 +60,28 @@ class IndependentValidationAgentTests(unittest.TestCase):
         self.assertTrue(run.needs_review)
         self.assertNotIn("expected_label", client.last_user or "")
         self.assertNotIn("candidate_label", client.last_user or "")
+
+    def test_provider_constraint_receives_exact_batch_taxonomy(self) -> None:
+        client = ConstrainedFakeClient(
+            {
+                "predicted_label": "att_fu_hcs",
+                "confidence": 0.9,
+                "evidence": ["source evidence"],
+                "ambiguities": [],
+            }
+        )
+        agent = IndependentValidationAgent(client)
+        labels = ("att_fu_hcs", "hcs_zone_respected_once", "no_trade")
+        decision, _ = agent.validate(
+            vector_id="GT-R02-099",
+            source_locator="primary chart exact-label",
+            source_context="Primary evidence.",
+            allowed_labels=labels,
+        )
+        self.assertEqual(decision.predicted_label, "att_fu_hcs")
+        self.assertEqual(client.last_allowed_labels, labels)
+        self.assertIn("copied verbatim", client.last_user or "")
+        self.assertIn("Never merge", client.last_user or "")
 
     def test_abstain_is_allowed_and_fail_closed(self) -> None:
         client = FakeClient(
