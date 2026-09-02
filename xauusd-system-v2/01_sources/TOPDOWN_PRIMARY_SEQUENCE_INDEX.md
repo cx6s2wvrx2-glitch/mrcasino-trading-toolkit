@@ -34,12 +34,12 @@ A non-XAUUSD sequence can be inspected for source inventory, but is excluded fro
 | 2021-11-30 | 2 | inspected_non_xauusd_excluded | — |
 | 2021-12-06 | 4 | processed | Round 10 |
 | 2021-12-12 | 7 | processed | Round 10 |
-| 2022-01-10 | 4 | pending | — |
-| 2022-03-14 | 4 | pending | — |
-| 2022-04-03 | 5 | pending | — |
-| 2022-07-30 | 5 | pending | — |
-| 2022-10-10 | 7 | pending | — |
-| 2022-11-20 | 5 | pending | — |
+| 2022-01-10 | 4 | processed | Round 11 |
+| 2022-03-14 | 4 | processed | Round 11 |
+| 2022-04-03 | 5 | processed | Round 11 |
+| 2022-07-30 | 5 | processed | Round 11 |
+| 2022-10-10 | 7 | processed | Round 11 |
+| 2022-11-20 | 5 | processed | Round 11 |
 | 2023-05-18 | 6 | pending | — |
 | 2023-05-19 | 8 | pending | — |
 | 2023-05-22 | 5 | pending | — |
@@ -59,7 +59,7 @@ A non-XAUUSD sequence can be inspected for source inventory, but is excluded fro
 | 2024-07-29 | 8 | pending | — |
 | 2024-07-30 | 6 | pending | — |
 
-Current inspected/exhausted: **58 / 188 images across 9 / 29 sequences**.
-Of those 9 sequences, **8 are XAUUSD processed sequences** and **1 is a non-XAUUSD sequence inspected and excluded**.
+Current inspected/exhausted: **88 / 188 images across 15 / 29 sequences**.
+Of those 15 sequences, **14 are XAUUSD processed sequences** and **1 is a non-XAUUSD sequence inspected and excluded**.
 
 This index tracks source exhaustion only. `processed` does **not** mean strategy-verified or detector-certified.
