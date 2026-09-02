@@ -90,6 +90,45 @@ class Agent06ReadinessCliTests(unittest.TestCase):
         self.assertFalse(output["ready_to_run"])
         self.assertEqual(output["missing_locators"], ["source#image:b.png"])
 
+    def test_pdf_fragment_locators_can_use_canonical_physical_page_fallback(self) -> None:
+        source_id = "11111111-1111-1111-1111-111111111111"
+        dataset = {
+            "dataset": "page-fallback",
+            "status": "candidate_not_verified",
+            "source_episode": "primary",
+            "promotion_allowed": False,
+            "test_vectors": [
+                {
+                    "id": "GT-P1",
+                    "source_locator": f"v2_sources:{source_id}#page:3#visual:a",
+                    "expected_label": "label_a",
+                    "expected_class": "valid",
+                    "evidence": ["primary"],
+                    "forbidden_inference": "",
+                },
+                {
+                    "id": "GT-P2",
+                    "source_locator": f"v2_sources:{source_id}#page:3#visual:b",
+                    "expected_label": "label_b",
+                    "expected_class": "edge_case",
+                    "evidence": ["primary"],
+                    "forbidden_inference": "",
+                },
+            ],
+        }
+        (self.datasets / "ground_truth_round_02.json").write_text(json.dumps(dataset), encoding="utf-8")
+        code, output = self.run_cli({
+            "version": 1,
+            "entries": [{
+                "source_locator": f"v2_sources:{source_id}#page:3",
+                "images": [{"path": "images/b.png", "mime_type": "image/png"}],
+            }],
+        })
+        self.assertEqual(code, 0)
+        self.assertEqual(output["status"], "READY_TO_RUN")
+        self.assertEqual(output["resolved_cases"], 2)
+        self.assertEqual(output["image_required_cases"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
