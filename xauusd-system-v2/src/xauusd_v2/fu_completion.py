@@ -36,6 +36,12 @@ def classify_fu_completion(
     - FU criteria met + close within previous candle open/close -> Complete FU;
     - new high/low + FU setup but no closure within previous body -> Attempted FU form 2.
 
+    Timeframe-scope contract (explicit user clarification, 2026-09-02):
+    this FU/ATT-FU primitive logic is timeframe-neutral. The same classifier is
+    conceptually applicable on every timeframe. Timeframe authority and
+    downstream use are evaluated elsewhere and must not change the primitive
+    completion definition.
+
     This function deliberately does NOT decide whether the broader ``FU criteria``
     are met from raw OHLC. That predicate remains a separate certification task.
     """
