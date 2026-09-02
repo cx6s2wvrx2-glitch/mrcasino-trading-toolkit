@@ -3,11 +3,14 @@ from __future__ import annotations
 import unittest
 
 from xauusd_v2.agents.risk_agent import RiskDecisionState
+from xauusd_v2.backtest_sequence import SequenceState
+from xauusd_v2.ltf_execution import LTFExecutionState
 from xauusd_v2.orchestrator import (
     AgentPipelineCoordinator,
     ExecutionReadinessInput,
     PipelineReadinessState,
     ResearchReadinessInput,
+    StrategyCandidateReadinessInput,
 )
 
 
@@ -27,6 +30,74 @@ class OrchestratorTests(unittest.TestCase):
         )
         self.assertEqual(report.state, PipelineReadinessState.BLOCKED)
         self.assertIn("blind independent validation has not passed", report.blockers)
+
+    def test_strategy_candidate_requires_r143_and_r145(self) -> None:
+        report = self.coordinator.strategy_candidate_readiness(
+            StrategyCandidateReadinessInput(
+                True,
+                True,
+                SequenceState.COMPLETE_CANDIDATE,
+                LTFExecutionState.ENTRY_CANDIDATE,
+                True,
+                True,
+            )
+        )
+        self.assertEqual(report.state, PipelineReadinessState.STRATEGY_CANDIDATE_READY)
+        self.assertFalse(report.live_execution_authorized)
+
+    def test_incomplete_r143_blocks_strategy_candidate(self) -> None:
+        report = self.coordinator.strategy_candidate_readiness(
+            StrategyCandidateReadinessInput(
+                True,
+                True,
+                SequenceState.IN_PROGRESS,
+                LTFExecutionState.ENTRY_CANDIDATE,
+                True,
+                True,
+            )
+        )
+        self.assertEqual(report.state, PipelineReadinessState.BLOCKED)
+        self.assertIn("R-143 sequence state is in_progress", report.blockers)
+
+    def test_ltf_wait_blocks_strategy_candidate(self) -> None:
+        report = self.coordinator.strategy_candidate_readiness(
+            StrategyCandidateReadinessInput(
+                True,
+                True,
+                SequenceState.COMPLETE_CANDIDATE,
+                LTFExecutionState.WAIT,
+                True,
+                True,
+            )
+        )
+        self.assertEqual(report.state, PipelineReadinessState.BLOCKED)
+        self.assertIn("R-145 LTF execution state is wait", report.blockers)
+
+    def test_blind_validation_blocks_strategy_candidate(self) -> None:
+        report = self.coordinator.strategy_candidate_readiness(
+            StrategyCandidateReadinessInput(
+                True,
+                True,
+                SequenceState.COMPLETE_CANDIDATE,
+                LTFExecutionState.ENTRY_CANDIDATE,
+                False,
+                True,
+            )
+        )
+        self.assertEqual(report.state, PipelineReadinessState.BLOCKED)
+
+    def test_historical_reproducibility_blocks_strategy_candidate(self) -> None:
+        report = self.coordinator.strategy_candidate_readiness(
+            StrategyCandidateReadinessInput(
+                True,
+                True,
+                SequenceState.COMPLETE_CANDIDATE,
+                LTFExecutionState.ENTRY_CANDIDATE,
+                True,
+                False,
+            )
+        )
+        self.assertEqual(report.state, PipelineReadinessState.BLOCKED)
 
     def test_risk_veto_blocks_execution_candidate(self) -> None:
         report = self.coordinator.execution_readiness(
