@@ -20,14 +20,18 @@ def _csv_bytes() -> bytes:
     ).encode("utf-8")
 
 
+def _sha_ref(char: str) -> str:
+    return "sha256:" + char * 64
+
+
 def _spec(snapshot_id: str) -> ResearchExperimentSpec:
     return ResearchExperimentSpec(
         experiment_id="EXP-001",
         strategy_version="candidate-v0.1",
-        strategy_commit_sha="abc123",
+        strategy_commit_sha="a" * 40,
         data_snapshot_ref=snapshot_id,
-        parameter_set_ref="params:none",
-        cost_model_ref="costs:v1",
+        parameter_set_ref=_sha_ref("b"),
+        cost_model_ref=_sha_ref("c"),
         symbol="XAUUSD",
         timeframe_seconds=300,
         train=ResearchWindow("train", datetime(2024, 1, 1, 0, 0, tzinfo=UTC), datetime(2024, 1, 1, 0, 5, tzinfo=UTC)),
@@ -115,12 +119,13 @@ class DataSnapshotResearchRuntimeTests(unittest.TestCase):
 
     def test_snapshot_reference_mismatch_is_blocked(self) -> None:
         _, manifest, report = self._closed_snapshot()
-        runtime, _ = prepare_research_runtime(
-            spec=_spec("sha256:not-the-snapshot"),
+        runtime, design = prepare_research_runtime(
+            spec=_spec(_sha_ref("e")),
             snapshot=manifest,
             data_report=report,
             strategy_certification_ready=True,
         )
+        self.assertTrue(design.ready_for_research)
         self.assertEqual(runtime.status, ResearchRuntimeStatus.BLOCKED)
         self.assertTrue(any("snapshot_ref" in blocker for blocker in runtime.blockers))
 
