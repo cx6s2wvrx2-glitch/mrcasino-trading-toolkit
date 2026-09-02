@@ -32,9 +32,13 @@ class CertificationCoverageRound04Tests(unittest.TestCase):
         blocker = self.coverage["GT-R04-002"].blocker or ""
         self.assertIn("distinct from later Reflection zone geometry", blocker)
 
-    def test_fu_retest_visual_does_not_resolve_r54(self) -> None:
-        blocker = self.coverage["GT-R04-001"].blocker or ""
-        self.assertIn("R-54 fib orientation", blocker)
+    def test_fu_retest_visual_uses_quality_module_but_does_not_resolve_r75_anchor(self) -> None:
+        case = self.coverage["GT-R04-001"]
+        blocker = case.blocker or ""
+        self.assertIn("fu_retest_quality", case.components)
+        self.assertIn("R-75", blocker)
+        self.assertIn("fib 0/100 orientation", blocker)
+        self.assertEqual(case.state, CoverageState.PARTIAL)
 
     def test_hcs_strength_is_not_numeric(self) -> None:
         blocker = self.coverage["GT-R04-004"].blocker or ""
