@@ -1,0 +1,118 @@
+{
+  "dataset": "XAUUSD V2 Ground Truth Round 07",
+  "date": "2026-09-02",
+  "status": "candidate_not_verified",
+  "source_episode": "approved primary Mr Casino top-down sequence 2023-11-06",
+  "promotion_allowed": false,
+  "test_vectors": [
+    {
+      "id": "GT-R07-001",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-06#image:IMG_20231106_124128_353.jpg",
+      "expected_label": "monthly_zone_reaction_is_first_sign_while_existing_monthly_strength_still_applies",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary Monthly chart calls the current reaction from the monthly/refined 4D HCS zone a first sign to consider",
+        "the same chart explicitly says Monthly strength and previously mentioned HTF scenarios still apply"
+      ],
+      "forbidden_inference": "Do not turn a first reaction from the zone into a confirmed HTF direction flip."
+    },
+    {
+      "id": "GT-R07-002",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-06#image:IMG_20231106_124130_035.jpg",
+      "expected_label": "2w_negation_is_first_sell_strength_but_weaker_closure_not_enough_for_confirmation",
+      "expected_class": "invalid",
+      "evidence": [
+        "primary 2W chart says a 2-week negation is established to the downside and is a first sign of strength for deeper retracement",
+        "the same chart says the weaker 2W closure is not enough for confirmation because of the reaction from manipulation/weak-high context and the strong Monthly close to the upside"
+      ],
+      "forbidden_inference": "Do not treat the 2W negation as a confirmed dominant bearish regime while the source explicitly withholds confirmation."
+    },
+    {
+      "id": "GT-R07-003",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-06#image:IMG_20231106_124131_151.jpg",
+      "expected_label": "htf_zone_refinement_can_stack_monthly_11d_4d_hcs_and_extend_to_strong_hcs",
+      "expected_class": "valid",
+      "evidence": [
+        "primary 11D chart identifies a key zone ahead as Monthly/11D+4D HCS",
+        "the chart explicitly extends the area to include the strong HCS and shows the next 2W HCS zone below"
+      ],
+      "forbidden_inference": "Do not infer that every stacked multi-timeframe zone must be merged into one universal geometric range; this is a source-specific refinement example."
+    },
+    {
+      "id": "GT-R07-004",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-06#image:IMG_20231106_124133_026.jpg",
+      "expected_label": "overall_new_high_target_is_conditional_on_strongest_manipulation_base_while_current_focus_can_remain_intraday",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary weekly chart labels the new high as the main overall target/further potential only if the strongest base of manipulation is obtained",
+        "the same note says the level should be assessed again and that for now the interest is intraday"
+      ],
+      "forbidden_inference": "Do not promote a long-term target into an immediate intraday target or guaranteed outcome."
+    },
+    {
+      "id": "GT-R07-005",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-06#image:IMG_20231106_124135_957.jpg",
+      "expected_label": "weaker_daily_doji_1h_context_is_still_marked_for_daily_bias",
+      "expected_class": "valid",
+      "evidence": [
+        "primary Daily chart says it is purely marking zones and liquidity",
+        "the chart labels a Daily doji / 1hr area as not the strongest but still something to mark and consider in daily bias"
+      ],
+      "forbidden_inference": "Do not upgrade the weaker doji/1h context into major/core liquidity or a standalone entry trigger."
+    },
+    {
+      "id": "GT-R07-006",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-06#image:IMG_20231106_124138_339.jpg",
+      "expected_label": "12h_hcs_first_touch_can_refine_major_upside_zone",
+      "expected_class": "valid",
+      "evidence": [
+        "primary 12H chart says major zones to the upside are being refined",
+        "the chart explicitly marks a 12H HCS as the first touch of a zone of manipulation"
+      ],
+      "forbidden_inference": "Do not infer a universal reaction count or entry rule from this one zone-touch example."
+    },
+    {
+      "id": "GT-R07-007",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-06#image:IMG_20231106_124142_057.jpg",
+      "expected_label": "major_4h_8h_doji_is_htf_liquidity_context",
+      "expected_class": "valid",
+      "evidence": [
+        "primary 8H chart explicitly labels a Major 4hr/8hr doji"
+      ],
+      "forbidden_inference": "Do not infer exact doji-body geometry or automatic target priority from this visual label alone."
+    },
+    {
+      "id": "GT-R07-008",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-06#image:IMG_20231106_124145_395.jpg",
+      "expected_label": "reaction_from_major_doji_zone_is_first_hold_sign_and_zone_can_remain_relevant",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary 11H chart says price reacted from the Major 4hr/8hr doji zone and calls it the first sign the area was to hold longer",
+        "the chart explicitly says the zone is still relevant for a reaction"
+      ],
+      "forbidden_inference": "Do not assume every reaction consumes or invalidates a zone; this source example explicitly keeps the zone relevant."
+    },
+    {
+      "id": "GT-R07-009",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-06#image:IMG_20231106_124151_576.jpg",
+      "expected_label": "4h_hcs_has_refinement_role_while_fu_poi_remains_separate",
+      "expected_class": "valid",
+      "evidence": [
+        "primary 4H chart explicitly states that the 4H HCS has at least a refinement role to play",
+        "the chart separately labels a FU POI below"
+      ],
+      "forbidden_inference": "Do not merge the HCS refinement range and FU POI into one canonical zone unless later source evidence explicitly requires it."
+    },
+    {
+      "id": "GT-R07-010",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-06#image:IMG_20231106_124152_700.jpg",
+      "expected_label": "lower_tf_hcs_zone_can_have_ltf_role_without_becoming_strong_htf_zone",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary 2H chart says the HCS zone has a part to play if only on LTF for now",
+        "the chart calls the 1H zone only of some relevance and not the strongest, while noting refinement plus liquidity may hold longer under other manipulation"
+      ],
+      "forbidden_inference": "Do not promote a lower-TF zone into dominant HTF authority merely because it remains relevant for LTF execution/context."
+    }
+  ]
+}
