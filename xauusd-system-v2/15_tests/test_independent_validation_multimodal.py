@@ -71,7 +71,7 @@ class IndependentValidationMultimodalTests(unittest.TestCase):
         self.assertIn("original annotation", client.last_user)
         self.assertNotIn("expected_label", client.last_user)
         self.assertNotIn("expected_class", client.last_user)
-        self.assertEqual(result.agent_version, "0.2.0")
+        self.assertEqual(result.agent_version, "0.3.0")
 
     def test_text_only_payload_uses_existing_text_path(self) -> None:
         client = FakeMultimodalClient()
