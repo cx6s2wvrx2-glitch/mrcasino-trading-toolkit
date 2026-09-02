@@ -123,6 +123,68 @@ class Agent06LocalCliTests(unittest.TestCase):
         self.assertNotIn("super-secret", serialized)
         self.assertFalse(json.loads(serialized)["api_key_written_to_disk"])
 
+    def test_one_command_resume_reuses_run_and_passes_resume_existing(self) -> None:
+        repo = self.root / "repo"
+        (repo / "xauusd-system-v2" / "15_tests").mkdir(parents=True)
+        bundle = self.root / "private.zip"
+        bundle.write_bytes(b"bundle")
+        work = self.root / "private-work"
+        run_id = "agent06-anthropic-20260902T200000Z"
+        run_root = work / "runs" / run_id
+        run_root.mkdir(parents=True)
+        (run_root / "agent06_blind_checkpoint.json").write_text("{}", encoding="utf-8")
+        seen_commands: list[list[str]] = []
+
+        def fake_extract(_source: Path, destination: Path) -> None:
+            destination.mkdir(parents=True)
+            (destination / "primary_context_bundle.json").write_text("{}", encoding="utf-8")
+
+        def fake_hash(path: Path) -> str:
+            if path == bundle:
+                return agent06_local_cli._EXPECTED_BUNDLE_SHA256
+            if path.name == "primary_context_bundle.json":
+                return agent06_local_cli._EXPECTED_MANIFEST_SHA256
+            return "a" * 64
+
+        def has_module(command, module_name: str) -> bool:
+            return any(str(part).endswith(module_name) for part in command)
+
+        def fake_stage(command, *, cwd, environment, stage):
+            seen_commands.append(list(command))
+            if has_module(command, "agent06_packet_cli"):
+                output = Path(command[command.index("--output") + 1])
+                output.write_text("{}", encoding="utf-8")
+            elif has_module(command, "agent06_run_cli"):
+                self.assertIn("--resume-existing", command)
+                self.assertEqual(command[command.index("--run-id") + 1], run_id)
+                self.assertEqual(Path(command[command.index("--output-dir") + 1]), run_root)
+                (run_root / "agent06_blind_predictions.json").write_text("{}", encoding="utf-8")
+                (run_root / "agent06_runtime_manifest.json").write_text("{}", encoding="utf-8")
+            elif has_module(command, "agent06_compare_cli"):
+                output = Path(command[command.index("--output") + 1])
+                output.write_text("{}", encoding="utf-8")
+
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "super-secret"}, clear=False), patch.object(
+            agent06_local_cli, "_safe_extract_zip", side_effect=fake_extract
+        ), patch.object(agent06_local_cli, "_sha256_file", side_effect=fake_hash), patch.object(
+            agent06_local_cli, "_git_head", return_value="b" * 40
+        ), patch.object(agent06_local_cli, "_run_stage", side_effect=fake_stage):
+            code = agent06_local_cli.main([
+                "--bundle", str(bundle),
+                "--model", "claude-sonnet-5",
+                "--repo-root", str(repo),
+                "--work-root", str(work),
+                "--resume-run-id", run_id,
+            ])
+
+        self.assertEqual(code, 0)
+        self.assertEqual(len(seen_commands), 3)
+        self.assertEqual(list((work / "runs").iterdir()), [run_root])
+        summary = json.loads((run_root / "agent06_local_pipeline_summary.json").read_text(encoding="utf-8"))
+        self.assertTrue(summary["resumed"])
+        self.assertEqual(summary["run_id"], run_id)
+        self.assertFalse(summary["promotion_allowed"])
+
 
 if __name__ == "__main__":
     unittest.main()
