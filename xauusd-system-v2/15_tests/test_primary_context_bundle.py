@@ -8,6 +8,9 @@ from pathlib import Path
 from xauusd_v2.primary_context_bundle import FileSystemPrimaryContextBundleResolver, load_primary_context_bundle
 
 
+SOURCE_UUID = "a338728f-1796-4665-b678-774ea9f9f031"
+
+
 class PrimaryContextBundleTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
@@ -37,6 +40,49 @@ class PrimaryContextBundleTests(unittest.TestCase):
         self.assertEqual(payload.text, "original primary words")
         self.assertEqual(len(payload.images), 1)
         self.assertEqual(payload.images[0].mime_type, "image/png")
+
+    def test_pdf_fragment_locator_can_resolve_full_original_page(self) -> None:
+        page_locator = f"v2_sources:{SOURCE_UUID}#page:4"
+        manifest = self.write_manifest({
+            "version": 1,
+            "entries": [{
+                "source_locator": page_locator,
+                "images": [{"path": "images/a.png", "mime_type": "image/png"}],
+            }],
+        })
+        resolver = FileSystemPrimaryContextBundleResolver(bundle_root=self.root, manifest_path=manifest)
+        payload = resolver.resolve_payload(page_locator + "#visual:weekly")
+        self.assertEqual(len(payload.images), 1)
+
+    def test_exact_fragment_entry_takes_precedence_over_page_fallback(self) -> None:
+        page_locator = f"v2_sources:{SOURCE_UUID}#page:4"
+        fragment_locator = page_locator + "#visual:weekly"
+        (self.root / "images" / "fragment.png").write_bytes(b"fragment-chart")
+        manifest = self.write_manifest({
+            "version": 1,
+            "entries": [
+                {
+                    "source_locator": page_locator,
+                    "images": [{"path": "images/a.png", "mime_type": "image/png"}],
+                },
+                {
+                    "source_locator": fragment_locator,
+                    "images": [{"path": "images/fragment.png", "mime_type": "image/png"}],
+                },
+            ],
+        })
+        resolver = FileSystemPrimaryContextBundleResolver(bundle_root=self.root, manifest_path=manifest)
+        payload = resolver.resolve_payload(fragment_locator)
+        self.assertEqual(Path(payload.images[0].path).read_bytes(), b"fragment-chart")
+
+    def test_non_page_locator_never_uses_fallback(self) -> None:
+        manifest = self.write_manifest({
+            "version": 1,
+            "entries": [{"source_locator": "casinonotes.excalidraw", "text_path": "text/a.txt"}],
+        })
+        resolver = FileSystemPrimaryContextBundleResolver(bundle_root=self.root, manifest_path=manifest)
+        with self.assertRaises(LookupError):
+            resolver.resolve_payload("casinonotes.excalidraw#embedded:abc")
 
     def test_duplicate_locator_is_rejected(self) -> None:
         entry = {"source_locator": "same", "text_path": "text/a.txt"}
