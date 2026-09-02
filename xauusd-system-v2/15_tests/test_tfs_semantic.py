@@ -14,13 +14,15 @@ from xauusd_v2.tfs_semantic import (
 
 
 class TFSSemanticTests(unittest.TestCase):
-    def test_closed_10m_plus_prevalent_direction_establishes_tfs(self) -> None:
-        result = evaluate_established_tfs(
-            prevalent_direction=Direction.BULLISH,
-            candle_closed=True,
-            confirmation_timeframe_minutes=15,
-        )
-        self.assertEqual(result.state, TFSState.ESTABLISHED)
+    def test_source_backed_10m_floor_is_not_a_closed_10m_15m_enumeration(self) -> None:
+        for timeframe_minutes in (10, 15, 30, 60, 180):
+            with self.subTest(timeframe_minutes=timeframe_minutes):
+                result = evaluate_established_tfs(
+                    prevalent_direction=Direction.BULLISH,
+                    candle_closed=True,
+                    confirmation_timeframe_minutes=timeframe_minutes,
+                )
+                self.assertEqual(result.state, TFSState.ESTABLISHED)
 
     def test_open_candle_cannot_establish_tfs(self) -> None:
         result = evaluate_established_tfs(
@@ -31,12 +33,24 @@ class TFSSemanticTests(unittest.TestCase):
         self.assertEqual(result.state, TFSState.NOT_ESTABLISHED)
 
     def test_sub_10m_cannot_establish_tfs_alone(self) -> None:
+        for timeframe_minutes in (1, 5, 7, 9):
+            with self.subTest(timeframe_minutes=timeframe_minutes):
+                result = evaluate_established_tfs(
+                    prevalent_direction=Direction.BEARISH,
+                    candle_closed=True,
+                    confirmation_timeframe_minutes=timeframe_minutes,
+                )
+                self.assertEqual(result.state, TFSState.NOT_ESTABLISHED)
+
+    def test_timeframe_floor_does_not_claim_equal_strength_across_timeframes(self) -> None:
         result = evaluate_established_tfs(
-            prevalent_direction=Direction.BEARISH,
+            prevalent_direction=Direction.BULLISH,
             candle_closed=True,
-            confirmation_timeframe_minutes=5,
+            confirmation_timeframe_minutes=30,
         )
-        self.assertEqual(result.state, TFSState.NOT_ESTABLISHED)
+        self.assertEqual(result.state, TFSState.ESTABLISHED)
+        self.assertNotIn("equal strength", result.reason.lower())
+        self.assertNotIn("same strength", result.reason.lower())
 
     def test_missing_tfs_evidence_fails_closed(self) -> None:
         result = evaluate_established_tfs(
