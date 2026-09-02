@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from dataclasses import replace
 from datetime import UTC, datetime
 
 from xauusd_v2.data_snapshot import DataSnapshotManifest
@@ -93,9 +94,7 @@ class SourceChartAlignmentTests(unittest.TestCase):
         self.assertEqual(result.state, SourceChartAlignmentState.OFF_BAR_GRID)
 
     def test_provisional_snapshot_cannot_align_for_historical_replay(self) -> None:
-        provisional = DataSnapshotManifest(
-            **{**self.snapshot.__dict__, "closed_only": False}
-        )
+        provisional = replace(self.snapshot, closed_only=False)
         result = align_source_chart_to_snapshot(request=self.request(), snapshot=provisional)
         self.assertEqual(result.state, SourceChartAlignmentState.SNAPSHOT_NOT_CLOSED)
 
