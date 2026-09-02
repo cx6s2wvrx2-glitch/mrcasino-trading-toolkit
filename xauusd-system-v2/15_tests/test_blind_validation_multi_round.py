@@ -17,7 +17,7 @@ class BlindValidationMultiRoundTests(unittest.TestCase):
         base = Path(__file__).parent
         cls.datasets = tuple(
             load_ground_truth(base / f"ground_truth_round_{round_no:02d}.json")
-            for round_no in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+            for round_no in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
         )
         cls.packet = build_blind_packet_multi(cls.datasets)
 
@@ -32,10 +32,10 @@ class BlindValidationMultiRoundTests(unittest.TestCase):
             ambiguities=() if label else ("abstain",),
         )
 
-    def test_rounds_02_to_11_create_exactly_120_blind_cases(self) -> None:
-        self.assertEqual([len(dataset.vectors) for dataset in self.datasets], [20, 7, 6, 5, 8, 10, 10, 4, 20, 30])
-        self.assertEqual(len(self.packet.cases), 120)
-        self.assertEqual(len({case.vector_id for case in self.packet.cases}), 120)
+    def test_rounds_02_to_12_create_exactly_144_blind_cases(self) -> None:
+        self.assertEqual([len(dataset.vectors) for dataset in self.datasets], [20, 7, 6, 5, 8, 10, 10, 4, 20, 30, 24])
+        self.assertEqual(len(self.packet.cases), 144)
+        self.assertEqual(len({case.vector_id for case in self.packet.cases}), 144)
 
     def test_case_schema_contains_no_answer_or_analyst_fields(self) -> None:
         fields = {field.name for field in dataclasses.fields(self.packet.cases[0])}
@@ -44,35 +44,20 @@ class BlindValidationMultiRoundTests(unittest.TestCase):
             self.assertNotIn(forbidden, fields)
 
     def test_all_source_locators_are_preserved_exactly(self) -> None:
-        expected = {
-            vector.id: vector.source_locator
-            for dataset in self.datasets
-            for vector in dataset.vectors
-        }
+        expected = {vector.id: vector.source_locator for dataset in self.datasets for vector in dataset.vectors}
         actual = {case.vector_id: case.source_locator for case in self.packet.cases}
         self.assertEqual(actual, expected)
 
     def test_taxonomy_is_union_only_and_not_case_associated(self) -> None:
-        expected = tuple(sorted({
-            vector.expected_label
-            for dataset in self.datasets
-            for vector in dataset.vectors
-        }))
+        expected = tuple(sorted({vector.expected_label for dataset in self.datasets for vector in dataset.vectors}))
         self.assertEqual(self.packet.taxonomy, expected)
         self.assertGreater(len(self.packet.taxonomy), 2)
 
-    def test_clean_120_case_predictions_compare_as_all_agree_but_never_promote(self) -> None:
-        decisions = tuple(
-            self._decision(vector.id, vector.source_locator, vector.expected_label)
-            for dataset in self.datasets
-            for vector in dataset.vectors
-        )
-        report = compare_blind_multi_batch(
-            datasets=self.datasets,
-            batch=BlindValidationBatchResult(decisions=decisions),
-        )
-        self.assertEqual(report.total, 120)
-        self.assertEqual(report.agree, 120)
+    def test_clean_144_case_predictions_compare_as_all_agree_but_never_promote(self) -> None:
+        decisions = tuple(self._decision(vector.id, vector.source_locator, vector.expected_label) for dataset in self.datasets for vector in dataset.vectors)
+        report = compare_blind_multi_batch(datasets=self.datasets, batch=BlindValidationBatchResult(decisions=decisions))
+        self.assertEqual(report.total, 144)
+        self.assertEqual(report.agree, 144)
         self.assertEqual(report.disagree, 0)
         self.assertEqual(report.ambiguous, 0)
         self.assertTrue(report.all_agree)
@@ -80,23 +65,15 @@ class BlindValidationMultiRoundTests(unittest.TestCase):
 
     def test_one_missing_prediction_becomes_ambiguous_not_silently_dropped(self) -> None:
         all_vectors = tuple(vector for dataset in self.datasets for vector in dataset.vectors)
-        decisions = tuple(
-            self._decision(vector.id, vector.source_locator, vector.expected_label)
-            for vector in all_vectors[:-1]
-        )
-        report = compare_blind_multi_batch(
-            datasets=self.datasets,
-            batch=BlindValidationBatchResult(decisions=decisions),
-        )
-        self.assertEqual(report.total, 120)
-        self.assertEqual(report.agree, 119)
+        decisions = tuple(self._decision(vector.id, vector.source_locator, vector.expected_label) for vector in all_vectors[:-1])
+        report = compare_blind_multi_batch(datasets=self.datasets, batch=BlindValidationBatchResult(decisions=decisions))
+        self.assertEqual(report.total, 144)
+        self.assertEqual(report.agree, 143)
         self.assertEqual(report.ambiguous, 1)
         self.assertFalse(report.all_agree)
 
     def test_unknown_prediction_id_is_rejected_across_all_rounds(self) -> None:
-        batch = BlindValidationBatchResult(
-            decisions=(self._decision("UNKNOWN", "primary:unknown", "anything"),)
-        )
+        batch = BlindValidationBatchResult(decisions=(self._decision("UNKNOWN", "primary:unknown", "anything"),))
         with self.assertRaises(ValueError):
             compare_blind_multi_batch(datasets=self.datasets, batch=batch)
 
@@ -106,16 +83,7 @@ class BlindValidationMultiRoundTests(unittest.TestCase):
             status="candidate_not_verified",
             source_episode="primary",
             promotion_allowed=False,
-            vectors=(
-                GroundTruthVector(
-                    id=self.datasets[0].vectors[0].id,
-                    source_locator="primary:duplicate",
-                    expected_label="other_label",
-                    expected_class="invalid",
-                    evidence=("primary evidence",),
-                    forbidden_inference="",
-                ),
-            ),
+            vectors=(GroundTruthVector(id=self.datasets[0].vectors[0].id, source_locator="primary:duplicate", expected_label="other_label", expected_class="invalid", evidence=("primary evidence",), forbidden_inference=""),),
         )
         with self.assertRaises(ValueError):
             build_blind_packet_multi((*self.datasets, duplicate))
