@@ -32,6 +32,13 @@ def _extract_safe_runner_error_code(stderr: str) -> str | None:
     return None
 
 
+def _normalize_allowed_labels(allowed_labels: Sequence[str]) -> tuple[str, ...]:
+    labels = tuple(dict.fromkeys(str(label).strip() for label in allowed_labels if str(label).strip()))
+    if len(labels) < 2:
+        raise AgentContractError("blind validation requires at least two allowed labels")
+    return labels
+
+
 @dataclass(frozen=True, slots=True)
 class CommandModelClientConfig:
     """Configuration for a provider-independent structured-model subprocess adapter.
@@ -39,6 +46,9 @@ class CommandModelClientConfig:
     The configured command receives exactly one JSON object on stdin. Text-only calls
     contain {"system", "user"}. Multimodal calls additionally contain an `images`
     array with local primary-source file path, MIME type, SHA-256 and size metadata.
+    Agent-06 classification calls may also include an `allowed_labels` array so the
+    provider wrapper can enforce the frozen batch taxonomy in its native structured
+    output schema.
 
     The subprocess is responsible for sending those source files to the real model
     provider. API credentials belong in the subprocess environment or an external
@@ -137,6 +147,28 @@ class CommandStructuredModelClient:
             raise AgentContractError("user prompt is required")
         return self._run_request({"system": normalized_system, "user": normalized_user})
 
+    def generate_json_with_allowed_labels(
+        self,
+        *,
+        system: str,
+        user: str,
+        allowed_labels: Sequence[str],
+    ) -> dict[str, Any]:
+        normalized_system = system.strip()
+        normalized_user = user.strip()
+        if not normalized_system:
+            raise AgentContractError("system prompt is required")
+        if not normalized_user:
+            raise AgentContractError("user prompt is required")
+        labels = _normalize_allowed_labels(allowed_labels)
+        return self._run_request(
+            {
+                "system": normalized_system,
+                "user": normalized_user,
+                "allowed_labels": list(labels),
+            }
+        )
+
     def generate_json_multimodal(
         self,
         *,
@@ -169,5 +201,43 @@ class CommandStructuredModelClient:
                 "system": normalized_system,
                 "user": normalized_user,
                 "images": serialized_images,
+            }
+        )
+
+    def generate_json_multimodal_with_allowed_labels(
+        self,
+        *,
+        system: str,
+        user: str,
+        images: tuple[PrimaryImageEvidence, ...],
+        allowed_labels: Sequence[str],
+    ) -> dict[str, Any]:
+        normalized_system = system.strip()
+        normalized_user = user.strip()
+        if not normalized_system:
+            raise AgentContractError("system prompt is required")
+        if not normalized_user:
+            raise AgentContractError("user prompt is required")
+        if not images:
+            raise AgentContractError("multimodal call requires at least one primary image")
+        labels = _normalize_allowed_labels(allowed_labels)
+
+        serialized_images: list[dict[str, Any]] = []
+        for image in images:
+            image.verify()
+            serialized_images.append(
+                {
+                    "path": image.path,
+                    "mime_type": image.mime_type,
+                    "sha256": image.sha256,
+                    "size_bytes": image.size_bytes,
+                }
+            )
+        return self._run_request(
+            {
+                "system": normalized_system,
+                "user": normalized_user,
+                "images": serialized_images,
+                "allowed_labels": list(labels),
             }
         )
