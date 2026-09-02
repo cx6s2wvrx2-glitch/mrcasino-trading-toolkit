@@ -40,6 +40,17 @@ class CommandStructuredModelClientTests(unittest.TestCase):
             client.generate_json(system="system", user="user")
         self.assertNotIn("secret diagnostic", str(caught.exception))
 
+    def test_allowlisted_safe_error_code_is_exposed_but_other_stderr_is_hidden(self) -> None:
+        script = (
+            "import sys; "
+            "print('model-runner-safe-error: ANTHROPIC_HTTP_401', file=sys.stderr); "
+            "print('secret diagnostic must stay hidden', file=sys.stderr); "
+            "raise SystemExit(2)"
+        )
+        with self.assertRaisesRegex(AgentContractError, "ANTHROPIC_HTTP_401") as caught:
+            self.client(script).generate_json(system="system", user="user")
+        self.assertNotIn("secret diagnostic", str(caught.exception))
+
     def test_invalid_json_fails_closed(self) -> None:
         client = self.client("print('not-json')")
         with self.assertRaisesRegex(AgentContractError, "invalid JSON"):
