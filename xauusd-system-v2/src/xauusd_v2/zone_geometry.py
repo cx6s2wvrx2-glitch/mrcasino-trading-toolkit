@@ -119,10 +119,16 @@ def detect_true_orderblock(
 
 
 def build_1m_strong_fu_zone(*, candle: Candle, timeframe_minutes: int, strong_fu_confirmed: bool | None) -> ZoneRange | None:
-    """Build the scoped R-162 full-candle 1m Strong-FU zone.
+    """Build the source-scoped R-162 full-candle 1m Strong-FU zone.
 
-    This does not classify Strong FU. It only constructs the zone AFTER a
-    separately certified Strong-FU label has been supplied.
+    Important scope boundary: this function is 1m-specific because the cited
+    downstream **zone-construction rule** is 1m-specific. It does NOT define
+    Strong FU itself. Explicit user clarification on 2026-09-02 establishes that
+    Strong-FU and ATT-FU primitive logic is the same across all timeframes.
+
+    This function therefore only constructs this particular 1m zone AFTER a
+    separately certified Strong-FU label has been supplied. No caller may infer
+    that non-1m candles cannot be Strong FU from this function returning None.
     """
     if timeframe_minutes != 1:
         return None
