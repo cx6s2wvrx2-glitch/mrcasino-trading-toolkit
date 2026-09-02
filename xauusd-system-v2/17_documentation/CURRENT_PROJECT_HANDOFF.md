@@ -21,12 +21,12 @@ Supabase project: `mr-casino` (`wuhrhlzabiuudswktcvk`)
 
 ## Current verified technical checkpoint
 
-Latest verified branch state before this handoff-only commit:
-- branch head: `a8d56f9774a5743ced31de058b3928992e5f124b`
-- GitHub Actions run: `33647241660`
-- job: `100304975505`
+Latest fully verified code checkpoint before this documentation update:
+- branch head: `ac7932b154ce9b83d23e26e256ed20b2051622e3`
+- GitHub Actions run: `33651211458`
+- job: `100318394777`
 - Python: 3.12
-- result: **603 / 603 tests PASS**
+- result: **614 / 614 tests PASS**
 
 This handoff update itself creates a newer documentation commit and therefore another CI run. In every fresh continuation, verify the live branch head and latest XAUUSD V2 CI before modifying anything.
 
@@ -65,10 +65,14 @@ All eight have foundation code. Critical strategy/research/execution gates consu
 
 ## Agent 06 — current state
 
-Agent 06 has a provider-neutral multimodal blind-validation path.
+Agent 06 now has a provider-neutral, multimodal, **process-isolated** blind-validation path.
 
 Implemented:
-- blind packet excludes expected label/class/evidence per case;
+- canonical blind corpus R02–R13 = **173 cases**;
+- per-case blind input excludes expected label/class/evidence/forbidden-inference;
+- batch-wide taxonomy only, never associated with a case answer;
+- leakage-safe blind packet file schema;
+- recursive rejection of expected-answer/promotion fields from blind packet files;
 - external command JSON stdin/stdout boundary;
 - timeout, command failure, empty output and invalid JSON fail closed;
 - multimodal command contract;
@@ -77,16 +81,53 @@ Implemented:
 - text-only client cannot silently validate image evidence;
 - multimodal runtime audit manifest stores source hashes/metadata and predictions/abstentions but not ground-truth answers or local image paths;
 - primary-context filesystem resolver;
-- full physical-PDF-page fallback for `v2_sources:<uuid>#page:N#...`, with exact fragment entries taking precedence;
+- safe full physical-PDF-page fallback for `v2_sources:<uuid>#page:N#...`, with exact fragment entries taking precedence;
 - duplicate locator, answer-leakage and path-traversal rejection;
 - original top-down ZIP label-blind stager;
 - original Excalidraw label-blind stager;
 - PDF-page label-blind stager;
 - primary-context manifest merger;
-- Agent-06 readiness gate and CLI;
-- **direct Anthropic Messages API multimodal runner** behind the provider-neutral command boundary.
+- Agent-06 readiness gate;
+- direct Anthropic Messages API multimodal runner behind the provider-neutral command boundary;
+- strict loader for frozen blind prediction files;
+- deterministic post-run comparison pipeline.
+
+### Strong blind-process separation
+
+The provider process is no longer merely prevented from receiving answer fields in a function call; the real execution path is split into separate processes:
+
+1. `xauusd-v2-agent06-packet`
+   - runs **before** the provider process;
+   - reads canonical ground truth only to construct the frozen answer-free packet;
+   - writes only dataset name, batch-wide taxonomy, vector IDs and source locators.
+
+2. `xauusd-v2-agent06-run`
+   - consumes the already-built blind packet + private original source bundle;
+   - **does not load ground-truth datasets**;
+   - performs readiness again before the first model call;
+   - calls the external multimodal provider wrapper;
+   - writes frozen predictions + runtime manifest + readiness report;
+   - refuses to overwrite an existing run directory;
+   - records `ground_truth_loaded_by_this_process=false`, `comparison_performed_by_this_process=false`, `promotion_allowed=false`.
+
+3. `xauusd-v2-agent06-compare`
+   - is a separate **post-run** process;
+   - verifies packet fingerprint, exact vector IDs, exact source locators and taxonomy membership;
+   - only then loads ground truth and compares frozen predictions;
+   - disagreement/abstention remains unresolved;
+   - promotion remains false.
+
+This materially strengthens independence/leakage control. Unit/infrastructure tests still do **not** count as a real independent validation run.
 
 Relevant code:
+- `src/xauusd_v2/blind_validation_packet.py`
+- `src/xauusd_v2/blind_validation_packet_io.py`
+- `src/xauusd_v2/agent06_packet_cli.py`
+- `src/xauusd_v2/agent06_readiness.py`
+- `src/xauusd_v2/agent06_readiness_cli.py`
+- `src/xauusd_v2/agent06_run_cli.py`
+- `src/xauusd_v2/blind_validation_results_io.py`
+- `src/xauusd_v2/agent06_compare_cli.py`
 - `src/xauusd_v2/primary_context_payload.py`
 - `src/xauusd_v2/primary_context_bundle.py`
 - `src/xauusd_v2/topdown_primary_archive.py`
@@ -97,35 +138,42 @@ Relevant code:
 - `src/xauusd_v2/anthropic_model_runner.py`
 - `src/xauusd_v2/agents/validation_agent.py`
 - `src/xauusd_v2/blind_validation_multimodal_runtime.py`
-- `src/xauusd_v2/agent06_readiness.py`
-- `src/xauusd_v2/agent06_readiness_cli.py`
 
-CLI exposed by the package:
+Package CLIs:
 - `xauusd-v2-anthropic-runner`
+- `xauusd-v2-agent06-packet`
+- `xauusd-v2-agent06-readiness`
+- `xauusd-v2-agent06-run`
+- `xauusd-v2-agent06-compare`
+- `xauusd-v2-ingest-mt5`
 
-### Anthropic runner contract
+Canonical secure run procedure:
+`17_documentation/AGENT06_REAL_INDEPENDENT_RUN_RUNBOOK.md`.
 
-The runner is intentionally credential- and model-neutral in repository state:
-- API key must come from environment variable `ANTHROPIC_API_KEY`;
-- the model must be explicitly selected through `XAUUSD_AGENT06_ANTHROPIC_MODEL`;
-- there is **no hardcoded default model**;
+## Anthropic runner contract
+
+The wrapper requires configuration from environment/secrets rather than repository code:
+- API key: `ANTHROPIC_API_KEY`
+- explicit model: `XAUUSD_AGENT06_ANTHROPIC_MODEL`
+- no API key is allowed in command arguments or repo files;
 - optional `XAUUSD_AGENT06_ANTHROPIC_MAX_TOKENS` defaults to 2048;
 - optional `XAUUSD_AGENT06_ANTHROPIC_TIMEOUT_SECONDS` defaults to 120;
 - optional `ANTHROPIC_WORKSPACE_ID` is supported;
 - endpoint is the Anthropic Messages API;
-- primary images are rechecked for path, MIME, byte size and SHA-256 immediately before the provider request;
-- image payload safety limits are enforced;
-- provider output is requested as native JSON-schema structured output with exactly: `predicted_label`, `confidence`, `evidence`, `ambiguities`;
-- non-`end_turn`, malformed JSON, unexpected fields, network/API failure and mutated image evidence fail closed;
-- API error handling does not expose response bodies or credentials.
+- original source image bytes are rechecked for path, MIME, size and SHA-256 immediately before request;
+- provider output is constrained to structured JSON fields: `predicted_label`, `confidence`, `evidence`, `ambiguities`;
+- non-`end_turn`, malformed/unexpected output, network/API failure and mutated image evidence fail closed;
+- API error handling does not expose provider response bodies or credentials.
 
-This wrapper was tested without making a real provider call. Infrastructure tests do **not** count as independent validation.
+Selected first-run model as of the 2026-09-02 official Anthropic model-status check:
+- provider: `anthropic`
+- model: `claude-sonnet-5`
 
-A **real independent-provider Agent-06 validation run has NOT been executed**.
+Re-check official model status immediately before the real paid run. Do not silently substitute a different model.
+
+A **real independent-provider Agent-06 validation run has NOT yet been executed**.
 
 ## Agent-06 primary evidence recovery
-
-The previous missing-primary-source blocker has been materially removed.
 
 Canonical recovery audit:
 `17_documentation/AGENT06_PRIMARY_EVIDENCE_RECOVERY_2026_09_02.md`.
@@ -138,7 +186,7 @@ Recovered original private source material includes:
 
 ### Original Excalidraw
 
-The original `casinonotes.excalidraw` exists in the private Library and its exact Supabase source record now has a private Library `storage_path` mapping.
+The original `casinonotes.excalidraw` exists in the private Library and its exact Supabase source record has a private Library `storage_path` mapping.
 
 For canonical R02:
 - all **18** `#embedded:<fileId>` identifiers exist exactly;
@@ -161,7 +209,7 @@ The private bundle stages canonical and legacy sequence/image locator forms as a
 
 ### Corrected PDF physical-page provenance
 
-Several old R03–R05 locators used printed footer page numbers rather than physical 1-based PDF pages. Only provenance locators were corrected; expected labels/classes/evidence were not changed.
+Only provenance locators were corrected; expected labels/classes/evidence were not changed.
 
 Round 03 physical pages:
 - GT-R03-001 -> 5
@@ -183,12 +231,11 @@ Round 04 physical pages:
 Round 05:
 - GT-R05-002 -> physical `08_Zones_.pdf` page 3; its old locator pointed to nonexistent physical page 7.
 
-Regression tests pin these mappings.
+Regression tests pin these mappings and readiness now honors the safe canonical-page fallback.
 
 ## Private Agent-06 source bundle
 
-The recovered evidence is persisted privately, outside the public repository:
-
+Persisted privately, outside the public repository:
 - Library path: `/XAUUSD V2/Agent06/xauusd_agent06_primary_bundle_2026_09_02.zip`
 - ZIP size: `17,623,961` bytes
 - ZIP SHA-256: `6d3dea44ab528c240b05458628c93e38e8582a53d356bb5414aad4730aab9daf`
@@ -205,25 +252,28 @@ Do **not** commit this binary evidence bundle to the public GitHub repository.
 
 ## Current real Agent-06 blocker
 
-The source persistence and provider-wrapper engineering blockers are now removed.
+Source recovery, persistent private evidence, provider-wrapper engineering, readiness, blind-process isolation and post-run comparator are implemented.
 
-The remaining hard blocker is external configuration that cannot be invented or stored in repository code:
-1. a real Anthropic API credential must be available securely to the runtime as `ANTHROPIC_API_KEY`;
-2. an explicit Anthropic multimodal model must be selected as `XAUUSD_AGENT06_ANTHROPIC_MODEL`.
+The remaining hard blocker is now a **real secure execution environment** containing all of the following at the same time:
+1. the exact tested XAUUSD V2 code;
+2. the private evidence bundle kept outside the public repo;
+3. network access to the real Anthropic API;
+4. a real Anthropic credential supplied securely as `ANTHROPIC_API_KEY`;
+5. explicit model metadata `XAUUSD_AGENT06_ANTHROPIC_MODEL=claude-sonnet-5` (after final model-status recheck).
 
-No Anthropic/Claude, Gemini or OpenRouter connector/plugin was available in the current ChatGPT environment, and the GitHub connector does not expose secrets APIs. Do not paste or commit credentials into source files, manifests, command arguments or documentation.
+The current ChatGPT execution environment does not expose `ANTHROPIC_API_KEY`, and no Anthropic/Claude connector/plugin is available. GitHub Actions cannot consume the ChatGPT private Library bundle without deliberately moving that private source material into another secure store, and the bundle must not be uploaded to this public repository.
 
-When the secure credential and explicit model are available:
-1. materialize/unpack the private Agent-06 evidence bundle;
-2. configure `CommandStructuredModelClient` to execute `xauusd-v2-anthropic-runner`;
-3. run `agent06_readiness` using honest provider/model metadata and the real multimodal client capability;
-4. only if it returns `READY_TO_RUN`, execute the 173 cases blind;
-5. persist the auditable runtime manifest/predictions;
-6. reveal expected answers only to the deterministic downstream comparator;
-7. log disagreements/abstentions as unresolved review material;
-8. do not auto-promote rules even if agreement is 173/173.
+Therefore the next real provider call must not be faked or simulated here.
 
-Do not simulate independence with the same formalizer/model labels.
+When a secure runtime has the bundle + key + provider network:
+1. verify source bundle and manifest SHA-256;
+2. build/freeze the answer-free packet;
+3. run readiness;
+4. execute the 173-case isolated blind run;
+5. freeze/hash predictions and runtime manifest;
+6. only afterward run deterministic comparison;
+7. log actual provider/model/run metadata and disagreement/abstention counts;
+8. keep `promotion_allowed=false`.
 
 ## Broker historical-data path
 
@@ -322,8 +372,6 @@ Persisted canonical blind corpus: **Rounds 02–13 = 173 cases**.
 - R12 24
 - R13 29
 
-Agent 06 receives case identity/locator plus the batch-wide taxonomy; primary context is resolved separately without expected answers. Ground truth is exposed only to the downstream deterministic comparator.
-
 Even 173/173 functional agreement cannot auto-promote strategy rules and is not a profitability metric.
 
 ## Primary top-down archive — exhausted
@@ -365,10 +413,11 @@ Never auto-promote `[C]` to VERIFIED.
 
 Facts:
 - substantial semantic/candidate engine exists;
-- the persistent private Agent-06 source bundle exists;
+- persistent private Agent-06 source bundle exists;
 - 173 canonical blind cases exist;
-- direct Anthropic multimodal provider wrapper exists and is fail-closed;
-- latest verified pre-handoff regression suite is **603 / 603 PASS**;
+- real Anthropic multimodal wrapper exists and is fail-closed;
+- blind provider process is isolated from ground-truth loading/comparison;
+- latest verified pre-handoff regression suite is **614 / 614 PASS**;
 - VERIFIED knowledge = 0;
 - VERIFIED rules = 0;
 - no real independent external blind-model run has occurred;
@@ -378,14 +427,12 @@ Facts:
 
 ## Immediate next work
 
-The next legitimate step is blocked only by real external provider configuration.
-
 Priority:
-1. Verify this handoff commit with CI and always resume from the live branch head.
-2. Obtain/configure `ANTHROPIC_API_KEY` securely outside the repo and explicitly select `XAUUSD_AGENT06_ANTHROPIC_MODEL`.
-3. Materialize the private source bundle and run Agent-06 readiness with the real client.
-4. If READY, execute the 173-case blind external-model run and persist an auditable runtime manifest.
-5. Compare predictions deterministically against ground truth only afterward; disagreement/abstention stays unverified.
+1. Verify this documentation commit with CI and always resume from the live branch head.
+2. Run the first real Agent-06 validation only in a secure environment containing private bundle + Anthropic credential + provider network, following `AGENT06_REAL_INDEPENDENT_RUN_RUNBOOK.md`.
+3. Freeze predictions/runtime manifest before ground-truth comparison.
+4. Compare deterministically only afterward; disagreement/abstention stays unverified.
+5. Persist truthful real-run metadata only after an actual provider run.
 6. After/alongside independent validation, ingest real broker-quality XAUUSD MT5 history into the immutable snapshot store.
 7. Turn replay candidates READY only with proven broker/time/timestamp alignment; never invent timestamps.
 8. Keep helpers in shadow mode only.
