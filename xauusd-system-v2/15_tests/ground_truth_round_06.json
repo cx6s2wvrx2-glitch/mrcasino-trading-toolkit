@@ -1,0 +1,94 @@
+{
+  "dataset": "XAUUSD V2 Ground Truth Round 06",
+  "date": "2026-09-02",
+  "status": "candidate_not_verified",
+  "source_episode": "approved primary Mr Casino top-down sequence 2023-11-01",
+  "promotion_allowed": false,
+  "test_vectors": [
+    {
+      "id": "GT-R06-001",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-01#image:IMG_20231101_121009_891.jpg",
+      "expected_label": "monthly_buys_prevalent_after_hcs_x3_closure",
+      "expected_class": "valid",
+      "evidence": [
+        "primary chart says buys are overall established/prevalent after the last monthly closure",
+        "the same chart marks x3 manipulation closure as additional power and a monthly HCS closure as significant timeframe strength"
+      ],
+      "forbidden_inference": "Do not infer that monthly prevalent buys guarantee immediate intraday buys or a specific target/entry."
+    },
+    {
+      "id": "GT-R06-002",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-01#image:IMG_20231101_121011_724.jpg",
+      "expected_label": "weaker_monthly_bearish_hcs_not_enough_to_negate_prevalent_buys",
+      "expected_class": "invalid",
+      "evidence": [
+        "primary chart calls the bearish HCS a first weaker HCS",
+        "primary chart explicitly says it is still not enough to negate previous buys, especially with major liquidity and weekly doji above"
+      ],
+      "forbidden_inference": "Do not classify the bearish HCS as useless; the invalid class is only for the inference that it alone reverses the higher-timeframe prevalent buys."
+    },
+    {
+      "id": "GT-R06-003",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-01#image:IMG_20231101_121013_821.jpg",
+      "expected_label": "forming_3w_negation_allows_retracement_scenario_but_does_not_flip_prevalent_bias",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary chart marks a currently-forming 3-week negation high and possible retracement levels",
+        "the same chart says buys remain most prevalent until developing price action gives clear signs otherwise"
+      ],
+      "forbidden_inference": "Do not promote a forming 3W negation into a confirmed HTF reversal before the required confirming price action."
+    },
+    {
+      "id": "GT-R06-004",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-01#image:IMG_20231101_125358_589.jpg",
+      "expected_label": "untested_2w_hcs_zone_is_key_refinement_for_week_ahead",
+      "expected_class": "valid",
+      "evidence": [
+        "primary 2W chart explicitly labels a key 2-week untested HCS zone while refining zones for the week ahead"
+      ],
+      "forbidden_inference": "Do not infer that the existence of the 2W HCS zone is itself an entry trigger or guarantees a reaction."
+    },
+    {
+      "id": "GT-R06-005",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-01#image:IMG_20231101_125359_782.jpg",
+      "expected_label": "weekly_zone_no_longer_active_after_prior_reaction_within_refinement",
+      "expected_class": "invalid",
+      "evidence": [
+        "primary weekly chart explicitly says the zone is no longer active because price reacted the prior week upon a zone of manipulation within its refinement"
+      ],
+      "forbidden_inference": "Do not infer a universal reaction-count rule for every later Reflection zone family from this single older top-down example."
+    },
+    {
+      "id": "GT-R06-006",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-01#image:IMG_20231101_125402_868.jpg",
+      "expected_label": "4d_x3_is_first_major_sign_for_possible_longer_sells_not_full_confirmation",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary 4D chart labels x3 as the first major sign for the possibility of longer sells"
+      ],
+      "forbidden_inference": "Do not convert a first major sign into a confirmed swing-sell state without the remaining context and confirmation."
+    },
+    {
+      "id": "GT-R06-007",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-01#image:IMG_20231101_125406_708.jpg",
+      "expected_label": "unclosed_daily_hcs_x3_is_context_only_not_confirmed_signal",
+      "expected_class": "invalid",
+      "evidence": [
+        "primary chart marks Daily HCS + strong x3",
+        "the same chart explicitly says the candle is yet to close and that only zones are being looked at currently"
+      ],
+      "forbidden_inference": "Do not treat an unclosed Daily HCS/x3 as confirmed TFS or an executable signal."
+    },
+    {
+      "id": "GT-R06-008",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-01#image:IMG_20231101_125409_094.jpg",
+      "expected_label": "4h_hcs_retest_poi_is_key_for_ltf_entries_within_htf_context",
+      "expected_class": "valid",
+      "evidence": [
+        "primary 4H chart labels an HCS retest POI and says it is especially key for LTF entries in the day's price action",
+        "the chart conditions the idea on true buys respecting the 1975 low"
+      ],
+      "forbidden_inference": "Do not treat the 4H HCS retest POI as a standalone trade without the stated HTF condition and LTF execution evidence."
+    }
+  ]
+}
