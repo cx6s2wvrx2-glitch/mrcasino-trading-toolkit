@@ -16,28 +16,37 @@ Supabase project: `mr-casino` (`wuhrhlzabiuudswktcvk`)
 - Ambiguity = fail closed / NO TRADE / NOT CERTIFIED.
 - No LLM has live execution authority.
 - Never bypass connector safety blocks.
+- Never call source recovery, implementation coverage, or blind-model agreement a VERIFIED strategy promotion.
 
 ## Current verified technical checkpoint
 
-Latest fully verified code checkpoint before this documentation update:
-- GitHub Actions run: `33639681595`
-- job: `100279310183`
-- head commit: `606113cb6f1a2cb7386fb1672b34a108572f4be6`
+Latest fully verified code checkpoint before the documentation-only recovery commits:
+- branch head: `79f99683cee122db5ecb1467f5f8341dadbe8a8a`
+- GitHub Actions run: `33646095968`
+- job: `100301105070`
 - Python: 3.12
-- result: **540 / 540 tests PASS**
+- result: **595 / 595 tests PASS**
 
-Live Supabase snapshot checked 2026-09-02:
-- **29** active approved sources
+The branch may be ahead of this SHA because the Agent-06 recovery documentation itself is committed afterward. Always verify the live head and latest CI before modifying anything.
+
+## Live Supabase snapshot checked 2026-09-02
+
+- **29** approved-by-user source records remain in `status='review'`
+- **16** source records now have non-null `storage_path`
 - **195** knowledge claims
 - **23** V2 rules
 - **215** examples
 - **32** agent runs
-- **14** open disagreement/certification records
+- **14** unresolved disagreement/certification rows (`resolved_by_user=false`)
 - **0 VERIFIED knowledge**
 - **0 VERIFIED rules**
 
-The 14 open records are not 14 broken strategy components. Canonical engineering classification is in:
-`17_documentation/CERTIFICATION_OPEN_RECORDS_MATRIX.md`.
+Do not rewrite the 29 approved source rows as `ACTIVE`; the live database state is approved-by-user + `review`.
+
+The 14 unresolved rows were previously reconciled into **8 canonical blocker families** in:
+`17_documentation/OPEN_BOUNDARY_RECONCILIATION_2026_09_02.md`.
+
+This reconciliation did not set `resolved_by_user=true` and did not promote rules.
 
 ## Architecture
 
@@ -53,41 +62,156 @@ Canonical roles:
 
 All eight have foundation code. Critical strategy/research/execution gates consume evidence-bearing reports, not free booleans.
 
-Agent 06 is now **v0.2.0** and has a multimodal blind-validation path.
-
 ## Agent 06 — current state
+
+Agent 06 has a provider-neutral multimodal blind-validation path.
 
 Implemented:
 - blind packet excludes expected label/class/evidence per case;
-- text-only external model command adapter;
+- external command JSON stdin/stdout model boundary;
+- timeout + nonzero-exit + invalid-JSON fail-closed behavior;
 - multimodal external model command contract;
 - original primary images travel as file evidence with MIME + SHA-256 + byte size;
 - image mutation is detected before model call;
 - text-only client cannot silently validate an image case;
 - multimodal runtime audit manifest stores source hashes/metadata and prediction/abstention, but no ground-truth answer and no local image path;
 - primary-context filesystem bundle resolver;
+- full-physical-PDF-page fallback for `v2_sources:<uuid>#page:N#...` when no exact fragment entry exists;
 - bundle rejects duplicate locators, answer-leakage fields and path traversal;
-- Agent-06 readiness gate;
-- CLI returns `READY_TO_RUN` only when the full blind packet has resolvable primary evidence and model metadata/capability; otherwise `NOT_READY` with explicit blockers.
+- top-down original-ZIP label-blind stager;
+- original-Excalidraw label-blind stager;
+- PDF-page label-blind stager;
+- primary-context manifest merger;
+- Agent-06 readiness gate and CLI.
 
 Relevant code:
 - `src/xauusd_v2/primary_context_payload.py`
 - `src/xauusd_v2/primary_context_bundle.py`
+- `src/xauusd_v2/topdown_primary_archive.py`
+- `src/xauusd_v2/excalidraw_primary_context.py`
+- `src/xauusd_v2/pdf_primary_pages.py`
+- `src/xauusd_v2/primary_context_bundle_merge.py`
 - `src/xauusd_v2/structured_model_clients.py`
 - `src/xauusd_v2/agents/validation_agent.py`
 - `src/xauusd_v2/blind_validation_multimodal_runtime.py`
 - `src/xauusd_v2/agent06_readiness.py`
 - `src/xauusd_v2/agent06_readiness_cli.py`
 
-A **real independent-provider validation run has NOT yet been executed**. Never describe it as completed until an actual provider/model is run and logged.
+A **real independent-provider validation run has NOT been executed**. Never describe it as completed until an actual external provider/model runs blind and is logged.
 
-### Current real Agent-06 blocker
+## Agent-06 primary evidence recovery — major update
 
-Most approved primary source records in `v2_sources` still have `storage_path = null`. The external runtime therefore does not yet have a persistent source store containing the original approved PDFs/charts/notebook assets for all 173 locators.
+The previous missing-primary-source blocker has been materially removed.
 
-Do NOT substitute analyst summaries, evidence strings, model memory or candidate labels for missing primary context.
+Original private source material recovered:
+- `casinonotes.excalidraw`
+- `top down analysis (1).zip`
+- `PRICE ACTION REFLECTION.zip`
+- approved primary PDFs needed by R03–R05, including Analysis Basics, FU Retests, FU Negations, HCS, Zones, Imbalances, Reflection Master, and the approved backtest exercises document.
 
-The current Supabase connector available in ChatGPT exposes database SQL/docs but no binary Storage-upload action. GitHub connector handles UTF-8 text, not the source binary corpus. Therefore source persistence is still an infrastructure dependency, not something to fake through SQL/base64 or summaries.
+### Original Excalidraw
+
+The private original `casinonotes.excalidraw` is available and has an exact Supabase `storage_path` mapping.
+
+For canonical R02:
+- all **18** `#embedded:<fileId>` identifiers exist exactly;
+- each referenced file is attached to at least one live image element;
+- all 18 recovered embedded assets decode as real images and pass signature checks;
+- the one `#text:<elementId>` identifier exists as a live text element.
+
+No analyst label is required to retrieve those source assets.
+
+### Original top-down ZIP
+
+`top down analysis (1).zip` recovery state:
+- **188 / 188** original chart images present
+- **188 / 188** unique image basenames
+- **29** filename date groups
+- **28 XAUUSD sequences / 186 XAUUSD images** eligible for XAUUSD evidence
+- `2021-11-30` has exactly the two known GBPJPY images and remains excluded from XAUUSD ground truth/evidence.
+
+The private bundle stages both legacy and canonical sequence/image locator forms as a label-blind superset, so source retrieval does not depend on expected labels.
+
+### Corrected PDF physical-page provenance
+
+Several old R03–R05 locators used the PDF's printed footer page number instead of the real physical 1-based PDF page number. Only `source_locator` provenance was corrected; labels/classes/evidence were not changed.
+
+Round 03 physical pages:
+- GT-R03-001 -> 5
+- GT-R03-002 -> 3
+- GT-R03-003 -> 3
+- GT-R03-004 -> 3
+- GT-R03-005 -> 3
+- GT-R03-006 -> 3
+- GT-R03-007 -> 3
+
+Round 04 physical pages:
+- GT-R04-001 -> 3
+- GT-R04-002 -> 3
+- GT-R04-003 -> 4
+- GT-R04-004 -> 5
+- GT-R04-005 -> 4
+- GT-R04-006 -> 6
+
+Round 05:
+- GT-R05-002 -> physical `08_Zones_.pdf` page 3; the old locator pointed to nonexistent physical page 7.
+
+Regression tests pin these mappings.
+
+Canonical recovery audit:
+`17_documentation/AGENT06_PRIMARY_EVIDENCE_RECOVERY_2026_09_02.md`.
+
+## Private Agent-06 source bundle
+
+The recovered evidence is persisted privately, outside the public GitHub repository:
+
+- Library path: `/XAUUSD V2/Agent06/xauusd_agent06_primary_bundle_2026_09_02.zip`
+- ZIP size: `17,623,961` bytes
+- ZIP SHA-256: `6d3dea44ab528c240b05458628c93e38e8582a53d356bb5414aad4730aab9daf`
+- `primary_context_bundle.json` SHA-256: `e73568e4af896c4e4ffcb9bee7cbd694902d706003e2e594babeaa5faa422a37`
+- **477** resolver entries
+- **219** unique image assets
+- **1** text asset
+
+The 477 entries are deliberately more than the 173 blind cases because top-down evidence is staged as a label-blind locator superset.
+
+The Library copy was materialized back and verified byte-for-byte identical to the locally generated ZIP with the same SHA-256.
+
+Do **not** commit this binary evidence bundle to the public repository.
+
+## Current real Agent-06 blocker
+
+The primary-source persistence problem is no longer the main blocker.
+
+The remaining hard blocker for a real independent run is:
+- no genuinely independent external **multimodal** provider/credential runner is currently connected to the command boundary.
+
+Before a real blind run:
+1. connect an actual external multimodal provider/wrapper;
+2. supply honest provider/model metadata;
+3. run Agent-06 readiness against the private evidence bundle and the real client capability;
+4. only if readiness passes, run blind prediction with no expected answers exposed;
+5. compare predictions to ground truth afterward;
+6. disagreement/abstention remains unverified and cannot silently select the formalizer answer.
+
+Do not simulate this with the same model/formalized labels and do not claim independent validation based on infrastructure tests.
+
+## Broker historical-data path
+
+The MT5 historical-data ingestion path has also advanced.
+
+Implemented:
+- strict MT5 export parsing;
+- explicit broker/symbol/source-timezone/timeframe/evaluation timestamp;
+- canonical UTC OHLC normalization;
+- provisional-final-bar preservation;
+- gap reporting rather than silent filling;
+- raw-source SHA-256 + canonical snapshot SHA-256;
+- immutable content-addressed persistence for exact raw export, canonical CSV, and ingestion/audit manifest;
+- tamper/collision fail-closed behavior;
+- CLI: `xauusd-v2-ingest-mt5`.
+
+A real broker-quality MT5 XAUUSD history export has **not** yet been ingested. Therefore no historical replay/performance claim is unlocked by the ingestion code alone.
 
 ## Strategy / research modules already implemented at semantic or candidate level
 
@@ -114,9 +238,10 @@ The current Supabase connector available in ChatGPT exposes database SQL/docs bu
 - R-145 LTF execution candidate logic
 - Accepted-RR safeguard
 - 11h safeguard
-- deterministic Risk Engine with no hardcoded 3%/5%
+- deterministic Risk Engine with no hardcoded production 3%/5%
 - broker precision / tick-size / digits
 - immutable historical-data snapshots
+- MT5 source ingestion + content-addressed store
 - parent-child candle alignment
 - source-chart ↔ immutable broker-bar alignment
 - component replay / lookahead protection
@@ -124,17 +249,17 @@ The current Supabase connector available in ChatGPT exposes database SQL/docs bu
 
 ## Real source/calibration unknowns — DO NOT GUESS
 
-- FU: exact source-backed sufficiency for the opposite-direction move after liquidity take
-- R-54 exact Fibonacci 0/100 orientation for numeric 70% grading
-- universal numeric Strong-FU threshold, if one exists
-- exact broker-specific Imbalanced-Candle geometry/tolerance
-- x3-by-x3 standalone raw grammar
-- Accepted RR numeric/dynamic definition
-- 11h candle construction/session anchor
-- trail-level selection rule
-- final production risk policy, including historical 3% vs 5% conflict
+Canonical unresolved blocker families remain:
+1. FU: exact source-backed sufficiency for the opposite-direction move after liquidity take
+2. R-54 exact Fibonacci 0/100 orientation for numeric 70% grading
+3. universal numeric Strong-FU threshold, if one exists
+4. exact broker-specific Imbalanced-Candle geometry/tolerance
+5. x3-by-x3 standalone raw grammar
+6. Accepted RR numeric/dynamic definition
+7. 11h candle construction/session anchor
+8. final production risk policy, including historical 3% vs 5% conflict
 
-Operationally handled but not formally VERIFIED: liquidity-list evolution, HCS evolution, zone/orderblock geometry split, secondary PPT authority, Reflection numbering collisions.
+Other operational/governance issues remain source-scoped rather than silently flattened: liquidity-list evolution, HCS evolution, zone/orderblock geometry split, secondary PPT authority, Reflection numbering collisions.
 
 ## Source restrictions still active
 
@@ -171,7 +296,9 @@ Persisted canonical blind corpus: **Rounds 02–13 = 173 cases**.
 - R12 24
 - R13 29
 
-Agent 06 sees only `vector_id + source_locator` plus a batch-wide taxonomy before source-context resolution. Even 173/173 agreement cannot auto-promote strategy rules.
+Agent 06 receives case identity/locator and batch-wide taxonomy, then source context is resolved without expected answers. Expected labels are revealed only to the downstream comparator.
+
+Even 173/173 functional agreement cannot auto-promote strategy rules and says nothing by itself about profitability.
 
 ## Primary top-down archive — exhausted
 
@@ -190,7 +317,7 @@ Other already-exhausted/indexed corpora:
 - Price Action Reflection visuals through 2023-05-31
 - student Swing-low archive — secondary only
 - student handwritten notes — secondary only
-- Casino Notes text annotations
+- Casino Notes material
 
 Inspected/exhausted != VERIFIED.
 
@@ -208,32 +335,36 @@ Never auto-promote `[C]` to VERIFIED.
 
 ## Current strategic status
 
-NOT strategy-verified. NOT performance-certified. NOT live-ready.
+**NOT strategy-verified. NOT performance-certified. NOT live-ready.**
 
 Facts:
 - substantial semantic/candidate engine exists;
-- approved visual source exhaustion is advanced;
+- approved primary source recovery is now sufficient to build a persistent private Agent-06 evidence bundle;
 - 173 persisted blind cases exist;
-- **540 regression tests pass at the latest verified code checkpoint**;
+- latest verified pre-documentation regression suite is **595 / 595 PASS**;
 - VERIFIED knowledge = 0;
 - VERIFIED rules = 0;
+- no independent external blind-model run has occurred;
+- no real broker-history research run has occurred;
 - no performance claim is certified;
 - live execution remains disabled.
 
 ## Immediate next work
 
-Continue without waiting for the huge Discord channel; user will provide that gradually.
+Continue without waiting for the large Discord channel; user will provide that gradually.
 
 Priority:
-1. Make the 173-case Agent-06 primary-context bundle persistently resolvable from original approved text/images; do not use summaries as substitute.
-2. Configure a genuinely independent external multimodal provider/wrapper and run Agent 06 only after `agent06_readiness` says `READY_TO_RUN`.
-3. Compare real blind predictions deterministically against ground truth; disagreement/abstention stays unverified.
-4. Build/connect broker-quality XAUUSD historical-data ingestion and immutable snapshots for replay/source-chart alignment.
-5. Turn replay candidates READY only with proven broker/time/timestamp alignment.
-6. Keep helpers in shadow mode only.
-7. Keep connector-blocked candidate material noncanonical unless a compliant persistence path appears.
-8. Ingest future Discord photos gradually with chronology/source authority preserved.
-9. After sufficient certification: OOS -> walk-forward -> costs/slippage -> sensitivity -> Monte Carlo -> paper/demo -> shadow -> tiny live -> production.
+1. Verify the latest documentation commits with CI and always resume from the live branch head.
+2. Find/connect a genuinely independent external multimodal provider/wrapper compatible with the command client; do not fake independence.
+3. Run `agent06_readiness` against the private evidence bundle and the real external client/model metadata.
+4. If READY, execute the 173-case blind external-model run and persist an auditable runtime manifest.
+5. Compare blind predictions deterministically against ground truth only afterward; disagreements/abstentions remain unverified.
+6. In parallel/after the independent-validation gate, ingest real broker-quality XAUUSD MT5 history into the immutable snapshot store.
+7. Turn replay candidates READY only with proven broker/time/timestamp alignment; never invent timestamps.
+8. Keep helpers in shadow mode only.
+9. Keep connector-blocked candidate material noncanonical unless a compliant persistence path appears.
+10. Ingest future Discord photos gradually with chronology/source authority preserved.
+11. Only after sufficient certification: OOS -> walk-forward -> costs/slippage -> sensitivity -> Monte Carlo -> paper/demo -> shadow -> tiny live -> production.
 
 ## Workflow discipline
 
@@ -246,11 +377,11 @@ For every new source/candidate:
 6. keep unverified/draft by default,
 7. never auto-promote,
 8. run CI after code/data-contract changes,
-9. do not claim persistence if connector blocks it,
+9. do not claim persistence if a connector blocks it,
 10. never touch unrelated projects.
 
 ## Fresh-chat resume prompt
 
 `Συνέχισε το XAUUSD V2 από xauusd-system-v2/17_documentation/CURRENT_PROJECT_HANDOFF.md στο branch xauusd-v2-foundation. Διάβασε πρώτα το handoff, έλεγξε live GitHub/Supabase και το τελευταίο CI, και συνέχισε από το πραγματικό current state. Μην αγγίξεις τίποτα εκτός του XAUUSD project.`
 
-In a fresh chat, fetch this file first, then verify live branch head, `01_sources/TOPDOWN_PRIMARY_SEQUENCE_INDEX.md`, Supabase snapshot and latest CI before modifying anything.
+In a fresh chat, fetch this file first, then verify live branch head, Supabase snapshot and latest CI before modifying anything.
