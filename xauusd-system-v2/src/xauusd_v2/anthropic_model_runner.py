@@ -4,6 +4,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -187,7 +188,12 @@ def parse_anthropic_response(value: object) -> dict[str, Any]:
         raise AnthropicRunnerError("Anthropic response must be a JSON object")
     if value.get("type") != "message":
         raise AnthropicRunnerError("Anthropic response is not a message")
-    if value.get("stop_reason") != "end_turn":
+    stop_reason = value.get("stop_reason")
+    if stop_reason != "end_turn":
+        if stop_reason == "max_tokens":
+            raise AnthropicRunnerError("Anthropic response stopped at max_tokens")
+        if stop_reason == "refusal":
+            raise AnthropicRunnerError("Anthropic response stopped with refusal")
         raise AnthropicRunnerError("Anthropic response did not complete with end_turn")
     content = value.get("content")
     if not isinstance(content, list):
@@ -204,6 +210,38 @@ def parse_anthropic_response(value: object) -> dict[str, Any]:
     except json.JSONDecodeError as exc:
         raise AnthropicRunnerError("Anthropic structured output is not valid JSON") from exc
     return _validate_decision_payload(payload)
+
+
+def _read_http_error_message(exc: urllib.error.HTTPError) -> str:
+    try:
+        body = exc.read()
+    except Exception:
+        return ""
+    if not body:
+        return ""
+    try:
+        value = json.loads(body)
+    except (UnicodeDecodeError, json.JSONDecodeError, TypeError):
+        return ""
+    if not isinstance(value, dict):
+        return ""
+    error = value.get("error")
+    if not isinstance(error, dict):
+        return ""
+    return str(error.get("message", "")).strip().lower()
+
+
+def _http_error_code(exc: urllib.error.HTTPError) -> str:
+    status = int(exc.code)
+    if status == 400:
+        message = _read_http_error_message(exc)
+        if "credit balance" in message or "billing" in message:
+            return "ANTHROPIC_HTTP_400_BILLING"
+        if "spend limit" in message:
+            return "ANTHROPIC_HTTP_400_SPEND_LIMIT"
+        if "model" in message and any(term in message for term in ("access", "available", "not found", "invalid")):
+            return "ANTHROPIC_HTTP_400_MODEL"
+    return f"ANTHROPIC_HTTP_{status}"
 
 
 def call_anthropic(command_request: object, config: AnthropicRunnerConfig) -> dict[str, Any]:
@@ -227,7 +265,8 @@ def call_anthropic(command_request: object, config: AnthropicRunnerConfig) -> di
         with urllib.request.urlopen(request, timeout=config.timeout_seconds) as response:
             response_bytes = response.read()
     except urllib.error.HTTPError as exc:
-        raise AnthropicRunnerError(f"Anthropic API returned HTTP {exc.code}") from exc
+        safe_code = _http_error_code(exc)
+        raise AnthropicRunnerError(f"Anthropic API returned HTTP {exc.code} [{safe_code}]") from exc
     except urllib.error.URLError as exc:
         raise AnthropicRunnerError("Anthropic API request failed") from exc
     except TimeoutError as exc:
@@ -254,11 +293,32 @@ def run_stdin_stdout(
     return json.dumps(decision, ensure_ascii=False, separators=(",", ":"))
 
 
+def _safe_runner_error_code(exc: AnthropicRunnerError) -> str:
+    message = str(exc)
+    bracketed = re.search(r"\[(ANTHROPIC_HTTP_[A-Z0-9_]+)\]", message)
+    if bracketed is not None:
+        return bracketed.group(1)
+    if message == "ANTHROPIC_API_KEY is required":
+        return "ANTHROPIC_CONFIG_KEY_MISSING"
+    if message == "XAUUSD_AGENT06_ANTHROPIC_MODEL is required":
+        return "ANTHROPIC_CONFIG_MODEL_MISSING"
+    if message == "Anthropic API request failed":
+        return "ANTHROPIC_NETWORK_ERROR"
+    if message == "Anthropic API request timed out":
+        return "ANTHROPIC_TIMEOUT"
+    if message == "Anthropic response stopped at max_tokens":
+        return "ANTHROPIC_STOP_MAX_TOKENS"
+    if message == "Anthropic response stopped with refusal":
+        return "ANTHROPIC_STOP_REFUSAL"
+    return "ANTHROPIC_RUNNER_CONTRACT_ERROR"
+
+
 def main() -> int:
     try:
         stdin_text = sys.stdin.read()
         stdout_text = run_stdin_stdout(stdin_text=stdin_text)
     except AnthropicRunnerError as exc:
+        print(f"model-runner-safe-error: {_safe_runner_error_code(exc)}", file=sys.stderr)
         print(f"anthropic-runner-error: {exc}", file=sys.stderr)
         return 2
     print(stdout_text)
