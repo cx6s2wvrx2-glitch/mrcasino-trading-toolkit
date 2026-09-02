@@ -27,6 +27,30 @@ class CommandStructuredModelClientTests(unittest.TestCase):
         self.assertEqual(payload["predicted_label"], "label_a")
         self.assertEqual(payload["evidence"], ["system", "user"])
 
+    def test_allowed_labels_are_transported_as_separate_provider_constraint(self) -> None:
+        script = (
+            "import json,sys; "
+            "request=json.load(sys.stdin); "
+            "print(json.dumps({'predicted_label':request['allowed_labels'][0],'confidence':0.9,"
+            "'evidence':request['allowed_labels'],'ambiguities':[]}))"
+        )
+        payload = self.client(script).generate_json_with_allowed_labels(
+            system="system",
+            user="user",
+            allowed_labels=("label_a", "label_b", "label_a"),
+        )
+        self.assertEqual(payload["predicted_label"], "label_a")
+        self.assertEqual(payload["evidence"], ["label_a", "label_b"])
+
+    def test_allowed_label_constraint_requires_at_least_two_unique_labels(self) -> None:
+        client = self.client("raise SystemExit(99)")
+        with self.assertRaisesRegex(AgentContractError, "at least two"):
+            client.generate_json_with_allowed_labels(
+                system="system",
+                user="user",
+                allowed_labels=("label_a", "label_a"),
+            )
+
     def test_empty_prompt_fails_before_external_command(self) -> None:
         client = self.client("raise SystemExit(99)")
         with self.assertRaises(AgentContractError):
