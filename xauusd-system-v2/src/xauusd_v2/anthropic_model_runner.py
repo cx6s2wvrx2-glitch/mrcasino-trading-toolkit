@@ -56,7 +56,7 @@ class AnthropicRunnerError(RuntimeError):
 class AnthropicRunnerConfig:
     api_key: str
     model: str
-    max_tokens: int = 2048
+    max_tokens: int = 16384
     timeout_seconds: float = 120.0
     workspace_id: str | None = None
 
@@ -70,7 +70,7 @@ class AnthropicRunnerConfig:
         if not model:
             raise AnthropicRunnerError("XAUUSD_AGENT06_ANTHROPIC_MODEL is required")
         try:
-            max_tokens = int(str(env.get("XAUUSD_AGENT06_ANTHROPIC_MAX_TOKENS", "2048")))
+            max_tokens = int(str(env.get("XAUUSD_AGENT06_ANTHROPIC_MAX_TOKENS", "16384")))
             timeout_seconds = float(str(env.get("XAUUSD_AGENT06_ANTHROPIC_TIMEOUT_SECONDS", "120")))
         except ValueError as exc:
             raise AnthropicRunnerError("invalid Anthropic runner numeric configuration") from exc
