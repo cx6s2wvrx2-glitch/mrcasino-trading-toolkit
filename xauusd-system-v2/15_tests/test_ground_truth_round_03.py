@@ -42,6 +42,20 @@ class GroundTruthRound03Tests(unittest.TestCase):
         self.assertIn("imbalanced_candle_visual_h1", labels)
         self.assertIn("classic_imbalance_visual_m5", labels)
 
+    def test_round_03_locators_use_real_physical_pdf_pages(self) -> None:
+        expected_pages = {
+            "GT-R03-001": 5,
+            "GT-R03-002": 3,
+            "GT-R03-003": 3,
+            "GT-R03-004": 3,
+            "GT-R03-005": 3,
+            "GT-R03-006": 3,
+            "GT-R03-007": 3,
+        }
+        for vector in self.dataset.vectors:
+            marker = vector.source_locator.split("#page:", 1)[1].split("#", 1)[0]
+            self.assertEqual(int(marker), expected_pages[vector.id])
+
 
 if __name__ == "__main__":
     unittest.main()
