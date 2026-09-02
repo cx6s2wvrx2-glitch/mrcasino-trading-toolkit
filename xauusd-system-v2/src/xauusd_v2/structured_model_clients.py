@@ -2,12 +2,34 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
 from .agents.base import AgentContractError
 from .primary_context_payload import PrimaryImageEvidence
+
+
+_SAFE_RUNNER_ERROR_PREFIX = "model-runner-safe-error: "
+_SAFE_RUNNER_ERROR_CODE = re.compile(r"^[A-Z0-9_:-]{1,80}$")
+
+
+def _extract_safe_runner_error_code(stderr: str) -> str | None:
+    """Return only an explicitly marked, tightly constrained diagnostic code.
+
+    Arbitrary subprocess stderr remains hidden. Provider wrappers may emit one
+    machine-safe code such as ``ANTHROPIC_HTTP_401`` for operator diagnostics;
+    free-form error text, response bodies and credentials are never propagated.
+    """
+
+    for line in stderr.splitlines():
+        if not line.startswith(_SAFE_RUNNER_ERROR_PREFIX):
+            continue
+        code = line[len(_SAFE_RUNNER_ERROR_PREFIX) :].strip()
+        if _SAFE_RUNNER_ERROR_CODE.fullmatch(code):
+            return code
+    return None
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,8 +109,10 @@ class CommandStructuredModelClient:
             raise AgentContractError("external model command could not be started") from exc
 
         if completed.returncode != 0:
+            safe_code = _extract_safe_runner_error_code(completed.stderr)
+            suffix = f" ({safe_code})" if safe_code is not None else ""
             raise AgentContractError(
-                f"external model command failed with exit code {completed.returncode}"
+                f"external model command failed with exit code {completed.returncode}{suffix}"
             )
 
         stdout = completed.stdout.strip()
