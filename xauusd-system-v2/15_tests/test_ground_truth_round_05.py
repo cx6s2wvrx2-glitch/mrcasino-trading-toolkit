@@ -35,6 +35,13 @@ class GroundTruthRound05Tests(unittest.TestCase):
         self.assertEqual(case.expected_class, "invalid")
         self.assertIn("establishment", case.forbidden_inference)
 
+    def test_zone_first_reaction_case_points_to_real_pdf_page_three(self) -> None:
+        case = next(v for v in self.dataset.vectors if v.id == "GT-R05-002")
+        self.assertEqual(
+            case.source_locator,
+            "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:3#text:potential-zone-before-first-reaction",
+        )
+
     def test_doji_outside_last_wick_is_preserved_as_edge_case(self) -> None:
         case = next(v for v in self.dataset.vectors if v.id == "GT-R05-004")
         self.assertEqual(case.expected_class, "edge_case")
