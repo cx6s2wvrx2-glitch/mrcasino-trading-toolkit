@@ -4,10 +4,13 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from .agents.risk_agent import RiskDecisionState
+from .backtest_sequence import SequenceState
+from .ltf_execution import LTFExecutionState
 
 
 class PipelineReadinessState(StrEnum):
     BLOCKED = "BLOCKED"
+    STRATEGY_CANDIDATE_READY = "STRATEGY_CANDIDATE_READY"
     RESEARCH_READY = "RESEARCH_READY"
     EXECUTION_CANDIDATE = "EXECUTION_CANDIDATE"
 
@@ -21,6 +24,16 @@ class ResearchReadinessInput:
     historical_reproducible: bool
     market_data_validated: bool
     research_design_approved: bool
+
+
+@dataclass(frozen=True, slots=True)
+class StrategyCandidateReadinessInput:
+    market_data_validated: bool
+    market_context_unambiguous: bool
+    r143_sequence_state: SequenceState
+    ltf_execution_state: LTFExecutionState
+    blind_validation_passed: bool
+    historical_reproducible: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,11 +54,12 @@ class PipelineReadinessReport:
 class AgentPipelineCoordinator:
     """Deterministic coordinator for cross-agent gates.
 
-    V0.1 intentionally has no live-execution authorization path. Even a complete
-    candidate stops at EXECUTION_CANDIDATE until later paper/shadow/live gates exist.
+    The coordinator connects certified strategy state to research/risk layers but
+    intentionally has no live-execution authorization path. Missing or ambiguous
+    evidence always blocks progression.
     """
 
-    version = "0.1.0"
+    version = "0.2.0"
 
     def research_readiness(self, inputs: ResearchReadinessInput) -> PipelineReadinessReport:
         blockers: list[str] = []
@@ -61,6 +75,41 @@ class AgentPipelineCoordinator:
         blockers.extend(message for passed, message in checks if not passed)
         state = PipelineReadinessState.RESEARCH_READY if not blockers else PipelineReadinessState.BLOCKED
         return PipelineReadinessReport(state=state, blockers=tuple(blockers))
+
+    def strategy_candidate_readiness(
+        self,
+        inputs: StrategyCandidateReadinessInput,
+    ) -> PipelineReadinessReport:
+        """Connect market/context + R-143 + R-145 + validation gates.
+
+        This is the deterministic bridge that was missing in v0.1. A complete
+        R-143 sequence is necessary but not sufficient: the LTF execution model,
+        blind validation and historical reproducibility must also pass.
+        """
+        blockers: list[str] = []
+        if not inputs.market_data_validated:
+            blockers.append("market-data validation has not passed")
+        if not inputs.market_context_unambiguous:
+            blockers.append("market context is ambiguous/conflicting")
+        if inputs.r143_sequence_state is not SequenceState.COMPLETE_CANDIDATE:
+            blockers.append(f"R-143 sequence state is {inputs.r143_sequence_state.value}")
+        if inputs.ltf_execution_state is not LTFExecutionState.ENTRY_CANDIDATE:
+            blockers.append(f"R-145 LTF execution state is {inputs.ltf_execution_state.value}")
+        if not inputs.blind_validation_passed:
+            blockers.append("blind independent validation has not passed")
+        if not inputs.historical_reproducible:
+            blockers.append("historical reproducibility has not passed")
+
+        state = (
+            PipelineReadinessState.STRATEGY_CANDIDATE_READY
+            if not blockers
+            else PipelineReadinessState.BLOCKED
+        )
+        return PipelineReadinessReport(
+            state=state,
+            blockers=tuple(blockers),
+            live_execution_authorized=False,
+        )
 
     def execution_readiness(self, inputs: ExecutionReadinessInput) -> PipelineReadinessReport:
         blockers: list[str] = []
