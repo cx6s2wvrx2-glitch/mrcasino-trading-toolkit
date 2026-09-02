@@ -17,8 +17,12 @@ class FUQualityMetrics:
 
     The approved source describes a desirable/Strong FU qualitatively as a
     strong close with little or no rejection and explicitly warns against being
-    too rigid. Therefore this object intentionally contains NO Strong-FU
-    threshold and makes NO strong/attempted classification.
+    too rigid. Explicit user clarification on 2026-09-02 confirms that Strong-FU
+    primitive logic is the same on every timeframe; timeframe changes authority
+    and downstream context, not this quality concept.
+
+    Therefore this object intentionally contains NO Strong-FU threshold, makes NO
+    strong/attempted classification, and has no timeframe-specific branch.
     """
 
     direction: CandleDirection
@@ -40,6 +44,9 @@ def measure_fu_quality(*, open: float, high: float, low: float, close: float) ->
     candles, it is the lower wick. The opposite wick is reported as the
     manipulation-side wick. Doji candles are measured but are not classified as
     Strong/Attempted FU here.
+
+    The measurements are timeframe-neutral by contract. Any timeframe weighting
+    belongs to the higher-level authority/context layer.
     """
     prices = (open, high, low, close)
     if not all(isfinite(value) for value in prices):
