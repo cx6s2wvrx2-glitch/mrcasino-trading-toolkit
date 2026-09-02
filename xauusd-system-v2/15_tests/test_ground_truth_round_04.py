@@ -36,6 +36,19 @@ class GroundTruthRound04Tests(unittest.TestCase):
         case = next(v for v in self.dataset.vectors if v.id == "GT-R04-001")
         self.assertIn("R-54 fib anchor", case.forbidden_inference)
 
+    def test_round_04_locators_use_real_physical_pdf_pages(self) -> None:
+        expected_pages = {
+            "GT-R04-001": 3,
+            "GT-R04-002": 3,
+            "GT-R04-003": 4,
+            "GT-R04-004": 5,
+            "GT-R04-005": 4,
+            "GT-R04-006": 6,
+        }
+        for vector in self.dataset.vectors:
+            marker = vector.source_locator.split("#page:", 1)[1].split("#", 1)[0]
+            self.assertEqual(int(marker), expected_pages[vector.id])
+
 
 if __name__ == "__main__":
     unittest.main()
