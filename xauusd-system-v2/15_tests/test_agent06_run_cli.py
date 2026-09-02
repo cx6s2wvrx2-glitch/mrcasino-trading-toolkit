@@ -55,6 +55,7 @@ class Agent06RunCliTests(unittest.TestCase):
             "json.dump({'predicted_label':'label_a','confidence':0.75,'evidence':['primary'],'ambiguities':[]},sys.stdout)\n",
             encoding="utf-8",
         )
+        self.repo_commit = "c" * 40
 
     @staticmethod
     def _last_json_line(text: str) -> dict:
@@ -70,6 +71,7 @@ class Agent06RunCliTests(unittest.TestCase):
             "--model", "model-y",
             "--run-id", "run-1",
             "--output-dir", str(output_dir),
+            "--repo-commit", self.repo_commit,
             "--command", sys.executable, str(wrapper or self.wrapper),
         ]
 
@@ -82,6 +84,7 @@ class Agent06RunCliTests(unittest.TestCase):
             "--model", "claude-sonnet-5",
             "--run-id", "run-module",
             "--output-dir", "output",
+            "--repo-commit", "d" * 40,
             "--command", sys.executable, "-m", "xauusd_v2.anthropic_model_runner",
         ])
         self.assertEqual(
@@ -97,6 +100,7 @@ class Agent06RunCliTests(unittest.TestCase):
         self.assertEqual(code, 0)
         summary = self._last_json_line(stdout.getvalue())
         self.assertEqual(summary["status"], "BLIND_RUN_COMPLETE")
+        self.assertEqual(summary["repo_commit"], self.repo_commit)
         self.assertEqual(summary["resumed_count"], 0)
         self.assertFalse(summary["comparison_performed"])
         predictions = json.loads((output_dir / "agent06_blind_predictions.json").read_text(encoding="utf-8"))
@@ -107,6 +111,7 @@ class Agent06RunCliTests(unittest.TestCase):
         self.assertNotIn("expected_label", json.dumps(predictions))
         checkpoint = json.loads((output_dir / "agent06_blind_checkpoint.json").read_text(encoding="utf-8"))
         self.assertEqual(checkpoint["completed_count"], 2)
+        self.assertEqual(checkpoint["repo_commit"], self.repo_commit)
         self.assertFalse(checkpoint["promotion_allowed"])
 
     def test_interrupted_run_resumes_without_recalling_completed_case(self) -> None:
@@ -151,6 +156,20 @@ class Agent06RunCliTests(unittest.TestCase):
         predictions = json.loads((output_dir / "agent06_blind_predictions.json").read_text(encoding="utf-8"))
         self.assertEqual(len(predictions["decisions"]), 2)
 
+    def test_resume_rejects_repo_commit_mismatch(self) -> None:
+        output_dir = self.root / "repo-mismatch"
+        args = self._base_args(output_dir=output_dir)
+        main(args)
+        (output_dir / "agent06_blind_predictions.json").unlink()
+        (output_dir / "agent06_runtime_manifest.json").unlink()
+        resume_args = self._base_args(output_dir=output_dir)
+        commit_position = resume_args.index("--repo-commit") + 1
+        resume_args[commit_position] = "e" * 40
+        command_position = resume_args.index("--command")
+        resume_args.insert(command_position, "--resume-existing")
+        with self.assertRaisesRegex(SystemExit, "repo_commit mismatch"):
+            main(resume_args)
+
     def test_resume_rejects_packet_identity_mismatch(self) -> None:
         output_dir = self.root / "resume-mismatch"
         output_dir.mkdir()
@@ -160,6 +179,7 @@ class Agent06RunCliTests(unittest.TestCase):
                 "run_id": "run-1",
                 "model_provider": "provider-x",
                 "model_name": "model-y",
+                "repo_commit": self.repo_commit,
                 "packet_sha256": "0" * 64,
                 "taxonomy_sha256": "0" * 64,
                 "completed_count": 0,
@@ -200,6 +220,7 @@ class Agent06RunCliTests(unittest.TestCase):
                 "--model", "model-y",
                 "--run-id", "run-2",
                 "--output-dir", str(self.root / "run2"),
+                "--repo-commit", self.repo_commit,
                 "--command", sys.executable, str(wrapper),
             ])
         self.assertEqual(code, 2)
