@@ -1,9 +1,11 @@
 # FU Family — Certification Draft
 
 Status: DRAFT / NOT VERIFIED / NOT PRODUCTION
-Date: 2026-09-01
+Date: 2026-09-01; timeframe-scope clarification recorded 2026-09-02
 
 This module consolidates approved FU-family evidence. It does not allow implementation helpers to define strategy truth.
+
+Explicit user clarification recorded in `01_sources/USER_CLARIFICATION_FU_TIMEFRAME_SCOPE_2026_09_02.md` establishes that the FU-family primitive logic is fractal/timeframe-invariant. A 1m example is not a 1m-only definition of Strong FU or ATT FU.
 
 ## 1. Core FU meaning
 
@@ -36,7 +38,7 @@ Until primary visual certification resolves this, code must expose:
 `fu_break_status = wick_only | body_close | ambiguous`
 and must not silently treat all three as equivalent.
 
-## 3. Attempted FU (AFU)
+## 3. Attempted FU (AFU / ATT FU)
 
 User-confirmed abbreviation:
 `AFU = Attempted FU`.
@@ -47,6 +49,11 @@ Source-supported behavior:
 - later/stronger manipulation may build from it;
 - Reflection includes ATT FU among certain liquidity structures on 30m+;
 - HCS can include ATT FU in weaker forms.
+
+Explicit timeframe-scope clarification:
+- ATT FU is **not** a special lower-timeframe primitive;
+- the same ATT-FU logic applies on every timeframe;
+- timeframe changes contextual authority and downstream use, not the identity of the ATT-FU primitive.
 
 AFU must therefore remain a distinct state, not be auto-promoted to FU.
 
@@ -61,7 +68,12 @@ Current source-supported interpretation:
 - FU strength contributes to timeframe authority, continuation confidence and hold logic;
 - strong FU still does not override liquidity calculation.
 
-The exact quantitative candle-shape threshold for SFU is NOT yet certified.
+Explicit timeframe-scope clarification:
+- Strong FU follows the **same primitive logic on every timeframe**;
+- a labelled 1m Strong-FU example is an application/example, not a 1m-only definition;
+- the project must not encode a different Strong-FU definition merely because the candle is on 1m, 5m, 1h, 4h, daily or another timeframe.
+
+The exact quantitative candle-shape threshold for SFU is NOT yet certified. The clarification resolves timeframe scope, not the unresolved numeric threshold.
 
 ## 5. FU Retest — validity versus quality
 
@@ -145,15 +157,26 @@ Direct primary HCS evidence clarifies:
 
 Use this only as a provisional ranking framework. Do not convert to arbitrary numeric weights yet.
 
-## 9. Timeframe authority
+## 9. Timeframe authority versus primitive definition
 
 Current source-supported principles:
-- timeframe matters materially;
+- timeframe matters materially for **authority and context**;
 - HTF FU cannot be casually overridden by LTF FU;
 - stronger opposite-side HTF evidence is required for true negation/reversal;
 - FU at higher timeframe can support a larger directional move;
 - LTF FU is primarily useful for refinement/execution when HTF context already agrees;
 - Reflection R-216: `The LTF builds the HTF but HTF commands the LTF`.
+
+Explicit user clarification adds the missing scope distinction:
+- **FU / Strong FU / ATT FU primitive logic is the same on every timeframe**;
+- timeframe does not create a different definition of those primitives;
+- timeframe changes hierarchy, authority, move scale, context and downstream application.
+
+Therefore both statements must coexist:
+
+`FU-family primitive logic = timeframe-invariant`
+
+`timeframe authority / downstream usage = timeframe-sensitive`
 
 Candidate rule:
 `LTF FU cannot independently overturn active HTF TFS/FU authority.`
@@ -169,6 +192,8 @@ Current approved evidence supports:
 - as-forming FU entries are aggressive and only valid in stronger surrounding context;
 - primary Q&A: sole 1m FU forming may be considered only with prior FU retest/zone reaction and extreme opposite-side liquidity;
 - Price Action Reflection: after buys were established, 5m ATT FU retest + strong 1m FU close is presented as an advanced entry; later 1m HCS is the easier re-entry.
+
+These are timeframe-specific **applications**, not different FU-family primitive definitions.
 
 Therefore candidate gate:
 `FU entry requires pre-existing context; FU itself is never sufficient.`
@@ -210,6 +235,8 @@ Each state must carry:
 - HTF/TFS context;
 - source-evidence provenance.
 
+The presence of `timeframe` in the state is for authority/context/provenance; it must not switch the core FU/ATT-FU/Strong-FU primitive definition.
+
 No transition should be inferred from future bars in historical data.
 
 ## 13. Open certification questions after current primary review
@@ -223,11 +250,12 @@ Before VERIFIED status:
 6. labelled positive/negative examples for SFU;
 7. labelled FU-negation examples across TF hierarchy;
 8. exact detector boundaries for multi-candle x3 variants and `x3 by x3`;
-9. precise rules for timeframe-equivalence claims;
+9. precise rules for timeframe-equivalence/authority claims;
 10. exact fib anchor/orientation for FU-retest >70% grading;
 11. quantitative HCS `near enough` tolerance.
 
-No longer treated as an open primitive-definition question:
-- core x3 meaning, because R-213 provides the final source definition.
+No longer treated as open:
+- core x3 meaning, because R-213 provides the final source definition;
+- whether Strong FU / ATT FU are 1m-only concepts — explicit user clarification establishes timeframe-invariant primitive logic.
 
-Ambiguous cases remain `NOT CERTIFIED / NO TRADE`.
+Ambiguous raw detector cases remain `NOT CERTIFIED / NO TRADE`.
