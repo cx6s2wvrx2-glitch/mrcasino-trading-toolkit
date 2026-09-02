@@ -195,6 +195,8 @@ class Agent06AuditCliTests(unittest.TestCase):
         self.assertTrue(report["artifact_integrity_passed"])
         self.assertFalse(report["promotion_allowed"])
         self.assertFalse(report["independent_validation_auto_promoted"])
+        self.assertEqual(report["runtime_abstained_count"], 1)
+        self.assertEqual(report["runtime_image_case_count"], 2)
         self.assertEqual(report["ambiguous"], 1)
         self.assertEqual(report["blockers"], [])
 
@@ -234,6 +236,56 @@ class Agent06AuditCliTests(unittest.TestCase):
         report = agent06_audit_cli.audit_agent06_run(run_root=self.root, expected_case_count=3)
         self.assertEqual(report["status"], "AUDIT_FAIL")
         self.assertIn("missing required artifact: agent06_runtime_manifest.json", report["blockers"])
+
+    def test_runtime_abstained_count_must_match_frozen_predictions(self) -> None:
+        self._build_valid_run()
+        path = self.root / "agent06_runtime_manifest.json"
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["abstained_count"] = 0
+        self._write(path, payload)
+        report = agent06_audit_cli.audit_agent06_run(run_root=self.root, expected_case_count=3)
+        self.assertEqual(report["status"], "AUDIT_FAIL")
+        self.assertIn(
+            "runtime manifest abstained_count does not match frozen predictions",
+            report["blockers"],
+        )
+
+    def test_runtime_image_count_must_match_per_case_evidence(self) -> None:
+        self._build_valid_run()
+        path = self.root / "agent06_runtime_manifest.json"
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["image_case_count"] = 1
+        self._write(path, payload)
+        report = agent06_audit_cli.audit_agent06_run(run_root=self.root, expected_case_count=3)
+        self.assertEqual(report["status"], "AUDIT_FAIL")
+        self.assertIn(
+            "runtime manifest image_case_count does not match per-case evidence metadata",
+            report["blockers"],
+        )
+
+    def test_runtime_image_metadata_cannot_leak_local_path(self) -> None:
+        self._build_valid_run()
+        path = self.root / "agent06_runtime_manifest.json"
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["cases"][0]["images"][0]["local_path"] = "/private/source.png"
+        self._write(path, payload)
+        report = agent06_audit_cli.audit_agent06_run(run_root=self.root, expected_case_count=3)
+        self.assertEqual(report["status"], "AUDIT_FAIL")
+        self.assertTrue(
+            any("leaks path-like fields" in blocker for blocker in report["blockers"])
+        )
+
+    def test_runtime_image_hash_and_size_are_validated(self) -> None:
+        self._build_valid_run()
+        path = self.root / "agent06_runtime_manifest.json"
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["cases"][0]["images"][0]["sha256"] = "not-a-hash"
+        payload["cases"][0]["images"][0]["size_bytes"] = 0
+        self._write(path, payload)
+        report = agent06_audit_cli.audit_agent06_run(run_root=self.root, expected_case_count=3)
+        self.assertEqual(report["status"], "AUDIT_FAIL")
+        self.assertTrue(any("image SHA-256 is invalid" in blocker for blocker in report["blockers"]))
+        self.assertTrue(any("image size is invalid" in blocker for blocker in report["blockers"]))
 
 
 if __name__ == "__main__":
