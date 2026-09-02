@@ -14,14 +14,18 @@ def dt(year: int, month: int, day: int) -> datetime:
     return datetime(year, month, day, tzinfo=UTC)
 
 
+def sha_ref(char: str) -> str:
+    return "sha256:" + char * 64
+
+
 def valid_spec(**overrides):
     values = {
         "experiment_id": "EXP-001",
         "strategy_version": "v0.1-candidate",
-        "strategy_commit_sha": "abc123",
-        "data_snapshot_ref": "xauusd-icmarkets-snapshot-001",
-        "parameter_set_ref": "params-001",
-        "cost_model_ref": "costs-broker-model-001",
+        "strategy_commit_sha": "a" * 40,
+        "data_snapshot_ref": sha_ref("b"),
+        "parameter_set_ref": sha_ref("c"),
+        "cost_model_ref": sha_ref("d"),
         "symbol": "XAUUSD",
         "timeframe_seconds": 60,
         "train": ResearchWindow("train", dt(2022, 1, 1), dt(2023, 1, 1)),
@@ -42,6 +46,7 @@ class QuantResearchAgentTests(unittest.TestCase):
         report, run = self.agent.validate_experiment(spec=valid_spec())
         self.assertTrue(report.ready_for_research)
         self.assertEqual(report.blockers, ())
+        self.assertTrue(run.payload["content_addressed_inputs_required"])
         self.assertFalse(run.payload["authority"]["may_modify_strategy"])
         self.assertFalse(run.payload["authority"]["may_authorize_trade"])
 
@@ -57,6 +62,40 @@ class QuantResearchAgentTests(unittest.TestCase):
         report, _ = self.agent.validate_experiment(spec=valid_spec(cost_model_ref=""))
         self.assertFalse(report.ready_for_research)
         self.assertTrue(any("cost_model_ref" in item for item in report.blockers))
+
+    def test_strategy_commit_must_be_exact_full_sha(self) -> None:
+        report, _ = self.agent.validate_experiment(spec=valid_spec(strategy_commit_sha="abc123"))
+        self.assertFalse(report.ready_for_research)
+        self.assertIn(
+            "strategy_commit_sha must be an exact 40-character Git commit SHA",
+            report.blockers,
+        )
+
+    def test_snapshot_ref_must_be_content_addressed(self) -> None:
+        report, _ = self.agent.validate_experiment(
+            spec=valid_spec(data_snapshot_ref="xauusd-snapshot-latest")
+        )
+        self.assertFalse(report.ready_for_research)
+        self.assertIn(
+            "data_snapshot_ref must be a content-addressed sha256:<64-hex> reference",
+            report.blockers,
+        )
+
+    def test_parameter_ref_must_be_content_addressed(self) -> None:
+        report, _ = self.agent.validate_experiment(spec=valid_spec(parameter_set_ref="params-v1"))
+        self.assertFalse(report.ready_for_research)
+        self.assertIn(
+            "parameter_set_ref must be a content-addressed sha256:<64-hex> reference",
+            report.blockers,
+        )
+
+    def test_cost_model_ref_must_be_content_addressed(self) -> None:
+        report, _ = self.agent.validate_experiment(spec=valid_spec(cost_model_ref="costs-v1"))
+        self.assertFalse(report.ready_for_research)
+        self.assertIn(
+            "cost_model_ref must be a content-addressed sha256:<64-hex> reference",
+            report.blockers,
+        )
 
     def test_non_xauusd_is_rejected(self) -> None:
         report, _ = self.agent.validate_experiment(spec=valid_spec(symbol="GC"))
