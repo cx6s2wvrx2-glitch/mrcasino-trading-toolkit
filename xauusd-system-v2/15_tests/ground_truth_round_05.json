@@ -18,7 +18,7 @@
     },
     {
       "id": "GT-R05-002",
-      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:7#text:potential-zone-before-first-reaction",
+      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:3#text:potential-zone-before-first-reaction",
       "expected_label": "zone_not_confirmed_before_first_reaction",
       "expected_class": "invalid",
       "evidence": [
