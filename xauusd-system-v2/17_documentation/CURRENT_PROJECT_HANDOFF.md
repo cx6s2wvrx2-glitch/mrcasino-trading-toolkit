@@ -20,12 +20,16 @@ Supabase project: `mr-casino` (`wuhrhlzabiuudswktcvk`)
 
 ## Current engineering checkpoint
 
-Latest code checkpoint before this documentation refresh:
-- commit `c0ba4ad7a4c0deb59e898be0a3eb1f1cfbf2878c`;
-- GitHub Actions run `33679713826`;
-- full regression suite **669 / 669 PASS**.
+Latest fully exercised code checkpoint before the subsequent documentation-only refreshes:
+- commit `0bd5a662e392771e9ca40f3beacde38a2dbf1604`;
+- GitHub Actions run `33681442520`;
+- job `100418712032`;
+- Python 3.12;
+- full regression suite **685 / 685 PASS**.
 
-The branch may advance through documentation-only commits after that checkpoint. Always verify the live head and latest XAUUSD V2 CI before substantive continuation.
+The later MT5 runbook documentation commit `08b0429fd4a568517ff56d9a9b79affd5ec748e7` also completed GitHub Actions successfully in run `33681531038`.
+
+The branch may advance through later documentation commits. Always verify the live head and latest XAUUSD V2 CI before substantive continuation.
 
 ## Supabase truth
 
@@ -57,6 +61,11 @@ Detailed audits:
 - `17_documentation/PRIMARY_BLOCKER_AUDIT_B01_B04_2026_09_02.md`
 - `17_documentation/PRIMARY_BLOCKER_AUDIT_B05_B08_2026_09_02.md`
 - `17_documentation/OPEN_BOUNDARY_RECONCILIATION_2026_09_02.md`
+
+B-08 engineering contract:
+- `17_documentation/PRODUCTION_RISK_POLICY_CONTRACT_2026_09_02.md`
+
+The B-08 software contract is ready, but the blocker remains unresolved because no real production numeric limits have yet been explicitly user-approved.
 
 ## User clarification — Strong FU / ATT FU
 
@@ -106,37 +115,35 @@ Implemented and regression-tested:
 - strict post-run auditor;
 - safe provider error classification;
 - Anthropic structured-output compatibility;
-- default Anthropic output budget 16384 tokens;
-- compact taxonomy transport that does not place all 173 labels in the JSON-schema grammar;
-- explicit provider codes `L001` ... `L173` mapped deterministically to the frozen taxonomy;
+- compact taxonomy transport using provider codes `L001` ... `L173` mapped deterministically to the frozen taxonomy;
 - malformed/out-of-range provider taxonomy code becomes a fail-closed per-case abstention instead of crashing the whole batch;
-- per-case progress output;
+- per-case progress output for checkpoint-enabled runs;
 - atomic private checkpoint after every successful case;
-- safe resume of interrupted runs without re-calling already checkpointed cases;
-- resume is bound to the exact run ID, provider, model, Git commit, packet SHA, taxonomy SHA and primary text/image fingerprints;
+- safe resume without re-calling already checkpointed cases;
+- resume bound to exact run ID, provider, model, Git commit, packet SHA, taxonomy SHA and primary text/image fingerprints;
+- one-command resume through `xauusd-v2-agent06-local --resume-run-id <run-id>`;
+- full-orchestrator regression verifies that resume reuses the exact run and passes `--resume-existing` rather than creating a second run;
 - all persisted blind/checkpoint/final artifacts keep `promotion_allowed=false`.
 
 Run/resume contract:
 `17_documentation/AGENT06_RUN_AND_RESUME_RUNBOOK_2026_09_02.md`.
 
-### Important current live-provider truth
+### Current live-provider truth
 
-Several real local Anthropic attempts reached `claude-sonnet-5`, but all posted attempts so far failed before completing all 173 cases. They exposed and led to fixes for:
-- provider command parsing;
-- unsupported structured-output schema constraints;
-- max-token truncation;
-- invented/concatenated labels;
-- over-complex 173-label enum schema;
-- out-of-range numeric taxonomy index.
+A real local Anthropic `claude-sonnet-5` run is currently executing on the user's Mac from the older local commit:
+`69a55ad9deb5f3e00dba85a576c3f1081587ea4c`.
 
-**No end-to-end real external Agent-06 validation has yet been completed or audited.**
+It reached the isolated 173-case provider stage and its Anthropic child process was observed alive. It has not yet been reported complete or failed in the conversation.
 
-The next fresh live run after pulling the checkpoint-enabled code will preserve every successfully completed case. Older failed runs cannot be resumed because they predate the checkpoint contract.
+That currently executing run predates the new per-case checkpoint/resume contract, so the newer remote commits do not affect it and it must **not** be interrupted or updated mid-run. Do not ask the user to `git pull` until that process exits.
 
-A completed real run must reach:
-`LOCAL_AGENT06_PIPELINE_COMPLETE`
+Earlier real attempts exposed and led to fixes for provider command parsing, structured-output schema compatibility and other provider-boundary issues. None of those failed attempts counts as completed external validation.
 
-and then pass the separate `xauusd-v2-agent06-audit` artifact audit before any independent-validation completion claim is made.
+**Current certification truth: no end-to-end real external Agent-06 validation has yet been completed and audited.**
+
+A completed real run must reach `LOCAL_AGENT06_PIPELINE_COMPLETE` and then pass the separate `xauusd-v2-agent06-audit` artifact audit before any independent-validation completion claim is made.
+
+If the current pre-checkpoint run fails, it cannot be resumed. After it exits, pull the newer checkpoint-enabled branch and start a fresh run; any later interruption can then safely resume from the last completed case on the same commit.
 
 ## Agent-06 private evidence identity
 
@@ -157,6 +164,9 @@ Implemented:
 - strict MT5 history parsing and ingestion;
 - explicit source timezone, never inferred;
 - broker/symbol/timeframe/OHLC/order/spacing validation;
+- new `--dry-run` mode that validates and fingerprints an export without persisting anything;
+- dry-run returns source/normalized hashes, snapshot identity, coverage timestamps, bar count, closed-only state and gap diagnostics;
+- persist mode requires an explicit store root;
 - immutable raw + normalized content-addressed snapshots;
 - tamper-detecting snapshot reload;
 - source-chart alignment;
@@ -167,6 +177,12 @@ Implemented:
 - `xauusd-v2-replay-readiness`;
 - strict R-143 six-stage timestamp certification bound to the exact verified broker snapshot;
 - replay loaders reject extra hidden fields and `promotion_allowed=true`.
+
+Canonical operational order is now:
+`original broker export -> dry-run validation -> inspect diagnostics -> immutable persist -> source/chart alignment -> six-stage R-143 evidence -> replay admissibility`.
+
+Runbook:
+`17_documentation/MT5_TO_REPLAY_READINESS_RUNBOOK.md`.
 
 R-143 six-stage order:
 1. HCS zone reaction;
@@ -186,6 +202,25 @@ A replay episode may become `READY_CANDIDATE` only when exact chart/broker align
 - real historical performance/backtest evidence = 0;
 - performance claims allowed = false.
 
+## B-08 production risk policy engineering state
+
+The deterministic Risk Engine still contains no production risk defaults.
+
+New strict policy layer:
+- `src/xauusd_v2/risk_policy_io.py`;
+- `src/xauusd_v2/risk_policy_cli.py`;
+- CLI `xauusd-v2-risk-policy-check`.
+
+A policy document must explicitly provide all four limits:
+- maximum per-trade risk fraction;
+- maximum daily-loss fraction;
+- maximum total-open-risk fraction;
+- maximum concurrent positions.
+
+The contract rejects missing limits, extra hidden fields and any attempt to set strategy authority, live execution authority or promotion authority to true.
+
+No historical 3%/5% statement and no test-fixture number is treated as production policy. Numeric B-08 policy remains pending explicit user approval.
+
 ## What is already substantially finished
 
 Engineering/foundation work is largely in place for:
@@ -197,40 +232,41 @@ Engineering/foundation work is largely in place for:
 - zones/HCS/negation/x3/TFS/True Stop candidate layers;
 - R-143 ordered sequence and R-145 LTF execution candidate;
 - targets/LAOL boundaries;
-- deterministic risk engine foundation;
-- immutable MT5 data layer;
+- deterministic risk engine foundation plus strict no-default policy contract;
+- immutable MT5 data layer plus non-persisting dry-run validation;
 - replay anti-lookahead infrastructure;
 - 173-case blind validation infrastructure;
 - strict independent-validation audit path;
-- safe checkpoint/resume for expensive live provider runs.
+- safe per-case checkpoint/resume and one-command local resume for future expensive provider runs.
 
 Implementation coverage is not strategy verification.
 
 ## Critical path still remaining
 
-1. **Complete one real 173-case Agent-06 Anthropic run** on one fixed tested commit.
-2. **Audit its frozen artifacts** and record truthful agree/disagree/ambiguous/abstention counts; no promotion.
-3. **Persist truthful run metadata to Supabase** only after artifact verification; never persist the API secret.
-4. **Obtain real broker XAUUSD MT5 history** and ingest it into immutable snapshots.
-5. **Use real broker data to align primary charts and certify R-143 stage timestamps**, then create actual replay-ready candidates.
-6. **Resolve B-04 with broker-quality labelled OHLC evidence**, not TradingView approximation.
-7. **Resolve B-01/B-02/B-03/B-05/B-06/B-07 only from explicit evidence or user clarification**, never invention.
-8. **Define B-08 production risk policy with explicit user approval** as a deterministic safety policy separate from strategy truth.
-9. **Run historical replay / OOS / walk-forward / cost-and-slippage research** only after strategy/data gates are sufficiently closed.
-10. **Separate certification/promotion process** after evidence and performance research. VERIFIED remains 0 until that process genuinely occurs.
-11. **Live execution stays disabled** until certification, risk policy, operational safeguards and explicit authorization are complete.
+1. Complete and audit one real 173-case Agent-06 Anthropic run.
+2. Persist truthful provider/model/comparison metadata only after artifact verification; never persist the API secret and never auto-promote.
+3. Obtain a real broker XAUUSD MT5 export, first dry-run validate it, then persist it immutably.
+4. Use real broker data to align primary charts and certify R-143 stage timestamps, creating actual replay-admissible candidates.
+5. Resolve B-04 with broker-quality labelled OHLC evidence, not TradingView approximation.
+6. Resolve B-01/B-02/B-03/B-05/B-06/B-07 only from explicit evidence or user clarification, never invention.
+7. Obtain explicit user-approved numeric values for B-08 through the strict production-risk policy contract.
+8. Run historical replay / OOS / walk-forward / cost-and-slippage research only after strategy/data gates are sufficiently closed.
+9. Run a separate certification/promotion process after evidence and performance research. VERIFIED remains 0 until that process genuinely occurs.
+10. Keep live execution disabled until certification, risk policy, operational safeguards and explicit authorization are complete.
 
 ## Current bottom line
 
-The project is no longer blocked mainly by missing software plumbing. The main remaining work is now **real external evidence, broker data, unresolved strategy definitions and explicit production policy**.
+The project is no longer blocked mainly by missing software plumbing. The main remaining work is now real external evidence, broker data, unresolved strategy definitions and explicit production policy.
 
 Current truth:
 - 173-case blind corpus: ready;
-- Agent-06 provider infrastructure: ready with checkpoint/resume;
+- Agent-06 provider infrastructure: ready with one-command checkpoint/resume for future runs;
+- currently executing legacy/pre-checkpoint Agent-06 run: outcome pending;
 - completed/audited real Agent-06 run: **NO**;
-- MT5/replay infrastructure: ready;
+- MT5/replay infrastructure including dry-run: ready;
 - real MT5 dataset: **NO**;
 - real replay-ready episodes: **0**;
+- B-08 policy contract: ready, numeric user policy not approved;
 - canonical unresolved blocker families: **8**;
 - VERIFIED knowledge/rules: **0 / 0**;
 - live trading: **DISABLED**.
