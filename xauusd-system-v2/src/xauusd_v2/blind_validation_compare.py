@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Iterable
 
 from .blind_validation_runner import BlindValidationBatchResult
 from .validation import GroundTruthDataset, ValidationOutcome, compare_predictions
@@ -22,19 +23,45 @@ def compare_blind_batch(
     dataset: GroundTruthDataset,
     batch: BlindValidationBatchResult,
 ) -> BlindValidationComparisonReport:
-    """Compare blind Agent-06 outputs only after the blind run is complete.
+    """Backward-compatible comparison for one ground-truth dataset."""
+    return compare_blind_multi_batch(datasets=(dataset,), batch=batch)
 
-    This layer is deterministic and intentionally separate from Agent 06. It never
-    grants VERIFIED status. Dataset promotion remains governed by `validation.py`
-    and the dataset's own `promotion_allowed` flag.
+
+def compare_blind_multi_batch(
+    *,
+    datasets: Iterable[GroundTruthDataset],
+    batch: BlindValidationBatchResult,
+) -> BlindValidationComparisonReport:
+    """Compare one completed blind batch against multiple datasets afterwards.
+
+    Agent 06 never sees this layer. Duplicate vector IDs across datasets are rejected,
+    unknown predictions are rejected, and missing predictions become AMBIGUOUS through
+    the existing deterministic ground-truth comparator. Agreement never promotes.
     """
+    items = tuple(datasets)
+    if not items:
+        raise ValueError("at least one ground-truth dataset is required")
+
+    expected_ids: set[str] = set()
+    duplicate_ids: set[str] = set()
+    for dataset in items:
+        for vector in dataset.vectors:
+            if vector.id in expected_ids:
+                duplicate_ids.add(vector.id)
+            expected_ids.add(vector.id)
+    if duplicate_ids:
+        raise ValueError(f"duplicate vector ids across comparison datasets: {sorted(duplicate_ids)!r}")
+
     predictions = batch.predictions
-    expected_ids = {vector.id for vector in dataset.vectors}
     extra_ids = set(predictions) - expected_ids
     if extra_ids:
         raise ValueError(f"blind batch contains unknown vector ids: {sorted(extra_ids)!r}")
 
-    outcomes = compare_predictions(dataset, predictions)
+    outcomes = tuple(
+        outcome
+        for dataset in items
+        for outcome in compare_predictions(dataset, predictions)
+    )
     agree = sum(outcome.result == "AGREE" for outcome in outcomes)
     disagree = sum(outcome.result == "DISAGREE" for outcome in outcomes)
     ambiguous = sum(outcome.result == "AMBIGUOUS" for outcome in outcomes)
