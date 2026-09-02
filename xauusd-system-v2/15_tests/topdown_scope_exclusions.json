@@ -1,0 +1,19 @@
+{
+  "source_id": "b271d0b8-a86b-4d65-a4ae-b7e49d5803a6",
+  "policy": "XAUUSD-only strategy ground truth",
+  "exclusions": [
+    {
+      "sequence": "2021-11-30",
+      "reason": "non_xauusd_symbol",
+      "symbol": "GBPJPY",
+      "images": [
+        "IMG_20211130_122900_639.jpg",
+        "IMG_20211130_122901_444.jpg"
+      ],
+      "inspected": true,
+      "ground_truth_allowed": false,
+      "promotion_allowed": false,
+      "notes": "Primary Mr Casino material, but excluded from the XAUUSD V2 ground-truth corpus. It must not be generalized to XAUUSD unless the user explicitly approves cross-instrument strategy evidence later."
+    }
+  ]
+}
