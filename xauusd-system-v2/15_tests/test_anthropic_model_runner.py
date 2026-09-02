@@ -97,6 +97,47 @@ class AnthropicModelRunnerTests(unittest.TestCase):
         self.assertNotIn("minimum", confidence_schema)
         self.assertNotIn("maximum", confidence_schema)
 
+    def test_allowed_labels_become_exact_enum_in_structured_schema(self) -> None:
+        labels = ["att_fu_hcs", "hcs_zone_respected_once", "no_trade"]
+        payload = build_anthropic_request(
+            {
+                "system": "system",
+                "user": "user",
+                "allowed_labels": labels,
+            },
+            self.config(),
+        )
+        label_schema = payload["output_config"]["format"]["schema"]["properties"]["predicted_label"]
+        self.assertEqual(label_schema["type"], ["string", "null"])
+        self.assertEqual(label_schema["enum"], [*labels, None])
+        self.assertNotIn("att_fu_hcs_hcs_zone_respected_once", label_schema["enum"])
+
+    def test_outside_taxonomy_response_is_rejected_even_if_provider_violates_schema(self) -> None:
+        text = json.dumps(
+            {
+                "predicted_label": "att_fu_hcs_hcs_zone_respected_once",
+                "confidence": 0.8,
+                "evidence": ["source evidence"],
+                "ambiguities": [],
+            }
+        )
+        labels = ("att_fu_hcs", "hcs_zone_respected_once", "no_trade")
+        with self.assertRaisesRegex(AnthropicRunnerError, "outside frozen taxonomy") as raised:
+            parse_anthropic_response(self.decision_response(text=text), allowed_labels=labels)
+        self.assertEqual(_safe_runner_error_code(raised.exception), "ANTHROPIC_LABEL_OUTSIDE_TAXONOMY")
+
+    def test_invalid_allowed_label_payload_fails_before_provider_call(self) -> None:
+        with self.assertRaisesRegex(AnthropicRunnerError, "at least two"):
+            build_anthropic_request(
+                {"system": "system", "user": "user", "allowed_labels": ["only-one"]},
+                self.config(),
+            )
+        with self.assertRaisesRegex(AnthropicRunnerError, "only strings"):
+            build_anthropic_request(
+                {"system": "system", "user": "user", "allowed_labels": ["valid", 7]},
+                self.config(),
+            )
+
     def test_multimodal_request_base64_encodes_verified_primary_image(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "source.png"
@@ -148,6 +189,19 @@ class AnthropicModelRunnerTests(unittest.TestCase):
         request = urlopen.call_args.args[0]
         self.assertEqual(request.full_url, ANTHROPIC_MESSAGES_URL)
         self.assertNotIn("secret-test-key", json.dumps(result))
+
+    def test_call_anthropic_revalidates_response_against_allowed_labels(self) -> None:
+        response = self.decision_response()
+        with patch("urllib.request.urlopen", return_value=_Response(response)):
+            with self.assertRaisesRegex(AnthropicRunnerError, "outside frozen taxonomy"):
+                call_anthropic(
+                    {
+                        "system": "system",
+                        "user": "user",
+                        "allowed_labels": ["candidate-b", "candidate-c"],
+                    },
+                    self.config(),
+                )
 
     def test_confidence_range_is_enforced_locally_after_provider_response(self) -> None:
         text = json.dumps(
