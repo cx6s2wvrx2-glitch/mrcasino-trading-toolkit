@@ -55,8 +55,10 @@ class ZoneGeometryTests(unittest.TestCase):
         self.assertIsNotNone(zone)
         self.assertEqual((zone.low, zone.high), (94.0, 112.0))
 
-    def test_strong_fu_zone_is_scoped_to_1m(self) -> None:
+    def test_r162_zone_application_is_1m_scoped_not_strong_fu_definition(self) -> None:
         candle = Candle(open=100.0, high=112.0, low=94.0, close=108.0)
+        # Only this source-backed zone application is 1m-scoped. A None result
+        # here must never be interpreted as "5m cannot be Strong FU".
         self.assertIsNone(build_1m_strong_fu_zone(candle=candle, timeframe_minutes=5, strong_fu_confirmed=True))
 
     def test_unconfirmed_strong_fu_cannot_create_zone(self) -> None:
