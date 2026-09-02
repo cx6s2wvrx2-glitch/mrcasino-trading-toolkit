@@ -3,79 +3,98 @@
 Date: 2026-09-02
 Status: STRATEGY ENGINE FOUNDATION ACTIVE / NOT STRATEGY-VERIFIED / NOT LIVE-READY
 
-## Verified live inventory snapshot
+## Live inventory snapshot
 
 Supabase snapshot on 2026-09-02:
 - 29 active user-approved sources
-- 53 examples
+- 60 examples
 - 195 knowledge claims
 - 23 V2 rules
 - 11 disagreement/certification records still `resolved_by_user=false`
-- 30 agent runs
+- 31 agent runs
 - 0 VERIFIED knowledge claims
 - 0 VERIFIED rules
 
-The 11 open database records are not all equally blocking. Several now have operational source-backed resolutions in code but remain unclosed for governance/formal certification. Real unresolved boundaries are preserved rather than guessed.
+The 11 open database records are not all equally blocking. Several have operational source-backed resolutions in code but remain unclosed for formal certification/governance. Real unresolved boundaries remain explicit.
 
 ## Agent and orchestration state
 
 All 8 canonical agent roles have v0.1 foundations.
 
-Orchestrator is now v0.2 and contains a real deterministic bridge from strategy evidence to downstream research/risk:
+Current orchestrator: **v0.5**.
 
-`validated data + unambiguous context + R-143 COMPLETE + R-145 entry candidate + blind validation + historical reproducibility -> STRATEGY_CANDIDATE_READY`
+Strategy candidate requires evidence-bearing reports, not free booleans:
 
-There is still no path to live authorization. `live_execution_authorized` remains false by construction.
+`validated data + unambiguous context + R-143 COMPLETE + R-145 ENTRY_CANDIDATE + clean blind-validation report + passing historical-replay report -> STRATEGY_CANDIDATE_READY`
+
+Research reruns that full strategy gate. Execution consumes the actual strategy report. A blocked upstream report cannot be relabelled ready downstream. `live_execution_authorized=false` remains hard-coded.
 
 ## Strategy implementation state
 
-Source-backed/candidate executable layers now cover:
+Source-backed/candidate layers cover:
 - FU semantic criteria + Complete FU / ATT FU forms;
 - Casino_v7/BETA shadow comparison;
-- liquidity interaction and R-207 30m+ core marking;
+- liquidity interaction and R-207 core marking;
 - zone lifecycle and zone geometries;
 - HCS semantic grammar;
 - negation window;
-- final R-213 x3 semantic primitive;
-- TFS established/as-forming state;
+- final R-213 x3 primitive;
+- TFS established/as-forming;
 - True Stop semantic gate;
 - R-143 official sequence;
 - R-145 LTF execution;
 - target hierarchy with fail-closed trail selection.
 
-## Ground-truth coverage
+## Ground truth
 
-Round-02 has 20 primary-labelled cases:
-- 12 EXECUTABLE implementation coverage
-- 7 PARTIAL with explicit preserved blockers
+Round 02:
+- 20 primary-labelled cases
+- 12 EXECUTABLE
+- 7 PARTIAL
 - 1 CONTEXT_ONLY
-- 0 VERIFIED promotions
 
-A leakage-safe blind-validation packet and Agent-06 batch runner are implemented. The independent validator cannot receive per-case expected labels/classes or analyst answer summaries.
+Round 03:
+- 7 additional explicit primary visual labels from approved sources
+- 6 PARTIAL
+- 1 RAW_BLOCKED pending broker-quality imbalance fixture
+
+Total current Round02+03 labelled cases: 27. Dataset coverage does not imply VERIFIED status.
+
+## Validation and replay infrastructure
+
+Implemented:
+- leakage-safe Agent-06 packet;
+- primary-source context resolver contract;
+- Agent-06 blind batch runner;
+- deterministic downstream AGREE/DISAGREE/AMBIGUOUS comparison;
+- lookahead-safe R-143 component replay with separate `occurred_at` / `available_at`;
+- historical replay batch gate where valid `IN_PROGRESS` no-entry sessions do not count as failures.
+
+A real independent model/provider run has not yet occurred.
 
 ## Latest regression
 
-Latest confirmed full GitHub Actions regression before this readiness document: **244/244 tests PASS** on Python 3.12.
+Latest confirmed GitHub Actions regression: **284/284 PASS** on Python 3.12, run `33590480750`, job `100123291079`.
 
-## Main remaining technical/certification boundaries
+## Main remaining boundaries
 
-- exact R-54 70% fib orientation/anchor;
+- R-54 70% fib orientation/anchor;
 - universal/timeframe-specific Strong-FU calibration beyond explicit scoped evidence;
 - broker-specific exact imbalanced-candle tolerance/classifier;
 - exact raw TS-respect wick/body geometry;
-- x3-by-x3 definition;
+- x3-by-x3;
 - trail-level selection;
-- 11h timeframe construction;
-- real independent Agent-06 provider/runtime run;
-- broker-quality XAUUSD historical-data connection;
+- 11h construction;
+- real independent Agent-06 provider/runtime validation;
+- broker-quality XAUUSD historical data/MT5 connection;
 - full raw top-down detector across multiple sessions;
 - production risk policy;
-- no certified strategy version yet because VERIFIED rules remain zero.
+- certified strategy version still unavailable because VERIFIED rules remain zero.
 
-## Correct next work
+## Current next work
 
-1. run deterministic comparison/reporting infrastructure for blind Agent-06 predictions;
-2. expand primary ground truth, especially explicit FU/ATT/SFU/IMB examples;
-3. turn additional PARTIAL cases into executable only when source evidence supports the missing boundary;
-4. connect broker-quality historical data and run component-by-component reproducibility before any full performance backtest;
-5. keep live execution disabled through validation, OOS, walk-forward, cost/slippage, paper, shadow and tiny-live gates.
+1. define a machine-readable historical replay-session dataset with strict timestamp/provenance validation;
+2. populate replay sessions from approved primary examples before broker data arrives;
+3. expand explicit primary ground truth without using unapproved PDFs 11–13;
+4. connect broker-quality history and run component-by-component reproducibility;
+5. only then begin full performance backtesting under OOS/walk-forward/cost/slippage gates.
