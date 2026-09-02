@@ -3,12 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
+from uuid import UUID
 
 
 class SourceLocatorKind(StrEnum):
     EXCALIDRAW_EMBEDDED = "excalidraw_embedded"
     EXCALIDRAW_TEXT = "excalidraw_text"
     TOPDOWN_SEQUENCE = "topdown_sequence"
+    V2_SOURCE = "v2_source"
     OTHER = "other"
 
 
@@ -23,9 +25,9 @@ class ParsedSourceLocator:
 class PrimarySourceContextResolver(Protocol):
     """Runtime interface for retrieving actual primary source context.
 
-    Implementations may use mounted conversation/library files, extracted archives or
-    other approved storage, but must never substitute analyst summaries for unavailable
-    primary content.
+    Implementations may use mounted conversation/library files, extracted archives,
+    approved Supabase source metadata or other approved storage, but must never
+    substitute analyst summaries for unavailable primary content.
     """
 
     def resolve(self, locator: ParsedSourceLocator) -> str | None: ...
@@ -40,6 +42,17 @@ def parse_source_locator(raw: str) -> ParsedSourceLocator:
     asset = asset.strip()
     if not asset:
         raise ValueError("source locator asset name is required")
+
+    if asset.startswith("v2_sources:"):
+        source_id = asset.removeprefix("v2_sources:").strip()
+        try:
+            UUID(source_id)
+        except (ValueError, AttributeError) as exc:
+            raise ValueError("v2_sources locator must contain a valid UUID") from exc
+        locator_value = fragment.strip() if sep else ""
+        if not locator_value:
+            raise ValueError("v2_sources locator requires a page/visual/text fragment")
+        return ParsedSourceLocator(value, asset, SourceLocatorKind.V2_SOURCE, locator_value)
 
     if not sep or not fragment.strip():
         return ParsedSourceLocator(value, asset, SourceLocatorKind.OTHER, "")
