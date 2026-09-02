@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from ..models import AgentRunResult
+from ..primary_context_payload import PrimaryContextPayload
 from .base import AgentContractError, StructuredModelClient
 from .prompts import VALIDATION_AGENT_SYSTEM
 
@@ -24,47 +26,40 @@ class IndependentValidationDecision:
 class IndependentValidationAgent:
     """Blind validator.
 
-    This agent is intentionally not given an expected/candidate label. It only
-    receives source evidence, a locator, and a label taxonomy. Comparison with
-    ground truth happens later in the deterministic validation layer.
+    The agent is intentionally not given the expected/candidate label. It receives
+    only primary source evidence, source locator and the batch-wide label taxonomy.
+    Comparison with ground truth happens later in deterministic validation code.
     """
 
     name = "independent_validation_agent_06"
-    version = "0.1.0"
+    version = "0.2.0"
 
     def __init__(self, client: StructuredModelClient) -> None:
         self.client = client
 
-    def validate(
-        self,
-        *,
-        vector_id: str,
-        source_locator: str,
-        source_context: str,
-        allowed_labels: tuple[str, ...],
-    ) -> tuple[IndependentValidationDecision, AgentRunResult]:
-        vector_id = vector_id.strip()
-        source_locator = source_locator.strip()
-        source_context = source_context.strip()
+    @staticmethod
+    def _normalize_inputs(
+        *, vector_id: str, source_locator: str, allowed_labels: tuple[str, ...]
+    ) -> tuple[str, str, tuple[str, ...]]:
+        normalized_vector_id = vector_id.strip()
+        normalized_locator = source_locator.strip()
         labels = tuple(dict.fromkeys(label.strip() for label in allowed_labels if label.strip()))
-
-        if not vector_id:
+        if not normalized_vector_id:
             raise AgentContractError("vector_id is required")
-        if not source_locator:
+        if not normalized_locator:
             raise AgentContractError("source_locator is required")
-        if not source_context:
-            raise AgentContractError("source_context is required")
         if len(labels) < 2:
             raise AgentContractError("blind validation requires at least two allowed labels")
+        return normalized_vector_id, normalized_locator, labels
 
-        user_prompt = (
-            f"VECTOR ID: {vector_id}\n"
-            f"SOURCE LOCATOR: {source_locator}\n"
-            f"ALLOWED LABEL TAXONOMY: {list(labels)!r}\n\n"
-            f"PRIMARY SOURCE CONTEXT:\n{source_context}"
-        )
-        raw = self.client.generate_json(system=VALIDATION_AGENT_SYSTEM, user=user_prompt)
-
+    def _parse_decision(
+        self,
+        *,
+        raw: dict[str, Any],
+        vector_id: str,
+        source_locator: str,
+        labels: tuple[str, ...],
+    ) -> tuple[IndependentValidationDecision, AgentRunResult]:
         raw_label = raw.get("predicted_label")
         predicted_label = None if raw_label is None or not str(raw_label).strip() else str(raw_label).strip()
         if predicted_label is not None and predicted_label not in labels:
@@ -76,7 +71,6 @@ class IndependentValidationAgent:
 
         evidence = tuple(str(item).strip() for item in raw.get("evidence", []) if str(item).strip())
         ambiguities = tuple(str(item).strip() for item in raw.get("ambiguities", []) if str(item).strip())
-
         if predicted_label is None and not ambiguities:
             ambiguities = ("Validator abstained without a specific ambiguity; manual review required.",)
 
@@ -96,3 +90,81 @@ class IndependentValidationAgent:
             needs_review=True,
         )
         return decision, result
+
+    def validate(
+        self,
+        *,
+        vector_id: str,
+        source_locator: str,
+        source_context: str,
+        allowed_labels: tuple[str, ...],
+    ) -> tuple[IndependentValidationDecision, AgentRunResult]:
+        vector_id, source_locator, labels = self._normalize_inputs(
+            vector_id=vector_id,
+            source_locator=source_locator,
+            allowed_labels=allowed_labels,
+        )
+        source_context = source_context.strip()
+        if not source_context:
+            raise AgentContractError("source_context is required")
+
+        user_prompt = (
+            f"VECTOR ID: {vector_id}\n"
+            f"SOURCE LOCATOR: {source_locator}\n"
+            f"ALLOWED LABEL TAXONOMY: {list(labels)!r}\n\n"
+            f"PRIMARY SOURCE CONTEXT:\n{source_context}"
+        )
+        raw = self.client.generate_json(system=VALIDATION_AGENT_SYSTEM, user=user_prompt)
+        return self._parse_decision(
+            raw=raw,
+            vector_id=vector_id,
+            source_locator=source_locator,
+            labels=labels,
+        )
+
+    def validate_multimodal(
+        self,
+        *,
+        vector_id: str,
+        source_locator: str,
+        source_context: PrimaryContextPayload,
+        allowed_labels: tuple[str, ...],
+    ) -> tuple[IndependentValidationDecision, AgentRunResult]:
+        vector_id, source_locator, labels = self._normalize_inputs(
+            vector_id=vector_id,
+            source_locator=source_locator,
+            allowed_labels=allowed_labels,
+        )
+        payload = source_context.normalized()
+        if not payload.images:
+            return self.validate(
+                vector_id=vector_id,
+                source_locator=source_locator,
+                source_context=payload.text,
+                allowed_labels=labels,
+            )
+
+        multimodal_generate = getattr(self.client, "generate_json_multimodal", None)
+        if multimodal_generate is None or not callable(multimodal_generate):
+            raise AgentContractError("configured model client does not support primary images")
+
+        source_text = payload.text if payload.text else "[No primary source text; inspect the attached primary source image evidence.]"
+        user_prompt = (
+            f"VECTOR ID: {vector_id}\n"
+            f"SOURCE LOCATOR: {source_locator}\n"
+            f"ALLOWED LABEL TAXONOMY: {list(labels)!r}\n\n"
+            f"PRIMARY SOURCE TEXT:\n{source_text}\n\n"
+            f"PRIMARY SOURCE IMAGES: {len(payload.images)} file(s) supplied out-of-band. "
+            "Inspect the actual image evidence; do not infer missing chart content from the locator."
+        )
+        raw = multimodal_generate(
+            system=VALIDATION_AGENT_SYSTEM,
+            user=user_prompt,
+            images=payload.images,
+        )
+        return self._parse_decision(
+            raw=raw,
+            vector_id=vector_id,
+            source_locator=source_locator,
+            labels=labels,
+        )
