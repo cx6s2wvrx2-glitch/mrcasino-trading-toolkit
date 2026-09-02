@@ -1,0 +1,57 @@
+{
+  "dataset": "XAUUSD V2 Ground Truth Round 04",
+  "date": "2026-09-02",
+  "status": "candidate_not_verified",
+  "source_episode": "approved primary Mr Casino FU-retest and Zones visuals",
+  "promotion_allowed": false,
+  "test_vectors": [
+    {
+      "id": "GT-R04-001",
+      "source_locator": "v2_sources:bdbc80ef-3ad9-4bbb-b711-3883ae26b824#page:2#visual:h4",
+      "expected_label": "fu_retest_visual_h4",
+      "expected_class": "valid",
+      "evidence": ["primary visual is explicitly captioned FU retest, 4hr XAUUSD (H4)"],
+      "forbidden_inference": "Do not infer a universal raw retest distance or R-54 fib anchor from this single H4 chart."
+    },
+    {
+      "id": "GT-R04-002",
+      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:2#visual:classic-ob-att-real-fu",
+      "expected_label": "classic_ob_att_fu_real_fu_zone",
+      "expected_class": "valid",
+      "evidence": ["original chart labels Small 4hr OB / ATT FU followed by the real FU", "original annotation says both are the same kind of zones and marks relevance after same-TF reaction"],
+      "forbidden_inference": "Do not collapse this older baseline zone construct into the later Reflection True-Orderblock or full-range zone geometries."
+    },
+    {
+      "id": "GT-R04-003",
+      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:3#visual:fu-wick-valid-zone",
+      "expected_label": "fu_wick_respected_valid_zone",
+      "expected_class": "valid",
+      "evidence": ["original chart explicitly says FU wick respected so valid zone", "chart shows 4hr FU + retest context and first rejection/update logic"],
+      "forbidden_inference": "Do not invent an exact numeric rejection distance or universal reaction count beyond the source-labelled case."
+    },
+    {
+      "id": "GT-R04-004",
+      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:4#visual:hcs-vs-ob-fu",
+      "expected_label": "hcs_zone_stronger_than_ob_fu",
+      "expected_class": "valid",
+      "evidence": ["original annotation says HCS = more powerful than an ordinary OB + FU zone", "chart labels 4hr HCS after reaction confirmation"],
+      "forbidden_inference": "Do not turn qualitative stronger-than ordering into a numeric strength score."
+    },
+    {
+      "id": "GT-R04-005",
+      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:4#visual:zone-of-manipulation-after-hcs",
+      "expected_label": "zone_of_manipulation_after_hcs_reaction",
+      "expected_class": "valid",
+      "evidence": ["original chart states that after a reaction respecting the HCS the zone changes and can be classed as a zone of manipulation for now", "chart calls for smaller zones within it for refinement"],
+      "forbidden_inference": "Do not infer a universal automatic zone-class transition without the source-defined HCS/reaction context."
+    },
+    {
+      "id": "GT-R04-006",
+      "source_locator": "v2_sources:c574ae7f-7928-4ca7-9df8-5fea1c125fd7#page:5#visual:att-fu-hcs-respected-once",
+      "expected_label": "att_fu_hcs_zone_respected_once",
+      "expected_class": "valid",
+      "evidence": ["original visual labels ATT FU in the area", "original chart labels 4hr HCS stronger and respected once"],
+      "forbidden_inference": "Do not infer a universal ATT-FU strength threshold or future reaction guarantee from one respected-once example."
+    }
+  ]
+}
