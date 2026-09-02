@@ -70,17 +70,20 @@ class Agent06LocalCliTests(unittest.TestCase):
                 return agent06_local_cli._EXPECTED_MANIFEST_SHA256
             return "a" * 64
 
+        def has_module(command, module_name: str) -> bool:
+            return any(str(part).endswith(module_name) for part in command)
+
         def fake_stage(command, *, cwd, environment, stage):
             stages.append((stage, dict(environment)))
-            if "agent06_packet_cli" in command:
+            if has_module(command, "agent06_packet_cli"):
                 output = Path(command[command.index("--output") + 1])
                 output.write_text("{}", encoding="utf-8")
-            elif "agent06_run_cli" in command:
+            elif has_module(command, "agent06_run_cli"):
                 output_dir = Path(command[command.index("--output-dir") + 1])
                 output_dir.mkdir(parents=True)
                 (output_dir / "agent06_blind_predictions.json").write_text("{}", encoding="utf-8")
                 (output_dir / "agent06_runtime_manifest.json").write_text("{}", encoding="utf-8")
-            elif "agent06_compare_cli" in command:
+            elif has_module(command, "agent06_compare_cli"):
                 output = Path(command[command.index("--output") + 1])
                 output.write_text("{}", encoding="utf-8")
 
