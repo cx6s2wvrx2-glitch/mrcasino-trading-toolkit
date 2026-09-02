@@ -109,7 +109,7 @@ class TopDownPrimaryArchiveTests(unittest.TestCase):
             )
             manifest = json.loads(report.manifest_path.read_text(encoding="utf-8"))
             encoded = json.dumps(manifest).lower()
-            self.assertIn(locator, encoded)
+            self.assertIn(locator.lower(), encoded)
             self.assertNotIn("expected_label", encoded)
             self.assertNotIn("expected_class", encoded)
             self.assertNotIn("forbidden_inference", encoded)
