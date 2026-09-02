@@ -10,6 +10,10 @@ from typing import Sequence
 from .mt5_snapshot_load import MT5SnapshotLoadError, load_verified_persisted_mt5_snapshot
 from .replay_candidate_readiness import evaluate_replay_candidate_readiness
 from .replay_candidate_registry import replay_candidates_by_id
+from .replay_stage_certification import (
+    ReplayStageCertificationError,
+    load_verified_replay_stage_certification,
+)
 from .source_chart_alignment import SourceChartAlignmentRequest, align_source_chart_to_snapshot
 
 
@@ -31,9 +35,9 @@ def build_parser() -> argparse.ArgumentParser:
         prog="xauusd-v2-replay-readiness",
         description=(
             "Verify one persisted MT5 snapshot and evaluate broker/chart alignment for one "
-            "registered source episode. Stage timestamp certification is deliberately not "
-            "accepted as a bare CLI assertion, so readiness remains fail-closed until a "
-            "machine-verifiable certification artifact exists."
+            "registered source episode. Stage timestamps can unlock replay readiness only through "
+            "a strict evidence artifact bound to the same candidate and immutable broker snapshot; "
+            "a bare certification boolean is never accepted."
         ),
     )
     parser.add_argument("--candidate-id", required=True)
@@ -43,6 +47,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--timeframe-seconds", required=True, type=int, help="Explicit source-chart timeframe")
     parser.add_argument("--window-start", required=True, type=_aware_datetime)
     parser.add_argument("--window-end", required=True, type=_aware_datetime)
+    parser.add_argument(
+        "--stage-certification",
+        type=Path,
+        default=None,
+        help=(
+            "Optional R-143 stage timestamp evidence artifact. Its six stage mappings are verified "
+            "against the exact closed MT5 snapshot before readiness can become true."
+        ),
+    )
     return parser
 
 
@@ -80,6 +93,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 2
 
+    stage_certification = None
     try:
         verified = load_verified_persisted_mt5_snapshot(args.manifest)
         alignment = align_source_chart_to_snapshot(
@@ -94,12 +108,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             ),
             snapshot=verified.snapshot,
         )
+        if args.stage_certification is not None:
+            stage_certification = load_verified_replay_stage_certification(
+                args.stage_certification,
+                candidate=candidate,
+                snapshot=verified,
+                alignment=alignment,
+            )
         readiness = evaluate_replay_candidate_readiness(
             candidate=candidate,
             alignment=alignment,
-            stage_timestamps_certified=None,
+            stage_timestamps_certified=(
+                True if stage_certification is not None else None
+            ),
         )
-    except (MT5SnapshotLoadError, OSError, ValueError) as exc:
+    except (MT5SnapshotLoadError, ReplayStageCertificationError, OSError, ValueError) as exc:
         print(
             json.dumps(
                 {
@@ -128,8 +151,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         "alignment_state": alignment.state.value,
         "aligned": alignment.aligned,
         "alignment_reason": alignment.reason,
-        "stage_timestamps_certified": False,
-        "stage_timestamp_certification_source": None,
+        "stage_timestamps_certified": stage_certification is not None,
+        "stage_timestamp_certification_source": (
+            str(stage_certification.artifact_path) if stage_certification is not None else None
+        ),
+        "stage_timestamp_certification_sha256": (
+            stage_certification.artifact_sha256 if stage_certification is not None else None
+        ),
+        "stage_confirmation_count": (
+            len(stage_certification.confirmations) if stage_certification is not None else 0
+        ),
         "readiness_state": readiness.state.value,
         "replay_ready": readiness.replay_ready,
         "readiness_reason": readiness.reason,
