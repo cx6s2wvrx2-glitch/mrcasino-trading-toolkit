@@ -1,0 +1,117 @@
+{
+  "dataset": "XAUUSD V2 Ground Truth Round 08",
+  "date": "2026-09-02",
+  "status": "candidate_not_verified",
+  "source_episode": "approved primary Mr Casino top-down sequence 2023-11-20",
+  "promotion_allowed": false,
+  "test_vectors": [
+    {
+      "id": "GT-R08-001",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-20#image:IMG_20231120_125449_652.jpg",
+      "expected_label": "established_2m_1m_strong_fu_can_support_buys_while_3m_fu_is_still_forming",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary 2M chart says the 3M FU is forming to the upside while 2M+1M strong FU is established",
+        "the same chart says the strong closures are enough to forgo the major gap for further buys first"
+      ],
+      "forbidden_inference": "Do not treat the still-forming 3M FU as confirmed or infer that the major gap can never matter later."
+    },
+    {
+      "id": "GT-R08-002",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-20#image:IMG_20231120_125450_827.jpg",
+      "expected_label": "overall_upside_continuation_can_coexist_with_intraday_sells_prevalent_now",
+      "expected_class": "valid",
+      "evidence": [
+        "primary Monthly chart says buys are being negated for the time being at least",
+        "the same note says that while expecting overall continuation to the upside, the intraday starting state is sells prevalent"
+      ],
+      "forbidden_inference": "Do not collapse swing/overall direction and current intraday prevalent direction into a single global bullish/bearish flag."
+    },
+    {
+      "id": "GT-R08-003",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-20#image:IMG_20231120_125452_070.jpg",
+      "expected_label": "monthly_3w_area_is_longer_sell_refinement_only_if_current_3w_fu_retest_is_respected",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary 3W chart calls the highlighted region a key Monthly/3W area to refine a potential longer sell further",
+        "the note explicitly conditions that idea on respecting the current 3W FU retest to the downside"
+      ],
+      "forbidden_inference": "Do not promote the zone to an unconditional longer-sell setup without the stated 3W FU-retest respect condition."
+    },
+    {
+      "id": "GT-R08-004",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-20#image:IMG_20231120_125454_396.jpg",
+      "expected_label": "respected_11d_hcs_zone_and_11d_low_can_back_swing_buy_but_sessions_must_confirm",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary 11D chart says the HCS zone is being respected and the 11D low gives major backing for the swing buy if it develops",
+        "the note explicitly says sessions through the week will confirm and warns of the opposite longer-sell effect under failure"
+      ],
+      "forbidden_inference": "Do not call the swing buy confirmed solely because the 11D zone is respected; the source itself requires developing-session confirmation."
+    },
+    {
+      "id": "GT-R08-005",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-20#image:IMG_20231120_125455_318.jpg",
+      "expected_label": "key_4d_hcs_zone_can_remain_relevant_while_further_refinement_is_still_required",
+      "expected_class": "valid",
+      "evidence": [
+        "primary 4D chart explicitly says the HCS zone is still key and that one more refinement within will be sought"
+      ],
+      "forbidden_inference": "Do not treat a key HTF HCS zone as already sufficiently refined for direct execution."
+    },
+    {
+      "id": "GT-R08-006",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-20#image:IMG_20231120_125457_191.jpg",
+      "expected_label": "untested_zone_of_manipulation_can_be_retained_as_key_refinement_context",
+      "expected_class": "valid",
+      "evidence": [
+        "primary 3D chart explicitly labels an untested key zone of manipulation after the 1963 area / 30min doji"
+      ],
+      "forbidden_inference": "Do not infer exact raw zone coordinates or universal zone strength solely from this labelled visual."
+    },
+    {
+      "id": "GT-R08-007",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-20#image:IMG_20231120_125458_736.jpg",
+      "expected_label": "reaction_from_2d_hcs_zone_is_first_confirmation_for_sells_while_buy_attempts_before_key_level_are_manipulated",
+      "expected_class": "valid",
+      "evidence": [
+        "primary 2D chart says reaction from the 2D HCS zone is the first confirmation for subsequent sells",
+        "the same chart says any negation/buy attempt before 1963 will be greatly manipulated on 4H/Daily and that sells are thus prevalent"
+      ],
+      "forbidden_inference": "Do not turn first confirmation into an unconditional multi-day sell guarantee or ignore later valid negation evidence beyond the stated context."
+    },
+    {
+      "id": "GT-R08-008",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-20#image:IMG_20231120_125459_630.jpg",
+      "expected_label": "daily_att_fu_retest_can_be_active_while_lower_zone_is_not_relevant_yet",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary Daily chart explicitly marks Daily ATT FU retest commencing",
+        "the same chart marks a lower zone as not relevant yet"
+      ],
+      "forbidden_inference": "Do not assume every visible lower zone is immediately relevant merely because it exists on the chart."
+    },
+    {
+      "id": "GT-R08-009",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-20#image:IMG_20231120_125501_212.jpg",
+      "expected_label": "significant_11h_x3_reaction_from_hcs_requires_strong_evidence_for_negation",
+      "expected_class": "edge_case",
+      "evidence": [
+        "primary 11H chart labels a significant x3 established reaction from the HCS zone",
+        "the note says any negation attempt will need many FU retests / strong manipulation under the 2D scenario"
+      ],
+      "forbidden_inference": "Do not invent a numeric count for 'many FU retests' or convert the phrase into a fixed negation threshold."
+    },
+    {
+      "id": "GT-R08-010",
+      "source_locator": "v2_sources:b271d0b8-a86b-4d65-a4ae-b7e49d5803a6#sequence:2023-11-20#image:IMG_20231120_125504_116.jpg",
+      "expected_label": "4h_context_can_separate_first_ltf_manipulation_from_eventual_main_htf_reaction",
+      "expected_class": "valid",
+      "evidence": [
+        "primary 4H chart explicitly distinguishes first for LTF manipulation from eventual main HTF reaction",
+        "the chart also notes the 1963-1956 low extended with a 1942 true stop"
+      ],
+      "forbidden_inference": "Do not collapse the first LTF manipulation stage and the eventual HTF reaction into one simultaneous event or infer the true-stop geometry from the annotation alone."
+    }
+  ]
+}
