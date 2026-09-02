@@ -15,6 +15,8 @@ Nothing in this document:
 - authorizes live execution;
 - treats implementation helpers as strategy authority.
 
+A user clarification recorded on 2026-09-02 is now part of the scope reconciliation: Strong FU and ATT FU use the same primitive logic across all timeframes. Timeframe changes authority/context/downstream application, not the primitive definition. See `01_sources/USER_CLARIFICATION_FU_TIMEFRAME_SCOPE_2026_09_02.md`.
+
 ## B-01 — FU sufficient opposite-direction move / break mechanics
 
 Primary evidence reviewed:
@@ -67,21 +69,25 @@ Reconciled boundary:
 
 Primary evidence reviewed:
 - `03_Analysis_Basics_.pdf` FU section;
-- `GIANNO_CASINO_REFLECTION_MASTER.pdf` 1-minute Strong-FU zone material.
+- `GIANNO_CASINO_REFLECTION_MASTER.pdf` Strong-FU examples, including the 1-minute zone application;
+- explicit user clarification dated 2026-09-02 on FU-family timeframe scope.
 
 What is established:
 - Strong-FU quality is associated with a strong close and little/no rejection;
-- the source's FU explanation is deliberately not presented as a rigid universal percentage threshold;
-- Reflection contains a specific 1-minute zone rule in which the full Strong-FU candle is marked and the cited 1-minute example breaks both the previous high and low.
+- Strong FU is a strength/quality class within the FU family, not a separate 1m concept;
+- **the same Strong-FU / ATT-FU primitive logic applies on every timeframe**;
+- timeframe changes authority, top-down weighting, move scale and downstream use, not the primitive definition;
+- Reflection contains a specific 1-minute zone application in which the full Strong-FU candle is marked and the cited 1-minute example breaks both the previous high and low.
 
 Critical scope distinction:
-- the 1-minute `breaks previous high + low` statement is source-backed **1-minute zone geometry/context**;
-- it must not be generalized into the universal definition of Strong FU across all timeframes.
+- the 1-minute `breaks previous high + low` statement is source-backed **1-minute zone geometry/application**;
+- it is **not** the definition of Strong FU itself;
+- equally, no 1m example may be used to imply that Strong FU or ATT FU have different primitive logic on higher timeframes.
 
 Reconciled boundary:
-- no universal body%, wick%, rejection%, pip or range threshold is certified.
-- V2 should retain threshold-free quality observables and source-scoped structural states.
-- The blocker can only close if primary evidence supplies a universal quantitative classifier or explicitly establishes that the classification is intentionally qualitative/contextual rather than numeric.
+- the timeframe-scope question is closed by explicit user clarification: FU-family primitive logic is fractal/timeframe-invariant;
+- B-03 remains open **only** on the question of a universal quantitative Strong-FU classifier: body%, wick%, rejection%, pip/range threshold, or explicit confirmation that no numeric threshold is intended;
+- V2 should retain threshold-free quality observables until that quantitative boundary is certified.
 
 ## B-04 — Broker-specific Imbalanced-Candle calibration
 
@@ -109,18 +115,19 @@ Reconciled boundary:
 
 ## Net result
 
-No blocker is promoted or resolved by this audit.
+No blocker is promoted or database-resolved by this audit.
 
 The remaining unknowns are now narrower:
 - **B-01:** exact sufficient raw FU break/move mechanic;
 - **B-02:** exact fib 0/100 orientation only;
-- **B-03:** whether any universal numeric Strong-FU threshold exists, and if so its exact definition;
+- **B-03:** exact universal numeric Strong-FU threshold, if one exists; timeframe scope itself is no longer open;
 - **B-04:** exact broker-OHLC classifier/tolerance for the later Imbalanced-Candle construct.
 
 This means future work should not re-open already settled concepts such as:
 - FU = liquidity take plus opposite-direction move in the same event;
 - R-54 retest quality ordering itself;
 - Strong-FU qualitative association with strong close / low rejection;
+- Strong FU / ATT FU primitive logic being consistent across timeframes;
 - broker-only provenance requirement for imbalances.
 
 ## Next actions
@@ -128,5 +135,5 @@ This means future work should not re-open already settled concepts such as:
 1. Keep Agent-06 independent validation separate from blocker resolution.
 2. Obtain/ingest broker MT5 history before attempting B-04 calibration.
 3. Use primary labelled fixtures plus immutable broker snapshots for any raw-detector certification.
-4. Keep B-01/B-02/B-03 fail-closed unless an explicit primary rule or sufficiently precise labelled fixture resolves the remaining mechanic.
+4. Keep B-01/B-02/B-03 fail-closed on their remaining mechanical/numeric unknowns; do not re-open the now-clarified FU-family timeframe scope.
 5. Do not mutate the unresolved database rows from this audit alone.
