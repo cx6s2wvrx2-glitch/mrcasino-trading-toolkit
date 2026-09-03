@@ -12,21 +12,36 @@ from .helper_fu_shadow import HelperFUClass, beta_fu_core_shadow, casino_v7_core
 class FUFamilyObservability:
     """Union of objective/source-relevant FU-family observations.
 
-    This object is deliberately NOT a FU classifier. It keeps the current narrow
-    V2 proxy, Reflection completion evidence and the user-supplied Casino_v7/BETA
-    implementation evidence side by side so divergences remain visible.
+    This object is deliberately NOT a FU classifier. It keeps raw previous-OHLC
+    relationships, the current narrow V2 proxy, Reflection completion evidence and
+    the user-supplied Casino_v7/BETA implementation evidence side by side so
+    divergences remain visible.
 
     No field in this object certifies FU semantics, Strong FU, HCS, strategy
     readiness, performance, promotion or live execution.
     """
 
     direction: CandleDirection
+
     swept_previous_high: bool
     swept_previous_low: bool
     swept_both_sides: bool
+
+    close_within_previous_range: bool
+    close_above_previous_high: bool
+    close_below_previous_low: bool
+
     close_within_previous_body: bool
     close_above_previous_body: bool
     close_below_previous_body: bool
+
+    close_above_previous_open: bool
+    close_below_previous_open: bool
+    close_above_previous_close: bool
+    close_below_previous_close: bool
+    open_above_previous_open: bool
+    open_below_previous_open: bool
+
     basic_fu_proxy: BasicFUCandidateState
 
     reflection_observed_class: FUCompletionClass
@@ -132,9 +147,18 @@ def observe_fu_family(
         swept_previous_high=raw.swept_previous_high,
         swept_previous_low=raw.swept_previous_low,
         swept_both_sides=raw.swept_both_sides,
+        close_within_previous_range=raw.close_within_previous_range,
+        close_above_previous_high=raw.close_above_previous_high,
+        close_below_previous_low=raw.close_below_previous_low,
         close_within_previous_body=raw.close_within_previous_body,
         close_above_previous_body=raw.close_above_previous_body,
         close_below_previous_body=raw.close_below_previous_body,
+        close_above_previous_open=raw.close_above_previous_open,
+        close_below_previous_open=raw.close_below_previous_open,
+        close_above_previous_close=raw.close_above_previous_close,
+        close_below_previous_close=raw.close_below_previous_close,
+        open_above_previous_open=raw.open_above_previous_open,
+        open_below_previous_open=raw.open_below_previous_open,
         basic_fu_proxy=basic.state,
         reflection_observed_class=observed_completion.classification,
         reflection_conditional_if_fu_criteria_met=conditional_class,
