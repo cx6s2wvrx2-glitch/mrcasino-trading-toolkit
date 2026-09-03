@@ -101,6 +101,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "bar_count": result.bar_count,
             "basic_fu_candidate_count": len(result.fu_candidates),
             "ambiguous_basic_fu_bar_count": result.ambiguous_basic_fu_bars,
+            "adjacency_gap_pairs_skipped": result.adjacency_gap_pairs_skipped,
             "wick_interaction_count_total": len(result.wick_interactions),
             "source_style_hcs_candidate_count": result.source_style_hcs_candidates,
             "candidate_only_output": bool(args.candidate_only),
