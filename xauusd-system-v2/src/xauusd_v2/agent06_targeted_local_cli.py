@@ -19,9 +19,9 @@ from .agent06_local_cli import (
     _safe_extract_zip,
     _sanitized_environment,
     _sha256_file,
-    _write_smoke_packet,
 )
-from .blind_validation_packet_io import load_blind_packet
+from .focused_validation_packet import FocusedValidationPacket
+from .focused_validation_packet_io import load_focused_packet, write_focused_packet
 
 
 _RUN_ID_RE = re.compile(r"agent06-focus-anthropic-\d{8}T\d{6}Z")
@@ -60,12 +60,32 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _write_focused_smoke_packet(source: Path, destination: Path, count: int) -> tuple[int, int]:
+    packet = load_focused_packet(source)
+    full_count = len(packet.cases)
+    if count <= 0 or count > full_count:
+        raise SystemExit("smoke-cases exceeds focused target case count")
+    smoke = FocusedValidationPacket(
+        dataset_name=packet.dataset_name,
+        verdict_taxonomy=packet.verdict_taxonomy,
+        cases=packet.cases[:count],
+    )
+    write_focused_packet(smoke, destination)
+    return full_count, len(packet.verdict_taxonomy)
+
+
 def _decision_counts(predictions_path: Path) -> tuple[int, dict[str, int], int]:
     try:
         payload = json.loads(predictions_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise SystemExit("focused predictions output is unreadable") from exc
-    decisions = payload.get("decisions") if isinstance(payload, dict) else None
+    if not isinstance(payload, dict) or payload.get("protocol") != "agent06_focused_claim_adjudication_v2":
+        raise SystemExit("focused predictions protocol mismatch")
+    if payload.get("expected_verdict_loaded_by_this_process") is not False:
+        raise SystemExit("focused provider process loaded an expected verdict")
+    if payload.get("ground_truth_dataset_loaded_by_this_process") is not False:
+        raise SystemExit("focused provider process loaded ground truth")
+    decisions = payload.get("decisions")
     if not isinstance(decisions, list):
         raise SystemExit("focused predictions output has invalid decisions")
     counts = {verdict: 0 for verdict in sorted(_VERDICTS)}
@@ -140,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
     work_root.mkdir(parents=True, exist_ok=True)
 
     if resume_run_id:
-        if not run_root.is_dir() or not (run_root / "agent06_blind_checkpoint.json").is_file():
+        if not run_root.is_dir() or not (run_root / "agent06_focused_checkpoint.json").is_file():
             raise SystemExit("resume-run-id does not contain a resumable focused checkpoint")
         if staging_root.exists():
             raise SystemExit("resume staging directory already exists; refusing ambiguous resume")
@@ -180,15 +200,15 @@ def main(argv: list[str] | None = None) -> int:
             stage="1/2 build focused unresolved-case packet",
         )
 
-        full_packet = load_blind_packet(packet_path)
+        full_packet = load_focused_packet(packet_path)
         full_case_count = len(full_packet.cases)
-        taxonomy_count = len(full_packet.taxonomy)
-        if tuple(full_packet.taxonomy) != ("SUPPORTED", "CONTRADICTED", "INSUFFICIENT"):
-            raise SystemExit("focused packet verdict taxonomy mismatch")
+        taxonomy_count = len(full_packet.verdict_taxonomy)
+        if full_case_count != 23:
+            raise SystemExit(f"focused packet expected 23 current target cases, got {full_case_count}")
 
         provider_packet_path = packet_path
         if smoke_cases:
-            _write_smoke_packet(packet_path, smoke_packet_path, smoke_cases)
+            _write_focused_smoke_packet(packet_path, smoke_packet_path, smoke_cases)
             provider_packet_path = smoke_packet_path
             print(
                 f"[smoke] selected {smoke_cases}/{full_case_count} focused cases; verdict taxonomy remains {taxonomy_count}",
@@ -202,7 +222,7 @@ def main(argv: list[str] | None = None) -> int:
         command = [
             python,
             "-m",
-            "xauusd_v2.agent06_run_cli",
+            "xauusd_v2.agent06_targeted_run_cli",
             "--packet",
             str(provider_packet_path),
             "--bundle-root",
@@ -244,8 +264,8 @@ def main(argv: list[str] | None = None) -> int:
         provider_env.pop("ANTHROPIC_API_KEY", None)
         provider_env.pop("XAUUSD_AGENT06_ANTHROPIC_MODEL", None)
 
-        predictions = run_root / "agent06_blind_predictions.json"
-        runtime_manifest = run_root / "agent06_runtime_manifest.json"
+        predictions = run_root / "agent06_focused_predictions.json"
+        runtime_manifest = run_root / "agent06_focused_runtime_manifest.json"
         if not predictions.is_file() or not runtime_manifest.is_file():
             raise SystemExit("focused run completed without required frozen outputs")
         completed_count, verdict_counts, abstain_count = _decision_counts(predictions)
