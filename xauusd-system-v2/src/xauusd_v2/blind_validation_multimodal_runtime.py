@@ -136,13 +136,22 @@ def execute_multimodal_blind_validation_runtime(
             decision = resumed.decision
             audit = resumed.audit
         else:
-            decision, _ = agent.validate_multimodal(
-                vector_id=case.vector_id,
-                source_locator=case.source_locator,
-                source_context=payload,
-                allowed_labels=packet.taxonomy,
-                focus=case.focus,
-            )
+            if case.focus:
+                decision, _ = agent.validate_multimodal(
+                    vector_id=case.vector_id,
+                    source_locator=case.source_locator,
+                    source_context=payload,
+                    allowed_labels=packet.taxonomy,
+                    focus=case.focus,
+                )
+            else:
+                # Keep the legacy call shape for V1 agents/test doubles.
+                decision, _ = agent.validate_multimodal(
+                    vector_id=case.vector_id,
+                    source_locator=case.source_locator,
+                    source_context=payload,
+                    allowed_labels=packet.taxonomy,
+                )
             audit = MultimodalRuntimeCaseAudit(
                 vector_id=case.vector_id,
                 source_locator=case.source_locator,
