@@ -1,0 +1,36 @@
+{
+  "schema_version": "source_fidelity_fixture_v1",
+  "episode_id": "mr-casino-2023-03-30-buy-sequence",
+  "source_locator": "01_sources/PRIMARY_NARRATIVE_2023_03_30_31.md#buy-side-narrative",
+  "timeframe_seconds": 60,
+  "window_start": "2023-03-30T00:00:00Z",
+  "window_end": "2023-03-31T00:00:00Z",
+  "anchors": [
+    {
+      "anchor_id": "source_true_stop_1972_70",
+      "level": "1972.70",
+      "predicate": "low_equals",
+      "source_ref": "PRIMARY_NARRATIVE_2023_03_30_31#locator-b"
+    },
+    {
+      "anchor_id": "source_1973_closure_area",
+      "level": "1973.00",
+      "predicate": "close_at_or_above",
+      "source_ref": "PRIMARY_NARRATIVE_2023_03_30_31#locator-b-continuation"
+    },
+    {
+      "anchor_id": "source_1975_hcs_reentry_area",
+      "level": "1975.00",
+      "predicate": "range_touch",
+      "source_ref": "PRIMARY_NARRATIVE_2023_03_30_31#locator-b-continuation"
+    },
+    {
+      "anchor_id": "source_1984_19_imbalance_target",
+      "level": "1984.19",
+      "predicate": "range_touch",
+      "source_ref": "PRIMARY_NARRATIVE_2023_03_30_31#locator-a"
+    }
+  ],
+  "expansion_probe": null,
+  "promotion_allowed": false
+}
