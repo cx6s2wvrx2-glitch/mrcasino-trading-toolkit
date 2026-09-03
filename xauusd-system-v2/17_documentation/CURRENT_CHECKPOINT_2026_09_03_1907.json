@@ -1,0 +1,111 @@
+{
+  "schema_version": "xauusd_v2_current_checkpoint_v1",
+  "checkpoint_time": "2026-09-03T19:07:00+03:00",
+  "scope": {
+    "repository": "cx6s2wvrx2-glitch/mrcasino-trading-toolkit",
+    "branch": "xauusd-v2-foundation",
+    "project_root": "xauusd-system-v2/",
+    "unrelated_projects_must_not_be_modified": true
+  },
+  "continuation_predecessor": "CURRENT_CHECKPOINT_2026_09_03_1859",
+  "reference_feed": {
+    "target": "FOREXCOM:XAUUSD",
+    "state": "REQUIRED_DEFERRED_NOT_ALIGNED",
+    "requirement_waived": false,
+    "broker_equivalence_established": false
+  },
+  "broker_snapshot": {
+    "normalized_sha256": "ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24",
+    "snapshot_id": "sha256:ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24"
+  },
+  "second_node_diagnostic": {
+    "status": "MARCH_HCS_SECOND_NODE_DIAGNOSTIC_COMPLETE_NOT_CERTIFIED",
+    "report_sha256": "0bef221b0bff0e6254f7c989057fc2a6f55ddc4cd26d77a674a300a95ceb8f63",
+    "1975": {
+      "level_touch_bar_count": 4,
+      "exact_last_wick_retest_bar_count": 1,
+      "basic_fu_miss_on_exact_retest_bar_count": 1,
+      "reflection_attempted_fu_form_1_on_basic_miss_retest_bar_count": 0,
+      "v7_att_shadow_on_basic_miss_retest_bar_count": 0,
+      "beta_fu_shadow_on_basic_miss_retest_bar_count": 0,
+      "diagnostic": "BASIC_FU_GAP_REMAINS_AFTER_SECOND_NODE_OBSERVABILITY",
+      "critical_exact_retest_bar": {
+        "bar_open": "2023-03-30T12:31:00Z",
+        "ohlc": ["1974.24", "1975.35", "1973.12", "1975.06"],
+        "latest_prior_basic_fu_proxy_bar_open": "2023-03-30T12:28:00Z",
+        "latest_prior_wick": ["1973.34", "1973.75"],
+        "exact_retest": true,
+        "basic_fu_state": "none",
+        "reflection_completion_lower_bound": "not_certified",
+        "casino_v7_fu_att": "none",
+        "beta_fu_candidate": false,
+        "certified_hcs": false
+      },
+      "adjacent_bar": {
+        "bar_open": "2023-03-30T12:32:00Z",
+        "reflection_completion_lower_bound": "attempted_fu_form_1",
+        "exact_last_wick_retest": false
+      },
+      "interpretation": "EXACT_RETEST_AND_ATTEMPTED_FU_FORM_1_ARE_ON_DIFFERENT_BARS_AND_MUST_NOT_BE_MERGED_WITHOUT_SOURCE_TEMPORAL_AUTHORITY"
+    },
+    "1986": {
+      "exact_last_wick_retest_bar_count": 4,
+      "control_positive_bar": "2023-03-31T12:36:00Z",
+      "basic_fu_state": "bearish_candidate",
+      "latest_prior_basic_fu_proxy_bar_open": "2023-03-31T12:35:00Z",
+      "exact_retest": true,
+      "diagnostic": "LAST_WICK_RETEST_WITH_BASIC_FU_PROXY",
+      "certified_hcs": false
+    }
+  },
+  "semantic_boundaries": {
+    "hcs_temporal_colocation": {
+      "state": "UNRESOLVED_FAIL_CLOSED",
+      "current_contract": "new eligible manipulation node formed on the retest of the last FU wick",
+      "plus_one_candle_bridge_authorized": false,
+      "plus_n_candle_bridge_authorized": false,
+      "reason": "no primary source inspected here explicitly authorizes splitting an HCS retest and its second node across adjacent same-timeframe candles"
+    },
+    "fu_same_candle": {
+      "state": "SOURCE_BACKED",
+      "requirement": "liquidity take and opposite-direction move occur in the same candle",
+      "parent_ohlc_alone_proves_intrabar_order": false
+    },
+    "generic_fu_retest_body_validity": {
+      "state": "SEPARATE_FROM_HCS_TEMPORAL_GRAMMAR",
+      "may_be_valid_on_body_without_wick": true,
+      "promotion_to_hcs_rule": false
+    }
+  },
+  "remote_state_before_checkpoint": {
+    "head": "408b363bdaa2242c1b31200378c93c8dacaf6597",
+    "ci": {
+      "workflow": "XAUUSD V2 Tests",
+      "run_number": 501,
+      "run_id": 33776058273,
+      "conclusion": "success"
+    }
+  },
+  "governance": {
+    "source_occurrence_timestamps_certified": false,
+    "semantic_stage_certification": false,
+    "performance_claim_allowed": false,
+    "strategy_truth_changed": false,
+    "promotion_allowed": false,
+    "live_execution_authorized": false
+  },
+  "open_boundaries": [
+    "B-01 sufficient opposite-direction FU move/break mechanics",
+    "B-02 R-54 full-FU 70% fib anchor/orientation",
+    "B-03 universal numeric Strong-FU threshold",
+    "B-04 broker-specific Imbalanced-Candle calibration",
+    "B-05 x3-by-x3 raw OHLC grammar",
+    "B-06 Accepted RR numeric/dynamic definition",
+    "B-07 synthetic 11h candle/session anchor",
+    "B-08 production numeric risk policy",
+    "trail-level selection boundary",
+    "FOREXCOM:XAUUSD exact reference alignment",
+    "HCS temporal/co-location grammar for staged retest to later node"
+  ],
+  "next_action": "DO_NOT_BUILD_MULTI_CANDLE_HCS_BRIDGE_WITHOUT_PRIMARY_SOURCE_AUTHORITY; CONTINUE_SOURCE_EVIDENCE_SEARCH_OR_LEAVE_1975_UNRESOLVED"
+}
