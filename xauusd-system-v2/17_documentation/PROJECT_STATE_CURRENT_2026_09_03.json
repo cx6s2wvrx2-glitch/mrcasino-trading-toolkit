@@ -1,0 +1,229 @@
+{
+  "schema_version": "xauusd_v2_project_handoff_v1",
+  "as_of_date": "2026-09-03",
+  "status": "ACTIVE_RESEARCH_STRATEGY_RECONSTRUCTION_HISTORICAL_REPLAY",
+  "repository": "cx6s2wvrx2-glitch/mrcasino-trading-toolkit",
+  "branch": "xauusd-v2-foundation",
+  "project_root": "xauusd-system-v2/",
+  "new_chat_entrypoint": "xauusd-system-v2/START_HERE_NEW_CHAT.md",
+  "human_state_document": "xauusd-system-v2/17_documentation/PROJECT_STATE_CURRENT_2026_09_03.md",
+  "scope": {
+    "allowed_root": "xauusd-system-v2/",
+    "unrelated_projects_must_not_be_modified": ["Flowstate", "LUMOS", "THRV", "gym"],
+    "clean_room": true,
+    "fail_closed": true,
+    "live_execution_authorized": false,
+    "promotion_allowed": false
+  },
+  "authority": {
+    "hierarchy": [
+      "approved_primary_mr_casino",
+      "approved_secondary_or_corroborative",
+      "helpers_engineering_reference_only"
+    ],
+    "helpers_are_strategy_truth": false,
+    "llm_live_authority": false
+  },
+  "user_research_premise": "The strategy has edge; reconstruct it faithfully and demonstrate/quantify that edge without substituting another strategy.",
+  "open_blockers": {
+    "B-01": "FU sufficient opposite-direction move/break mechanics",
+    "B-02": "R-54 numeric 70% full-FU Fib anchor/orientation",
+    "B-03": "universal numeric Strong-FU threshold only; timeframe scope itself resolved",
+    "B-04": "broker-specific Imbalanced-Candle calibration",
+    "B-05": "x3-by-x3 raw OHLC grammar",
+    "B-06": "Accepted RR numeric/dynamic definition",
+    "B-07": "synthetic 11h candle/session anchor",
+    "B-08": "production risk policy numeric values"
+  },
+  "separate_boundaries": [
+    "R-150 trail-level ordering/context exists but no certified trail selector"
+  ],
+  "user_clarifications": {
+    "fu_timeframe_scope": {
+      "resolved": true,
+      "meaning": "Strong FU / ATT FU primitive logic is timeframe-neutral/fractal; timeframe changes authority/context/scale/use, not primitive definition.",
+      "record": "xauusd-system-v2/01_sources/USER_CLARIFICATION_FU_TIMEFRAME_SCOPE_2026_09_02.md"
+    },
+    "tradingview_reference_feed": {
+      "canonical_visual_reference": "FOREXCOM:XAUUSD",
+      "exclusive_markets_role": "broker_execution_research_feed",
+      "record": "xauusd-system-v2/01_sources/PRIMARY_FEED_GUIDANCE_2024_04_28.md"
+    },
+    "observed_common_htf": {
+      "timeframes": ["1h", "2h", "3h", "5h", "7h", "11h"],
+      "authority": "user_observation_priority_metadata_only",
+      "record": "xauusd-system-v2/01_sources/USER_OBSERVATION_COMMON_HTF_USAGE_2026_09_03.md"
+    }
+  },
+  "agent06": {
+    "closure_status": "AGENT06_EXTERNAL_VALIDATION_CLOSED_WITH_UNRESOLVED_EVIDENCE",
+    "paid_provider_work_complete": true,
+    "further_provider_calls_required": false,
+    "ask_for_api_key_again": false,
+    "v1": {
+      "run_id": "agent06-anthropic-20260903T040444Z",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5",
+      "repo_commit": "50f9a434bcc678a7b04494ff457ed4fd980f8e8f",
+      "packet_sha256": "e9dd198f166dc7d4d22d1f921b00c4a84c02e36a3d7e5ec734b7703379e5ab4f",
+      "bundle_sha256": "6d3dea44ab528c240b05458628c93e38e8582a53d356bb5414aad4730aab9daf",
+      "context_manifest_sha256": "e73568e4af896c4e4ffcb9bee7cbd694902d706003e2e594babeaa5faa422a37",
+      "predictions_sha256": "fd2d3584ecde9d5b1b1804a8566d764057587297b53bdcbe0297e602e2b7ce0f",
+      "runtime_manifest_sha256": "d7c0aab96b7ed71852fd583018933e129471b7dc87ba8e6d902ce0ddedf7ff89",
+      "case_count": 173,
+      "exact_agree": 144,
+      "locator_set_agree": 6,
+      "unresolved_disagree": 13,
+      "abstain": 10
+    },
+    "focused_v2": {
+      "run_id": "agent06-focus-anthropic-20260903T084504Z",
+      "repo_commit": "1a19818559230d9452783caea7a59d0a424a0882",
+      "packet_sha256": "696df8f457c03854bc4d3445d9b9cebb23cb3b4625f9a6a9b96bbf827ed9e635",
+      "predictions_sha256": "4db60c6dc0b0e76e488fdcaa9ce868464b15de109557bffd29b78d7f0c9eba14",
+      "runtime_manifest_sha256": "251e1f66c4509d51ba0ea6a809d11058ffffd64b51e971a048c684d16ed074db",
+      "source_review_sha256": "26ff679f827ba4ffdcf5d41a8900642f51d10c3202d06731b879eb6992edf565",
+      "case_count": 23,
+      "supported": 19,
+      "contradicted": 0,
+      "insufficient": 4,
+      "evidence_open_ids": ["GT-R02-020", "GT-R13-002", "GT-R13-006", "GT-R13-026"]
+    },
+    "local_closure_report": "~/agent06_final_closure.json"
+  },
+  "exclusive_markets_m1": {
+    "broker_name": "Exclusive Markets Ltd.",
+    "broker_symbol": "XAUUSD!",
+    "server": "ExclusiveMarkets-Demo",
+    "source_file": "XAUUSD!_M1_202101040100_202609031251.csv",
+    "bar_count": 1999671,
+    "source_sha256": "691c1c2e9793e5eaea3291bf215147c0e02113ec910a5fc96fa751e2f8c84bc0",
+    "normalized_sha256": "ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24",
+    "snapshot_id": "sha256:ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24",
+    "source_timezone": "EET",
+    "timezone_provenance": "broker confirmed GMT+2 winter / GMT+3 summer",
+    "first_timestamp_utc": "2021-01-03T23:00:00+00:00",
+    "last_timestamp_utc": "2026-09-03T09:51:00+00:00",
+    "gap_count": 1604,
+    "fill_gaps": false,
+    "local_paths": {
+      "raw_source": "/Users/nikolaosgiannopoulos/.xauusd-v2/mt5/raw/691c1c2e9793e5eaea3291bf215147c0e02113ec910a5fc96fa751e2f8c84bc0/source.mt5.txt",
+      "canonical_snapshot": "/Users/nikolaosgiannopoulos/.xauusd-v2/mt5/snapshots/ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24/xauusd_ohlc.csv",
+      "ingestion_manifest": "/Users/nikolaosgiannopoulos/.xauusd-v2/mt5/ingestions/691c1c2e9793e5eaea3291bf215147c0e02113ec910a5fc96fa751e2f8c84bc0--ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24.json"
+    },
+    "do_not_request_another_full_export": true
+  },
+  "native_mtf_validation": {
+    "status": "PASS",
+    "exact_match_total": 5708,
+    "missing_total": 0,
+    "mismatch_total": 0,
+    "results": {
+      "H1": {"exact": 3976, "compared": 3976},
+      "H4": {"exact": 1039, "compared": 1039},
+      "H8": {"exact": 520, "compared": 520},
+      "D1": {"exact": 173, "compared": 173}
+    },
+    "do_not_rerun_without_contract_change": true
+  },
+  "derived_timeframes": {
+    "M5": 400019,
+    "M10": 200163,
+    "M15": 133448,
+    "M30": 66737,
+    "H1": 33385,
+    "H4": 8741,
+    "H8": 4374,
+    "D1": 1458
+  },
+  "timeframe_universe": {
+    "beta_helper_25_minutes": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,20,30,35,40,45,50,55,60,90,100],
+    "primary_higher_custom_examples": ["4D", "D1", "18h", "15h/14h", "12h", "11h", "7h", "5h", "4h", "3h", "1h", "50m"],
+    "eleven_hour_anchor_certified": false
+  },
+  "replay_2023_11_01": {
+    "episode_id": "casino-2023-11-01",
+    "source_locator": "top down analysis (1).zip#sequence:2023-11-01",
+    "status": "REPLAY_MARKET_SLICE_BUILT",
+    "bar_count": 13665,
+    "slice_sha256": "eefa2503777b576394f926e3e22555eb0b9dd4e194a24dae8ac6dcab5ed04399",
+    "first_timestamp_utc": "2023-10-23T00:00:00Z",
+    "last_timestamp_utc": "2023-11-03T20:59:00Z",
+    "price_low": 1953.43,
+    "price_high": 2009.37,
+    "anchor_1975_exact_distance": 0,
+    "source_capture_time_certified": false
+  },
+  "march_2023_replay": {
+    "current_high_value_episode": true,
+    "source_record": "xauusd-system-v2/01_sources/PRIMARY_NARRATIVE_2023_03_30_31.md",
+    "reconstruction_record": "xauusd-system-v2/17_documentation/SOURCE_NARRATED_OUTCOME_RECON_2023_03_30_31.md",
+    "buy_source_path": ["1972.70 area", "1973 area", "1975 area", "1984.19 target area"],
+    "buy_broker_observations": [
+      ["2023-03-30T15:52:00Z", "low", 1972.69],
+      ["2023-03-30T15:53:00Z", "low", 1972.70],
+      ["2023-03-30T15:58:00Z", "high", 1975.19],
+      ["2023-03-30T16:49:00Z", "high", 1984.24]
+    ],
+    "sell_broker_observations": {
+      "largest_3m_window_start": "2023-03-31T12:30:00Z",
+      "largest_3m_window_end": "2023-03-31T12:32:00Z",
+      "range_low": 1976.33,
+      "range_high": 1987.45,
+      "source_imbalance": 1987.56,
+      "broker_near_high": 1987.57,
+      "source_hcs_entry_area": 1986,
+      "minimum_source_target": 1973,
+      "target_trade_through_timestamp": "2023-03-31T17:19:00Z"
+    },
+    "cross_feed_tolerance_inferred": false
+  },
+  "current_implementation": {
+    "source_fidelity_layer": {
+      "files": [
+        "xauusd-system-v2/06_examples/SOURCE_FIDELITY_2023_03_30_BUY.json",
+        "xauusd-system-v2/06_examples/SOURCE_FIDELITY_2023_03_31_SELL.json",
+        "xauusd-system-v2/src/xauusd_v2/source_fidelity_replay.py",
+        "xauusd-system-v2/src/xauusd_v2/source_fidelity_replay_cli.py",
+        "xauusd-system-v2/15_tests/test_source_fidelity_replay.py"
+      ],
+      "cli": "xauusd-v2-source-fidelity-replay"
+    },
+    "primitive_replay_scan": {
+      "files": [
+        "xauusd-system-v2/src/xauusd_v2/primitive_replay_scan.py",
+        "xauusd-system-v2/src/xauusd_v2/primitive_replay_scan_cli.py",
+        "xauusd-system-v2/15_tests/test_primitive_replay_scan.py"
+      ],
+      "cli": "xauusd-v2-primitive-scan",
+      "certified_fu_count": 0,
+      "certified_hcs_count": 0,
+      "gap_pairs_fail_closed": true
+    }
+  },
+  "last_known_green_engineering_baseline_before_handoff_docs": {
+    "commit": "5b0397a59460f8586d72d9c8154b1351f309efec",
+    "workflow": "XAUUSD V2 Tests",
+    "run_number": 454,
+    "run_id": 33765119945,
+    "conclusion": "success"
+  },
+  "r143_stage_order": [
+    "HCS_ZONE_REACTION",
+    "TFS",
+    "LAOL_MET",
+    "TRUE_STOP_RESPECTED",
+    "TEN_MIN_TRUE_STOP_ESTABLISHED",
+    "TARGETS_AND_TIMING"
+  ],
+  "next_action": [
+    "Run March 30-31 source-fidelity fixtures against the already-persisted immutable M1 snapshot and freeze report hashes when local execution is needed.",
+    "Run primitive scan over narrow March 30 and March 31 windows and compare source-labelled 1973/1975/1986 areas to raw basic-FU/wick-retest candidate observations without certifying them.",
+    "Build deterministic replay evidence bridge: source labels vs source-fidelity anchors vs primitive raw observations vs existing semantic gates, with per-R143-stage evidence classification.",
+    "Do not resolve B-01 or B-03 by tuning the March winner.",
+    "Acquire a small FOREXCOM:XAUUSD historical reference sample only when exact feed-sensitive geometry genuinely requires it.",
+    "Then expand primary episodes, freeze rules, run population backtest, locked OOS/walk-forward, cost/slippage and broker robustness, followed later by B-08 and paper/shadow validation."
+  ],
+  "next_likely_user_needed_input": "Small FOREXCOM:XAUUSD historical reference sample or one local command against the already-persisted snapshot; no repeat of full MT5 setup.",
+  "communication_contract": "Before asking the user to run a command, explain in simple Greek: what we do -> why -> expected result -> what it means."
+}
