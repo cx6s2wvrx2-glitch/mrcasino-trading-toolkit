@@ -4,6 +4,7 @@ import argparse
 import csv
 import json
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Sequence
@@ -36,8 +37,8 @@ def _decimal(value: object, *, field: str) -> Decimal:
     return parsed
 
 
-def _iso_utc(value) -> str:
-    return value.isoformat().replace("+00:00", "Z")
+def _iso_utc(value: datetime) -> str:
+    return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _parse_native_arg(value: str) -> tuple[str, Path]:
@@ -94,24 +95,46 @@ def _load_candidate_index(path: Path) -> dict[str, CandidateOHLC]:
     return index
 
 
+def _bars_within_source_horizon(*, bars, spec: TimeframeSpec, source_coverage_end: datetime):
+    """Return native parent bars fully covered by the frozen M1 source snapshot."""
+    interval = timedelta(seconds=spec.seconds)
+    comparable = tuple(bar for bar in bars if bar.timestamp + interval <= source_coverage_end)
+    ignored = len(bars) - len(comparable)
+    return comparable, ignored
+
+
 def _validate_one(*, verified, source_timezone: str, spec: TimeframeSpec, native_path: Path) -> dict[str, object]:
     candidate_path = _candidate_path(verified, spec)
     candidates = _load_candidate_index(candidate_path)
 
+    # A native export may extend beyond the exact time at which the immutable M1
+    # source snapshot was frozen and may include a currently-forming parent bar.
+    # Parse the observation file in full, then let the M1 snapshot coverage horizon
+    # decide which parent bars are actually comparable.
     native = load_mt5_xauusd_history(
         native_path,
         broker_name=verified.snapshot.source_name,
         broker_symbol=verified.snapshot.source_symbol,
         source_timezone=source_timezone,
         timeframe_seconds=spec.seconds,
-        evaluation_time=verified.snapshot.coverage_end,
+        evaluation_time=datetime(2200, 1, 1, tzinfo=UTC),
     )
+
+    comparable_bars, ignored_outside_horizon = _bars_within_source_horizon(
+        bars=native.bars,
+        spec=spec,
+        source_coverage_end=verified.snapshot.coverage_end,
+    )
+    if not comparable_bars:
+        raise NativeMTFValidationError(
+            f"native {spec.code} export has no fully closed bars inside the frozen M1 source horizon"
+        )
 
     exact_matches = 0
     missing_candidate: list[str] = []
     mismatches: list[dict[str, object]] = []
 
-    for bar in native.bars:
+    for bar in comparable_bars:
         timestamp = _iso_utc(bar.timestamp)
         candidate = candidates.get(timestamp)
         if candidate is None:
@@ -153,17 +176,19 @@ def _validate_one(*, verified, source_timezone: str, spec: TimeframeSpec, native
                 }
             )
 
-    native_count = len(native.bars)
+    comparable_count = len(comparable_bars)
     missing_count = len(missing_candidate)
-    mismatch_count = native_count - exact_matches - missing_count
-    passed = native_count > 0 and missing_count == 0 and mismatch_count == 0
+    mismatch_count = comparable_count - exact_matches - missing_count
+    passed = comparable_count > 0 and missing_count == 0 and mismatch_count == 0
 
     return {
         "timeframe": spec.code,
         "timeframe_seconds": spec.seconds,
         "native_file": str(native_path.resolve()),
         "native_source_sha256": native.ingestion.source_sha256,
-        "native_bar_count": native_count,
+        "native_export_bar_count": len(native.bars),
+        "native_comparable_bar_count": comparable_count,
+        "native_outside_source_horizon_ignored_count": ignored_outside_horizon,
         "native_first_timestamp_utc": native.ingestion.first_timestamp_utc.isoformat(),
         "native_last_timestamp_utc": native.ingestion.last_timestamp_utc.isoformat(),
         "native_gap_count": native.ingestion.gap_count,
@@ -174,6 +199,7 @@ def _validate_one(*, verified, source_timezone: str, spec: TimeframeSpec, native
         "ohlc_mismatch_count": mismatch_count,
         "missing_candidate_timestamps_sample": missing_candidate[:20],
         "ohlc_mismatches_sample": mismatches,
+        "comparison_horizon_utc": verified.snapshot.coverage_end.isoformat(),
         "representative_native_sample_passed": passed,
     }
 
@@ -235,6 +261,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "broker_name": verified.snapshot.source_name,
             "broker_symbol": verified.snapshot.source_symbol,
             "source_timezone": source_timezone,
+            "comparison_horizon_utc": verified.snapshot.coverage_end.isoformat(),
             "validated_timeframes": [item["timeframe"] for item in results],
             "all_representative_samples_passed": all_passed,
             "results": results,
