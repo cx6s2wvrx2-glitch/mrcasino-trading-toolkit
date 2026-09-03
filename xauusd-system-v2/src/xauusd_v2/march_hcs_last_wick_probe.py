@@ -4,6 +4,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -42,6 +43,14 @@ def _write_immutable(path: Path, data: bytes) -> None:
 
 def _price(value: float) -> str:
     return str(value)
+
+
+def _decimal_price(value: float) -> Decimal:
+    return Decimal(str(value))
+
+
+def _level_touched(bar: MarketBar, level: Decimal) -> bool:
+    return _decimal_price(bar.low) <= level <= _decimal_price(bar.high)
 
 
 def _intersects(*, first_low: float, first_high: float, second_low: float, second_high: float) -> bool:
@@ -210,7 +219,7 @@ def _probe_hcs_spec(
     touches: list[dict[str, Any]] = []
 
     for bar in selected:
-        if not (bar.low <= float(spec.level) <= bar.high):
+        if not _level_touched(bar, spec.level):
             continue
         prior = [item for item in proxies if item.bar_open < bar.timestamp]
         latest_prior = prior[-1] if prior else None
