@@ -16,9 +16,46 @@ Approved source evidence establishes the semantic requirement:
 - an opposite-direction move/break occurs;
 - the relationship belongs to the same FU candle.
 
-Older/parallel source descriptions refer to a break of structure / previous-candle high-low, while later Reflection separates completion classes by new-extreme state and closure relative to the previous candle body.
+### Free Lessons
 
-The live draft FU rule already preserves the unresolved point as `Exact break-of-structure/close threshold`.
+Lesson 4 explicitly describes a valid FU with two confirmations:
+1. liquidity is taken;
+2. the SAME candle breaks structure after taking the liquidity.
+
+The lesson image/text does not provide a universal numeric distance or body-close threshold for that structure break.
+
+### How to rinse the banks
+
+The book states:
+1. FU takes liquidity;
+2. it must break the high/low of the previous candle.
+
+The available parsed text contains a damaged/truncated parenthetical after that sentence. Searches do not recover a separate trustworthy `close above` / `close below` statement. Therefore no universal close-through rule is inferred from the damaged text.
+
+The book also reinforces:
+- the FU concept applies across all timeframes;
+- liquidity/context comes before FU setups;
+- not every forming FU should be traded.
+
+### Reflection completion
+
+Reflection later separates completion from the underlying FU criteria:
+- ATT Form 1: no new high/low;
+- Complete FU: FU criteria are met AND close is inside the previous open/close body;
+- ATT Form 2: FU setup/new extreme exists but the required closure within the previous body is not achieved.
+
+This is strong evidence that **structural break evidence and final closure location are separate dimensions**. It does not, by itself, fully define the upstream `FU criteria met` mechanic.
+
+### Primary-source candidate interpretation — NOT PROMOTED
+
+A source-consistent working interpretation is now plausible for Complete-FU research:
+- the FU candle takes the relevant liquidity;
+- the candle makes the required opposite-side structural excursion/break;
+- final close location is then used by Reflection to distinguish Complete from ATT Form 2.
+
+Because the exact intrabar order and exact universal structural-break mechanic are not fully stated for every FU context, this remains a candidate interpretation rather than a certified rule.
+
+The live draft FU rule therefore continues to preserve `Exact break-of-structure/close threshold` as unresolved.
 
 ## Casino_v7 mechanical evidence
 
@@ -98,18 +135,9 @@ The BETA also routes both-side outside-bar structures into x3 or self-negation s
 
 Conclusion: BETA contributes state/exclusion mechanics and a broad return-inside-range FU candidate interpretation. It cannot be substituted directly for Reflection Complete/ATT truth.
 
-## Reflection completion evidence
-
-Reflection gives a different layer of the problem:
-- ATT Form 1: no new high/low;
-- Complete FU: FU criteria met + close inside previous candle body;
-- ATT Form 2: FU criteria met/new extreme + required body closure not achieved.
-
-This means the final Complete-vs-ATT2 class is not identical to the Casino_v7 continuation FU/ATT distinction.
-
 ## What is now objectively measurable
 
-`fu_observables.py` now records, without classification:
+`fu_observables.py` records, without classification:
 - whether previous high/low were swept;
 - whether both sides were swept;
 - whether close is inside previous total range;
@@ -124,7 +152,7 @@ This covers the key raw relationships used by Casino_v7/BETA while leaving strat
 ## B-01 narrowed conclusion
 
 B-01 is no longer an undefined generic question.
-It is specifically the unresolved **selection/composition rule** over observable opposite-move evidence.
+It is specifically the unresolved **selection/composition rule** over observable opposite-move evidence plus intrabar ordering after liquidity is taken.
 
 Candidate evidence families now separated are:
 
@@ -132,7 +160,7 @@ Candidate evidence families now separated are:
    - represented by Casino_v7 continuation FU branches.
 
 2. `WICK_THROUGH_OPPOSITE_EXTREME_CLOSE_INSIDE_RANGE`
-   - represented in Casino_v7/BETA branches and potentially interacts with Reflection closure classes.
+   - represented in Casino_v7/BETA branches and compatible with the idea that break evidence and closure class are separate dimensions.
 
 3. `RETURN_RELATIVE_TO_PREVIOUS_BODY`
    - previous open/close relationships used in pullback/reversal and Reflection Complete/ATT2 classification.
@@ -149,17 +177,14 @@ The unresolved strategy question is which of these observable families satisfy t
 
 - Do not set `close beyond previous high/low` as a universal FU rule from Casino_v7 alone.
 - Do not set `close back inside previous range` as a universal FU rule from BETA alone.
+- Do not treat the damaged book parenthetical as evidence of a close requirement.
 - Do not use candle colour alone as the opposite-direction move.
 - Do not collapse ATT Form 1 into no-FU.
 - Do not tune a threshold from historical profitability.
 
 ## Next action
 
-Use source-labelled cases and existing source text to search specifically for statements/examples that distinguish:
-- close-through extreme,
-- wick-through + body return,
-- body-close requirement,
-- pullback/reversal FU versus ATT.
+Represent previous-candle structural break evidence independently from final close position, then compare source-labelled examples/implementation branches against those facts.
 
 Where raw source examples lack exact market timestamps, they remain semantic evidence rather than inferred raw fixtures.
 
