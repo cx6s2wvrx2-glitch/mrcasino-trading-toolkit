@@ -78,7 +78,11 @@ def _normalize_header(value: str) -> str:
     return value.strip().lower().replace("\ufeff", "")
 
 
-def _map_headers(fieldnames: Iterable[str] | None) -> dict[str, str]:
+def _map_headers(
+    fieldnames: Iterable[str] | None,
+    *,
+    require_time: bool = True,
+) -> dict[str, str]:
     if not fieldnames:
         raise MT5HistoryError("MT5 export has no header row")
     normalized_to_original: dict[str, str] = {}
@@ -98,7 +102,10 @@ def _map_headers(fieldnames: Iterable[str] | None) -> dict[str, str]:
         if matches:
             mapping[canonical] = matches[0]
 
-    missing = [name for name in ("date", "time", "open", "high", "low", "close") if name not in mapping]
+    required = ["date", "open", "high", "low", "close"]
+    if require_time:
+        required.insert(1, "time")
+    missing = [name for name in required if name not in mapping]
     if missing:
         raise MT5HistoryError(f"missing required MT5 columns: {', '.join(missing)}")
     return mapping
@@ -128,7 +135,6 @@ def _parse_source_timezone(value: str) -> tuple[tzinfo, str]:
     if raw.upper() == "UTC" or raw == "Z":
         return timezone.utc, "UTC"
 
-    # Explicit fixed offsets: +02:00, -05:30, UTC+02:00, UTC-05:30.
     offset_text = raw.upper().removeprefix("UTC")
     if offset_text.startswith(("+", "-")):
         sign = 1 if offset_text[0] == "+" else -1
@@ -153,7 +159,13 @@ def _parse_source_timezone(value: str) -> tuple[tzinfo, str]:
     return zone, raw
 
 
-def _parse_mt5_datetime(date_raw: str, time_raw: str, *, row_number: int, source_tz: tzinfo) -> datetime:
+def _parse_mt5_datetime(
+    date_raw: str,
+    time_raw: str,
+    *,
+    row_number: int,
+    source_tz: tzinfo,
+) -> datetime:
     date_text = date_raw.strip()
     time_text = time_raw.strip()
     if not date_text or not time_text:
@@ -260,9 +272,11 @@ def load_mt5_xauusd_history_bytes(
         text = raw_bytes.decode("utf-8-sig")
     except UnicodeDecodeError as exc:
         raise MT5HistoryError("MT5 history export must be UTF-8 text") from exc
+
     delimiter = _detect_delimiter(text)
     reader = csv.DictReader(io.StringIO(text), delimiter=delimiter)
-    mapping = _map_headers(reader.fieldnames)
+    is_daily = timeframe_seconds == 86_400
+    mapping = _map_headers(reader.fieldnames, require_time=not is_daily)
     source_tz, normalized_timezone = _parse_source_timezone(source_timezone)
 
     rows: list[tuple[datetime, float, float, float, float]] = []
@@ -272,20 +286,31 @@ def load_mt5_xauusd_history_bytes(
     interval = timedelta(seconds=timeframe_seconds)
 
     for row_number, row in enumerate(reader, start=2):
+        time_raw = row.get(mapping["time"], "") if "time" in mapping else "00:00:00"
         timestamp = _parse_mt5_datetime(
             row.get(mapping["date"], ""),
-            row.get(mapping["time"], ""),
+            time_raw,
             row_number=row_number,
             source_tz=source_tz,
         )
         if previous_timestamp is not None:
             if timestamp <= previous_timestamp:
                 raise MT5HistoryError("MT5 bars must be strictly increasing with no duplicate timestamps")
-            difference = timestamp - previous_timestamp
-            if difference > interval:
-                gap_durations.append(int(difference.total_seconds() - timeframe_seconds))
-            elif difference < interval:
-                raise MT5HistoryError("MT5 bars overlap or are off the declared timeframe grid")
+
+            if is_daily:
+                previous_local_date = previous_timestamp.astimezone(source_tz).date()
+                current_local_date = timestamp.astimezone(source_tz).date()
+                day_step = (current_local_date - previous_local_date).days
+                if day_step <= 0:
+                    raise MT5HistoryError("MT5 daily bars must advance on the broker-local calendar")
+                if day_step > 1:
+                    gap_durations.append((day_step - 1) * 86_400)
+            else:
+                difference = timestamp - previous_timestamp
+                if difference > interval:
+                    gap_durations.append(int(difference.total_seconds() - timeframe_seconds))
+                elif difference < interval:
+                    raise MT5HistoryError("MT5 bars overlap or are off the declared timeframe grid")
         previous_timestamp = timestamp
 
         open_ = _parse_float(row.get(mapping["open"]), field_name="open", row_number=row_number)
