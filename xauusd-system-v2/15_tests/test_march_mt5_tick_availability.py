@@ -46,6 +46,18 @@ class _FakeProvider:
         return self.rows_by_start.get(date_from, [])
 
 
+def _verified_snapshot():
+    return SimpleNamespace(
+        normalized_sha256="f" * 64,
+        snapshot=SimpleNamespace(
+            timeframe_seconds=60,
+            source_name="Exclusive Markets",
+            source_symbol="XAUUSD!",
+            snapshot_id="sha256:" + "f" * 64,
+        ),
+    )
+
+
 class MarchMT5TickAvailabilityTests(unittest.TestCase):
     def test_normalization_is_half_open_and_preserves_equal_millisecond_order(self):
         start = datetime(2023, 3, 30, 12, 31, tzinfo=UTC)
@@ -77,15 +89,7 @@ class MarchMT5TickAvailabilityTests(unittest.TestCase):
 
     @patch("xauusd_v2.march_mt5_tick_availability.load_verified_persisted_mt5_snapshot")
     def test_available_ticks_do_not_certify_fu_or_hcs(self, load_verified):
-        load_verified.return_value = SimpleNamespace(
-            normalized_sha256="f" * 64,
-            snapshot=SimpleNamespace(
-                timeframe_seconds=60,
-                source_name="Exclusive Markets",
-                source_symbol="XAUUSD!",
-                snapshot_id="sha256:" + "f" * 64,
-            ),
-        )
+        load_verified.return_value = _verified_snapshot()
         first = datetime(2023, 3, 30, 12, 31, tzinfo=UTC)
         second = datetime(2023, 3, 31, 12, 36, tzinfo=UTC)
         provider = _FakeProvider(
@@ -107,6 +111,26 @@ class MarchMT5TickAvailabilityTests(unittest.TestCase):
         self.assertFalse(report["semantic_stage_certification"])
         self.assertFalse(report["performance_claim_allowed"])
         self.assertFalse(report["promotion_allowed"])
+        self.assertFalse(report["live_execution_authorized"])
+        self.assertTrue(provider.shutdown_called)
+
+    @patch("xauusd_v2.march_mt5_tick_availability.load_verified_persisted_mt5_snapshot")
+    def test_empty_historical_tick_arrays_are_unavailable_not_schema_errors(self, load_verified):
+        load_verified.return_value = _verified_snapshot()
+        provider = _FakeProvider(rows_by_start={})
+        report = acquire_march_mt5_tick_availability("ignored.json", provider=provider)
+        self.assertEqual(
+            report["status"],
+            "MARCH_MT5_TICK_AVAILABILITY_PARTIAL_OR_UNAVAILABLE_NOT_CERTIFIED",
+        )
+        self.assertEqual(report["available_window_count"], 0)
+        self.assertFalse(report["tick_path_evidence_available"])
+        self.assertEqual(
+            [item["status"] for item in report["tick_windows"]],
+            ["MT5_TICKS_UNAVAILABLE_FOR_RANGE", "MT5_TICKS_UNAVAILABLE_FOR_RANGE"],
+        )
+        self.assertTrue(all(item["ticks_bytes"] is None for item in report["tick_windows"]))
+        self.assertFalse(report["fu_criteria_certified"])
         self.assertFalse(report["live_execution_authorized"])
         self.assertTrue(provider.shutdown_called)
 
