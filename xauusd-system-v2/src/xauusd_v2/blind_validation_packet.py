@@ -10,9 +10,6 @@ from .validation import GroundTruthDataset
 class BlindValidationCase:
     vector_id: str
     source_locator: str
-    # Optional case-specific question/focus. Empty preserves the original V1
-    # single-label classification protocol byte-for-byte at packet serialization.
-    focus: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,14 +29,11 @@ def build_blind_packet_multi(
     *,
     dataset_name: str = "XAUUSD V2 Blind Validation Multi-Round",
 ) -> BlindValidationPacket:
-    """Create one leakage-safe Agent-06 V1 packet from multiple ground-truth rounds.
+    """Create one leakage-safe Agent-06 packet from multiple ground-truth rounds.
 
     Per-case expected labels/classes, evidence summaries and forbidden-inference notes
     never enter the packet. Expected labels are used only to build one batch-wide
     multi-option taxonomy; they are never associated with a case in Agent-06 input.
-
-    This legacy classifier intentionally leaves ``focus`` empty. Focused claim
-    adjudication is a distinct V2 protocol built by ``agent06_targeted_packet_cli``.
     """
     items = tuple(datasets)
     if not items:
