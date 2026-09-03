@@ -58,14 +58,15 @@ REPLAY_CANDIDATES: tuple[ReplayCandidate, ...] = (
         candidate_id="RC-003",
         source_id="b271d0b8-a86b-4d65-a4ae-b7e49d5803a6",
         locator="top down analysis (1).zip#sequence:2023-11-01",
-        state=ReplayCandidateState.RAW_DATA_BLOCKED,
+        state=ReplayCandidateState.TIMESTAMP_BLOCKED,
         sequence_evidence=(
-            "Primary Mr Casino chronological top-down visual sequence is suitable for market-context "
-            "cross-checking and later raw-bar alignment."
+            "Primary Mr Casino chronological top-down visual sequence now has an immutable Exclusive "
+            "Markets M1 replay slice and measured source-price alignment for the 1975 condition level."
         ),
         blocker=(
-            "The visual sequence is date-scoped but not yet aligned to immutable broker OHLC bars with "
-            "stage-level availability times; raw broker data alignment is required before replay."
+            "Raw broker history is no longer the blocker. The source sequence still lacks certified "
+            "capture/stage occurrence and availability timestamps, and it does not by itself expose all "
+            "six R-143 stages. Do not infer source time from image filenames or chart geometry."
         ),
     ),
 )
