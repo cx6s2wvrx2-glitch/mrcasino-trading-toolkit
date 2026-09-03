@@ -3,10 +3,14 @@ from __future__ import annotations
 import csv
 import tempfile
 import unittest
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
+from xauusd_v2.mtf_aggregation import parse_timeframe_codes
 from xauusd_v2.mtf_native_validation_cli import (
     NativeMTFValidationError,
+    _bars_within_source_horizon,
     _load_candidate_index,
     _parse_native_arg,
 )
@@ -45,6 +49,18 @@ class NativeMTFValidationCLITests(unittest.TestCase):
                 writer.writerow(row)
             with self.assertRaises(NativeMTFValidationError):
                 _load_candidate_index(path)
+
+    def test_native_bars_after_frozen_m1_horizon_are_ignored(self) -> None:
+        spec = parse_timeframe_codes("H1")[0]
+        start = datetime(2026, 9, 3, 7, 0, tzinfo=UTC)
+        bars = tuple(SimpleNamespace(timestamp=start + timedelta(hours=i)) for i in range(5))
+        comparable, ignored = _bars_within_source_horizon(
+            bars=bars,
+            spec=spec,
+            source_coverage_end=datetime(2026, 9, 3, 9, 52, tzinfo=UTC),
+        )
+        self.assertEqual([bar.timestamp for bar in comparable], [start, start + timedelta(hours=1)])
+        self.assertEqual(ignored, 3)
 
 
 if __name__ == "__main__":
