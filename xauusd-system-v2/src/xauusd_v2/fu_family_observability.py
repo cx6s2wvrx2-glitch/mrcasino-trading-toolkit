@@ -3,6 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .fu_basic_candidate import BasicFUCandidateState, classify_basic_fu_candidate
+from .fu_break_evidence import (
+    FUCandidateDirection,
+    FUPreviousCandleBreakEvidence,
+    assess_previous_candle_break,
+)
 from .fu_completion import FUCompletionClass, classify_fu_completion
 from .fu_observables import CandleDirection, extract_fu_observables
 from .helper_fu_shadow import HelperFUClass, beta_fu_core_shadow, casino_v7_core_shadow
@@ -13,9 +18,9 @@ class FUFamilyObservability:
     """Union of objective/source-relevant FU-family observations.
 
     This object is deliberately NOT a FU classifier. It keeps raw previous-OHLC
-    relationships, the current narrow V2 proxy, Reflection completion evidence and
-    the user-supplied Casino_v7/BETA implementation evidence side by side so
-    divergences remain visible.
+    relationships, direction-specific structural-break facts, the current narrow
+    V2 proxy, Reflection completion evidence and the user-supplied Casino_v7/BETA
+    implementation evidence side by side so divergences remain visible.
 
     No field in this object certifies FU semantics, Strong FU, HCS, strategy
     readiness, performance, promotion or live execution.
@@ -41,6 +46,9 @@ class FUFamilyObservability:
     close_below_previous_close: bool
     open_above_previous_open: bool
     open_below_previous_open: bool
+
+    bullish_previous_candle_break: FUPreviousCandleBreakEvidence
+    bearish_previous_candle_break: FUPreviousCandleBreakEvidence
 
     basic_fu_proxy: BasicFUCandidateState
 
@@ -81,6 +89,10 @@ def observe_fu_family(
     criteria. In that case we record a clearly counterfactual class under the
     explicit assumption ``fu_criteria_met=True``; the actual observed class stays
     NOT_CERTIFIED until the semantic prerequisite is supplied elsewhere.
+
+    Direction-specific previous-candle break evidence is also recorded for both
+    bullish and bearish FU hypotheses. Those facts do not assert that valid
+    liquidity was taken or that the opposite break happened after the take.
     """
 
     raw = extract_fu_observables(
@@ -92,6 +104,22 @@ def observe_fu_family(
         previous_high=previous_high,
         previous_low=previous_low,
         previous_close=previous_close,
+    )
+    bullish_break = assess_previous_candle_break(
+        direction=FUCandidateDirection.BULLISH,
+        high=high,
+        low=low,
+        close=close,
+        previous_high=previous_high,
+        previous_low=previous_low,
+    )
+    bearish_break = assess_previous_candle_break(
+        direction=FUCandidateDirection.BEARISH,
+        high=high,
+        low=low,
+        close=close,
+        previous_high=previous_high,
+        previous_low=previous_low,
     )
     basic = classify_basic_fu_candidate(
         open=open,
@@ -159,6 +187,8 @@ def observe_fu_family(
         close_below_previous_close=raw.close_below_previous_close,
         open_above_previous_open=raw.open_above_previous_open,
         open_below_previous_open=raw.open_below_previous_open,
+        bullish_previous_candle_break=bullish_break,
+        bearish_previous_candle_break=bearish_break,
         basic_fu_proxy=basic.state,
         reflection_observed_class=observed_completion.classification,
         reflection_conditional_if_fu_criteria_met=conditional_class,
