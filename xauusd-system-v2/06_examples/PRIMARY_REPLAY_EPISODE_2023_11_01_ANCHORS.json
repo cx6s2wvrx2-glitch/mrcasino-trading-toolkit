@@ -1,0 +1,19 @@
+{
+  "schema_version": "source_price_anchor_set_v1",
+  "episode_id": "casino-2023-11-01",
+  "source_locator": "top down analysis (1).zip#sequence:2023-11-01",
+  "strategy_truth_authority": false,
+  "promotion_allowed": false,
+  "live_execution_authorized": false,
+  "anchors": [
+    {
+      "anchor_id": "GT-R06-008-1975-low",
+      "price": "1975.00",
+      "evidence_class": "PRIMARY_SOURCE_LABEL",
+      "source_image": "IMG_20231101_125409_094.jpg",
+      "source_claim": "4h_hcs_retest_poi_is_key_for_ltf_entries_within_htf_context",
+      "source_note": "Primary 4H chart conditions the true-buy context on respect of the 1975 low.",
+      "role": "context_condition_level"
+    }
+  ]
+}
