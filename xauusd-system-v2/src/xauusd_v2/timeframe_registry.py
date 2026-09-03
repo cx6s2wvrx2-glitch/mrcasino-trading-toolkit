@@ -19,9 +19,11 @@ class TimeframeRegistryEntry:
     reference_anchor_status: str
     blocker: str | None = None
     source_note: str | None = None
+    user_observed_common: bool = False
 
 
 _BETA_MINUTES = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 30, 35, 40, 45, 50, 55, 60, 90, 100)
+_USER_OBSERVED_COMMON_HTF_MINUTES = frozenset({60, 120, 180, 300, 420, 660})
 
 
 def _beta_category(minutes: int) -> str:
@@ -69,12 +71,16 @@ def _build_registry() -> tuple[TimeframeRegistryEntry, ...]:
             broker_validation_status=_broker_status(code),
             reference_anchor_status=_reference_anchor_status(code),
             source_note="Exact BETA 1 + LAOL configured timeframe.",
+            user_observed_common=minutes in _USER_OBSERVED_COMMON_HTF_MINUTES,
         )
 
     # Primary-source higher-timeframe zone/refinement sequence. 15h/14h is
     # preserved as an alternative notation in the source, not silently turned
-    # into a rule requiring both layers.
+    # into a rule requiring both layers. H2 is retained because it appears in
+    # the primary 2023-11-01 visual sequence and is also reported by the user
+    # as commonly used; this does not make H2 a universally mandatory step.
     primary_htf = {
+        120: ("H2", ("context", "multi_confirmation"), "Primary 2023-11-01 visual-sequence use; not asserted as a universal mandatory step."),
         180: ("H3", ("zone", "tfs", "swing"), "Primary HTF descent / swing TFS."),
         240: ("H4", ("zone", "context"), "Primary HTF descent; broker-native validated."),
         300: ("H5", ("zone", "tfs", "swing"), "Primary HTF descent / swing TFS."),
@@ -93,10 +99,13 @@ def _build_registry() -> tuple[TimeframeRegistryEntry, ...]:
         existing = items.get(minutes)
         blocker = "B-07" if code == "H11" else None
         if existing is None:
+            evidence_class = "PRIMARY_SOURCE"
+            if minutes == 120:
+                evidence_class = "PRIMARY_VISUAL_SEQUENCE+USER_OBSERVATION"
             items[minutes] = TimeframeRegistryEntry(
                 code=code,
                 minutes=minutes,
-                evidence_class="PRIMARY_SOURCE",
+                evidence_class=evidence_class,
                 roles=roles,
                 beta_configured=False,
                 beta_category=None,
@@ -104,6 +113,7 @@ def _build_registry() -> tuple[TimeframeRegistryEntry, ...]:
                 reference_anchor_status=_reference_anchor_status(code),
                 blocker=blocker,
                 source_note=note,
+                user_observed_common=minutes in _USER_OBSERVED_COMMON_HTF_MINUTES,
             )
         else:
             items[minutes] = TimeframeRegistryEntry(
@@ -117,6 +127,7 @@ def _build_registry() -> tuple[TimeframeRegistryEntry, ...]:
                 reference_anchor_status=_reference_anchor_status(code),
                 blocker=blocker,
                 source_note=note,
+                user_observed_common=minutes in _USER_OBSERVED_COMMON_HTF_MINUTES,
             )
 
     return tuple(items[key] for key in sorted(items))
