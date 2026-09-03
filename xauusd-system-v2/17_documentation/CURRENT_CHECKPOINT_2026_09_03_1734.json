@@ -1,0 +1,83 @@
+{
+  "schema_version": "xauusd_v2_continuity_checkpoint_v1",
+  "created_local_time": "2026-09-03T17:34:00+03:00",
+  "repository": "cx6s2wvrx2-glitch/mrcasino-trading-toolkit",
+  "canonical_branch": "xauusd-v2-foundation",
+  "project_root": "xauusd-system-v2/",
+  "pre_checkpoint_head": "160d4ac383a70658e5c4093c431ef8381eb4947d",
+  "pre_checkpoint_ci": {
+    "workflow": "XAUUSD V2 Tests",
+    "run_id": 33766967657,
+    "conclusion": "success"
+  },
+  "immutable_mt5": {
+    "broker_name": "Exclusive Markets Ltd.",
+    "broker_symbol": "XAUUSD!",
+    "source_timezone": "EET",
+    "bar_count_m1": 1999671,
+    "source_sha256": "691c1c2e9793e5eaea3291bf215147c0e02113ec910a5fc96fa751e2f8c84bc0",
+    "normalized_sha256": "ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24",
+    "snapshot_id": "sha256:ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24",
+    "native_mtf_exact_matches": 5708,
+    "native_mtf_missing": 0,
+    "native_mtf_mismatches": 0
+  },
+  "reference_feed": "FOREXCOM:XAUUSD",
+  "broker_feed_role": "execution_research_only",
+  "agent06": {
+    "closed": true,
+    "further_paid_provider_calls_required": false,
+    "v1_exact": 144,
+    "locator_collision_neutral": 6,
+    "focused_supported": 19,
+    "focused_insufficient": 4,
+    "promotion_allowed": false
+  },
+  "open_blockers": ["B-01", "B-02", "B-03", "B-04", "B-05", "B-06", "B-07", "B-08"],
+  "new_modules_since_project_state": [
+    "src/xauusd_v2/primitive_replay_scan.py",
+    "src/xauusd_v2/primitive_replay_scan_cli.py",
+    "src/xauusd_v2/source_primitive_bridge.py",
+    "src/xauusd_v2/source_primitive_bridge_cli.py",
+    "src/xauusd_v2/r143_source_evidence.py"
+  ],
+  "new_examples_since_project_state": [
+    "06_examples/SOURCE_FIDELITY_2023_03_30_BUY.json",
+    "06_examples/R143_SOURCE_EVIDENCE_2023_03_30_BUY.json",
+    "06_examples/R143_SOURCE_EVIDENCE_2023_03_31_SELL.json"
+  ],
+  "march_2023": {
+    "buy_source_path": ["1972.70 area", "1973 area", "1975 area", "1984.19 target area"],
+    "sell_source_facts": ["100+ pips in 3 minutes", "1987.56 imbalance/high context", "1986 1m HCS sell context", "1973 minimum target"],
+    "feed_sensitive": true,
+    "semantic_stage_certification_complete": false,
+    "performance_claim_allowed": false
+  },
+  "next_action": {
+    "title": "Build one-command March source fidelity replay bundle",
+    "steps": [
+      "Consume verified MT5 ingestion manifest and March source fixtures",
+      "Run source-fidelity replay",
+      "Run primitive scan over bounded windows",
+      "Join anchors to primitive observations by exact timestamp only",
+      "Validate governed R-143 source evidence maps",
+      "Freeze hashes and reports in a content-addressed local bundle",
+      "Keep all semantic/promotion/performance/live flags false",
+      "Add CI tests for identity mismatch, gaps, ordering and lookahead safety"
+    ],
+    "user_needed_now": false,
+    "next_likely_user_step": "one local command against the already-persisted MT5 manifest after bundle CI passes"
+  },
+  "do_not_repeat": [
+    "full MT5 M1 export",
+    "Exclusive Markets timezone support question",
+    "MT5 ingestion/persist",
+    "MTF derivation",
+    "native H1/H4/H8/D1 validation",
+    "Agent-06 Anthropic validation",
+    "requesting Agent-06 API key"
+  ],
+  "live_execution_authorized": false,
+  "strategy_truth_changed": false,
+  "promotion_allowed": false
+}
