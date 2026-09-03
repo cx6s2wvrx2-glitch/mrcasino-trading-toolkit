@@ -19,8 +19,8 @@ class ReplayCandidateRegistryTests(unittest.TestCase):
     def test_no_candidate_is_falsely_ready(self) -> None:
         counts = replay_candidate_counts()
         self.assertEqual(counts[ReplayCandidateState.READY], 0)
-        self.assertEqual(counts[ReplayCandidateState.TIMESTAMP_BLOCKED], 1)
-        self.assertEqual(counts[ReplayCandidateState.RAW_DATA_BLOCKED], 1)
+        self.assertEqual(counts[ReplayCandidateState.TIMESTAMP_BLOCKED], 2)
+        self.assertEqual(counts[ReplayCandidateState.RAW_DATA_BLOCKED], 0)
         self.assertEqual(counts[ReplayCandidateState.CONTEXT_ONLY], 1)
 
     def test_every_non_ready_candidate_names_a_blocker(self) -> None:
@@ -33,10 +33,12 @@ class ReplayCandidateRegistryTests(unittest.TestCase):
         self.assertEqual(candidate.state, ReplayCandidateState.TIMESTAMP_BLOCKED)
         self.assertIn("do not infer", (candidate.blocker or "").lower())
 
-    def test_topdown_requires_raw_broker_alignment(self) -> None:
+    def test_topdown_raw_alignment_is_complete_but_stage_timestamps_remain_blocked(self) -> None:
         candidate = self.registry["RC-003"]
-        self.assertEqual(candidate.state, ReplayCandidateState.RAW_DATA_BLOCKED)
-        self.assertIn("raw broker data alignment", candidate.blocker or "")
+        self.assertEqual(candidate.state, ReplayCandidateState.TIMESTAMP_BLOCKED)
+        self.assertIn("Raw broker history is no longer the blocker", candidate.blocker or "")
+        self.assertIn("capture/stage", candidate.blocker or "")
+        self.assertIn("Do not infer", candidate.blocker or "")
 
 
 if __name__ == "__main__":
