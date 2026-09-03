@@ -36,7 +36,7 @@ class IndependentValidationAgent:
     """
 
     name = "independent_validation_agent_06"
-    version = "0.4.0"
+    version = "0.3.0"
 
     def __init__(self, client: StructuredModelClient) -> None:
         self.client = client
