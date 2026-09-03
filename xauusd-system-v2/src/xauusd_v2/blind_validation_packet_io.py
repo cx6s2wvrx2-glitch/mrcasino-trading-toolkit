@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
@@ -13,12 +14,10 @@ _FORBIDDEN_KEYS = {
     "evidence",
     "forbidden_inference",
     "ground_truth_answer",
-    "expected_verdict",
     "promotion_allowed",
 }
 _TOP_LEVEL_KEYS = {"version", "dataset_name", "taxonomy", "cases"}
-_CASE_KEYS_V1 = {"vector_id", "source_locator"}
-_CASE_KEYS_V2 = {"vector_id", "source_locator", "focus"}
+_CASE_KEYS = {"vector_id", "source_locator"}
 
 
 def _reject_answer_fields(value: Any, *, path: str = "root") -> None:
@@ -45,38 +44,11 @@ def blind_packet_payload(packet: BlindValidationPacket) -> dict[str, Any]:
     ids = [case.vector_id for case in packet.cases]
     if len(set(ids)) != len(ids):
         raise ValueError("blind packet contains duplicate vector ids")
-
-    focused = [bool(case.focus.strip()) for case in packet.cases]
-    if any(focused) and not all(focused):
-        raise ValueError("blind packet cannot mix focused and unfocused cases")
-
-    if all(focused):
-        cases = [
-            {
-                "vector_id": case.vector_id,
-                "source_locator": case.source_locator,
-                "focus": case.focus,
-            }
-            for case in packet.cases
-        ]
-        version = 2
-    else:
-        # Preserve the original V1 serialization exactly so old frozen packet
-        # identities and audit hashes remain valid.
-        cases = [
-            {
-                "vector_id": case.vector_id,
-                "source_locator": case.source_locator,
-            }
-            for case in packet.cases
-        ]
-        version = 1
-
     return {
-        "version": version,
+        "version": 1,
         "dataset_name": packet.dataset_name,
         "taxonomy": list(packet.taxonomy),
-        "cases": cases,
+        "cases": [asdict(case) for case in packet.cases],
     }
 
 
@@ -97,8 +69,7 @@ def load_blind_packet(path: str | Path) -> BlindValidationPacket:
     _reject_answer_fields(raw)
     if set(raw) != _TOP_LEVEL_KEYS:
         raise ValueError("blind packet top-level schema mismatch")
-    version = raw.get("version")
-    if version not in {1, 2}:
+    if raw.get("version") != 1:
         raise ValueError("unsupported blind packet version")
 
     dataset_name = str(raw.get("dataset_name", "")).strip()
@@ -119,27 +90,17 @@ def load_blind_packet(path: str | Path) -> BlindValidationPacket:
         raise ValueError("blind packet requires non-empty cases")
     cases: list[BlindValidationCase] = []
     seen_ids: set[str] = set()
-    expected_case_keys = _CASE_KEYS_V1 if version == 1 else _CASE_KEYS_V2
     for item in cases_raw:
-        if not isinstance(item, dict) or set(item) != expected_case_keys:
+        if not isinstance(item, dict) or set(item) != _CASE_KEYS:
             raise ValueError("blind packet case schema mismatch")
         vector_id = str(item.get("vector_id", "")).strip()
         source_locator = str(item.get("source_locator", "")).strip()
-        focus = str(item.get("focus", "")).strip() if version == 2 else ""
         if not vector_id or not source_locator:
             raise ValueError("blind packet case requires vector_id and source_locator")
-        if version == 2 and not focus:
-            raise ValueError("focused blind packet case requires focus")
         if vector_id in seen_ids:
             raise ValueError(f"duplicate blind packet vector id: {vector_id}")
         seen_ids.add(vector_id)
-        cases.append(
-            BlindValidationCase(
-                vector_id=vector_id,
-                source_locator=source_locator,
-                focus=focus,
-            )
-        )
+        cases.append(BlindValidationCase(vector_id=vector_id, source_locator=source_locator))
 
     return BlindValidationPacket(
         dataset_name=dataset_name,
