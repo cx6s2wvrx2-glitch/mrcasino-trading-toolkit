@@ -97,18 +97,23 @@ def build_targeted_packet(
             continue
         vector_id = str(raw.get("vector_id", "")).strip()
         source_locator = str(raw.get("source_locator", "")).strip()
+        reviewed_label = str(raw.get("expected_label", "")).strip()
         if not vector_id or vector_id in seen_ids:
             raise SystemExit("locator-set review contains duplicate/empty target vector id")
+        if not reviewed_label:
+            raise SystemExit(f"locator-set review is missing reviewed expected label: {vector_id}")
         vector = vectors.get(vector_id)
         if vector is None:
             raise SystemExit(f"target vector is missing from selected ground truth datasets: {vector_id}")
         if vector.source_locator != source_locator:
             raise SystemExit(f"target vector source locator changed since locator-set review: {vector_id}")
+        if vector.expected_label != reviewed_label:
+            raise SystemExit(f"target vector label changed since locator-set review: {vector_id}")
         selected.append(
             FocusedValidationCase(
                 vector_id=vector.id,
                 source_locator=vector.source_locator,
-                candidate_claim=vector.expected_label,
+                candidate_claim=reviewed_label,
             )
         )
         seen_ids.add(vector_id)
