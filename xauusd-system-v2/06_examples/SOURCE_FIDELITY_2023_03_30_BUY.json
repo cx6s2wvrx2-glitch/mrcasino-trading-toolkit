@@ -13,12 +13,6 @@
       "source_ref": "PRIMARY_NARRATIVE_2023_03_30_31#locator-b"
     },
     {
-      "anchor_id": "source_1973_closure_area",
-      "level": "1973.00",
-      "predicate": "close_at_or_above",
-      "source_ref": "PRIMARY_NARRATIVE_2023_03_30_31#locator-b-continuation"
-    },
-    {
       "anchor_id": "source_1975_hcs_reentry_area",
       "level": "1975.00",
       "predicate": "range_touch",
