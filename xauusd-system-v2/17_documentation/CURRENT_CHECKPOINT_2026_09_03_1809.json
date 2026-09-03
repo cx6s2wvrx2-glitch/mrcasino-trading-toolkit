@@ -1,0 +1,124 @@
+{
+  "schema_version": "xauusd_v2_continuity_checkpoint_v1",
+  "created_local_time": "2026-09-03T18:09:00+03:00",
+  "scope": {
+    "repository": "cx6s2wvrx2-glitch/mrcasino-trading-toolkit",
+    "branch": "xauusd-v2-foundation",
+    "project_root": "xauusd-system-v2/",
+    "non_xauusd_modifications_allowed": false
+  },
+  "engineering_baseline": {
+    "code_head": "358b579e379fc502ba12eb9e3799dae6eaaee68d",
+    "ci": {
+      "workflow": "XAUUSD V2 Tests",
+      "run_number": 480,
+      "run_id": 33770989366,
+      "head_sha": "358b579e379fc502ba12eb9e3799dae6eaaee68d",
+      "conclusion": "success",
+      "test_count": 817,
+      "test_ending": "Ran 817 tests in 1.130s / OK"
+    }
+  },
+  "march_bundle": {
+    "status": "MARCH_2023_REPLAY_BUNDLE_BUILT_NOT_CERTIFIED",
+    "bundle_sha256": "f1bf8cb5a9e58d90279d4a38d7273b28d594716a1d0dd2642f9e5fcef4c4ddf6",
+    "normalized_sha256": "ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24",
+    "snapshot_id": "sha256:ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24",
+    "episode_count": 2,
+    "episodes": [
+      {
+        "label": "2023-03-30-buy",
+        "anchor_count": 3,
+        "matched_anchor_count": 3,
+        "source_status": "SOURCE_FIDELITY_REPLAY_PASS",
+        "basic_fu_candidate_count": 189,
+        "source_style_hcs_candidate_count": 728,
+        "exact_bar_basic_fu_correspondence_count": 0,
+        "exact_bar_hcs_candidate_correspondence_count": 0
+      },
+      {
+        "label": "2023-03-31-sell",
+        "anchor_count": 5,
+        "matched_anchor_count": 5,
+        "source_status": "SOURCE_FIDELITY_REPLAY_PASS",
+        "basic_fu_candidate_count": 186,
+        "source_style_hcs_candidate_count": 1234,
+        "exact_bar_basic_fu_correspondence_count": 0,
+        "exact_bar_hcs_candidate_correspondence_count": 0
+      }
+    ],
+    "reference_feed_required": "FOREXCOM:XAUUSD",
+    "candidate_only_output": true,
+    "semantic_stage_certification": false,
+    "performance_claim_allowed": false,
+    "promotion_allowed": false,
+    "strategy_truth_changed": false,
+    "live_execution_authorized": false
+  },
+  "interpretation": {
+    "source_path_fidelity_passed_on_broker_snapshot": true,
+    "primitive_candidate_density_present": true,
+    "exact_source_anchor_primitive_correspondence_present": false,
+    "strategy_falsified": false,
+    "primitive_grammar_certified": false,
+    "next_diagnostic_question": "distinguish reference-feed geometry effects from incomplete primitive FU/HCS grammar without threshold tuning or invented tolerance"
+  },
+  "reference_feed_decision": {
+    "required_now": true,
+    "feed_id": "FOREXCOM:XAUUSD",
+    "timeframe_seconds": 60,
+    "windows": [
+      {
+        "start_utc": "2023-03-30T00:00:00Z",
+        "end_utc": "2023-03-31T00:00:00Z"
+      },
+      {
+        "start_utc": "2023-03-31T00:00:00Z",
+        "end_utc": "2023-04-01T00:00:00Z"
+      }
+    ],
+    "broad_new_data_pipeline_required": false,
+    "nearest_bar_substitution_allowed": false,
+    "price_tolerance_allowed": false,
+    "timezone_inference_allowed": false
+  },
+  "reference_comparator": {
+    "implemented": true,
+    "module": "src/xauusd_v2/march_reference_feed.py",
+    "cli_module": "src/xauusd_v2/march_reference_feed_cli.py",
+    "tests": "15_tests/test_march_reference_feed.py",
+    "command": "xauusd-v2-march-reference-feed",
+    "explicit_reference_feed_argument": "--reference-feed-id FOREXCOM:XAUUSD",
+    "output_status": "MARCH_REFERENCE_FEED_COMPARISON_BUILT_NOT_CERTIFIED",
+    "candidate_only_output": true,
+    "semantic_stage_certification": false,
+    "performance_claim_allowed": false,
+    "promotion_allowed": false,
+    "strategy_truth_changed": false,
+    "live_execution_authorized": false
+  },
+  "open_blockers": [
+    "B-01",
+    "B-02",
+    "B-03",
+    "B-04",
+    "B-05",
+    "B-06",
+    "B-07",
+    "B-08"
+  ],
+  "next_action": {
+    "external_input": "small FOREXCOM:XAUUSD M1 chart-data CSV covering the two governed March windows",
+    "then": "run the governed reference-feed comparator against the already-persisted MT5 ingestion manifest and inspect exact-time feed geometry plus primitive correspondence before changing any strategy rule"
+  },
+  "do_not_repeat": [
+    "MT5 March export ingestion",
+    "March MTF construction",
+    "March source-fidelity fixture creation",
+    "March primitive scanner construction",
+    "March source/primitive bridge construction",
+    "March consolidated replay bundle construction",
+    "March bundle local execution",
+    "Agent-06 completed work already recorded in prior checkpoints"
+  ]
+}
