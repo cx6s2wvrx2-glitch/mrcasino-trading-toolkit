@@ -72,6 +72,7 @@ class PrimitiveReplayScanResult:
     wick_interactions: tuple[WickInteractionObservation, ...]
     source_style_hcs_candidates: int
     ambiguous_basic_fu_bars: int
+    adjacency_gap_pairs_skipped: int
     certified_fu_count: int = 0
     certified_hcs_count: int = 0
     strategy_truth_changed: bool = False
@@ -134,7 +135,9 @@ def scan_primitive_replay_window(
 
     The caller supplies an explicit finite scan window. This avoids smuggling a
     strategy lookback/expiry horizon into the detector while keeping research scans
-    computationally bounded. No intrabar ordering is inferred from OHLC.
+    computationally bounded. No intrabar ordering is inferred from OHLC. Basic-FU
+    classification is also skipped across missing/non-contiguous parent bars instead
+    of pretending two bars separated by a market-data gap were consecutive candles.
     """
     if timeframe_seconds <= 0:
         raise PrimitiveReplayScanError("timeframe_seconds must be positive")
@@ -161,16 +164,19 @@ def scan_primitive_replay_window(
         if previous_timestamp is not None and bar.timestamp <= previous_timestamp:
             raise PrimitiveReplayScanError("scan bars must be strictly increasing")
         previous_timestamp = bar.timestamp
-        if bar.timestamp + step > scan_end + step:
-            raise PrimitiveReplayScanError("bar close lies outside the explicit scan horizon")
 
     per_bar_state: list[BasicFUCandidateState | None] = [None]
     candidates: list[PrimitiveFUCandidate] = []
     ambiguous_count = 0
+    gap_pairs_skipped = 0
 
     for index in range(1, len(selected)):
         previous = selected[index - 1]
         current = selected[index]
+        if current.timestamp - previous.timestamp != step:
+            per_bar_state.append(None)
+            gap_pairs_skipped += 1
+            continue
         result = classify_basic_fu_candidate(
             open=current.open,
             high=current.high,
@@ -209,10 +215,7 @@ def scan_primitive_replay_window(
         )
 
     index_by_open = {bar.timestamp: index for index, bar in enumerate(selected)}
-    direction_by_open = {
-        item.bar_open: item.direction
-        for item in candidates
-    }
+    direction_by_open = {item.bar_open: item.direction for item in candidates}
     interactions: list[WickInteractionObservation] = []
 
     for first in candidates:
@@ -286,4 +289,5 @@ def scan_primitive_replay_window(
         wick_interactions=tuple(interactions),
         source_style_hcs_candidates=sum(1 for item in interactions if item.source_style_hcs_candidate),
         ambiguous_basic_fu_bars=ambiguous_count,
+        adjacency_gap_pairs_skipped=gap_pairs_skipped,
     )
