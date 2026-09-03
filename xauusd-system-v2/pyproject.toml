@@ -12,6 +12,7 @@ dependencies = []
 [project.scripts]
 xauusd-v2-ingest-mt5 = "xauusd_v2.mt5_history_cli:main"
 xauusd-v2-build-mtf = "xauusd_v2.mtf_aggregation_cli:main"
+xauusd-v2-validate-native-mtf = "xauusd_v2.mtf_native_validation_cli:main"
 xauusd-v2-replay-readiness = "xauusd_v2.replay_readiness_cli:main"
 xauusd-v2-anthropic-runner = "xauusd_v2.anthropic_model_runner:main"
 xauusd-v2-agent06-packet = "xauusd_v2.agent06_packet_cli:main"
