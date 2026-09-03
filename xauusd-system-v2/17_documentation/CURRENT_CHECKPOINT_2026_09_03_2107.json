@@ -1,0 +1,52 @@
+{
+  "checkpoint_time": "2026-09-03T21:07:00+03:00",
+  "project": "XAUUSD V2",
+  "branch": "xauusd-v2-foundation",
+  "python_mt5_tick_probe": {
+    "status": "MT5_PYTHON_API_UNAVAILABLE_NOT_CERTIFIED",
+    "error": "MetaTrader5 Python integration is unavailable: No module named 'MetaTrader5'",
+    "broker_tick_availability_conclusion_allowed": false,
+    "install_python_module_as_workaround": false
+  },
+  "1975_current_boundary": {
+    "bar_open": "2023-03-30T12:31:00Z",
+    "exact_latest_basic_fu_proxy_wick_retest": true,
+    "conditional_reflection_classification": "attempted_fu_form_2",
+    "fu_criteria_certified": false,
+    "intrabar_order_required": true
+  },
+  "terminal_native_fallback": {
+    "exporter": "18_tools/mt5/XAUUSD_V2_March_HCS_Tick_Export.mq5",
+    "importer": "src/xauusd_v2/march_mt5_terminal_tick_import.py",
+    "importer_cli": "xauusd-v2-march-mt5-terminal-tick-import",
+    "windows": [
+      {
+        "window_id": "buy_1975_hcs_candidate_2023_03_30_1231",
+        "start_msc": 1680179460000,
+        "end_msc_inclusive": 1680179519999
+      },
+      {
+        "window_id": "sell_1986_hcs_control_2023_03_31_1236",
+        "start_msc": 1680266160000,
+        "end_msc_inclusive": 1680266219999
+      }
+    ]
+  },
+  "verified_ci_before_checkpoint": {
+    "head_sha": "85d25b9552a21146767108fbd203f2dd75a18c6a",
+    "workflow": "XAUUSD V2 Tests",
+    "run_number": 520,
+    "conclusion": "success"
+  },
+  "governance": {
+    "reference_feed_alignment_complete": false,
+    "marked_liquidity_reference_certified": false,
+    "fu_criteria_certified": false,
+    "semantic_stage_certification": false,
+    "strategy_truth_changed": false,
+    "performance_claim_allowed": false,
+    "promotion_allowed": false,
+    "live_execution_authorized": false
+  },
+  "next_action": "Compile and run the terminal-native MQL5 exporter in the connected Exclusive Markets MT5 terminal, then import the exact generated CSV through the governed importer."
+}
