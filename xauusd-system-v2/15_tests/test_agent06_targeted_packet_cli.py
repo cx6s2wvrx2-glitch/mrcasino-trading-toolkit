@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from xauusd_v2 import agent06_targeted_packet_cli
-from xauusd_v2.blind_validation_packet_io import load_blind_packet
+from xauusd_v2.focused_validation_packet_io import load_focused_packet
 
 
 class Agent06TargetedPacketCliTests(unittest.TestCase):
@@ -71,16 +71,19 @@ class Agent06TargetedPacketCliTests(unittest.TestCase):
                         {
                             "vector_id": "GT-R02-001",
                             "source_locator": "source#1",
+                            "expected_label": "claim_one",
                             "adjusted_result": "UNRESOLVED_DISAGREE",
                         },
                         {
                             "vector_id": "GT-R02-002",
                             "source_locator": "source#2",
+                            "expected_label": "claim_two",
                             "adjusted_result": "ABSTAIN",
                         },
                         {
                             "vector_id": "GT-R02-003",
                             "source_locator": "source#3",
+                            "expected_label": "claim_three",
                             "adjusted_result": "LOCATOR_SET_AGREE",
                         },
                     ],
@@ -105,25 +108,53 @@ class Agent06TargetedPacketCliTests(unittest.TestCase):
         )
         self.assertEqual(rc, 0)
         raw = json.loads(self.output.read_text(encoding="utf-8"))
-        self.assertEqual(raw["version"], 2)
-        self.assertEqual(raw["taxonomy"], ["SUPPORTED", "CONTRADICTED", "INSUFFICIENT"])
-        self.assertEqual([case["vector_id"] for case in raw["cases"]], ["GT-R02-001", "GT-R02-002"])
-        self.assertEqual([case["focus"] for case in raw["cases"]], ["claim_one", "claim_two"])
+        self.assertEqual(raw["version"], 1)
+        self.assertEqual(raw["protocol"], "agent06_focused_claim_adjudication_v2")
+        self.assertEqual(
+            raw["verdict_taxonomy"],
+            ["SUPPORTED", "CONTRADICTED", "INSUFFICIENT"],
+        )
+        self.assertEqual(
+            [case["vector_id"] for case in raw["cases"]],
+            ["GT-R02-001", "GT-R02-002"],
+        )
+        self.assertEqual(
+            [case["candidate_claim"] for case in raw["cases"]],
+            ["claim_one", "claim_two"],
+        )
         serialized = self.output.read_text(encoding="utf-8")
         self.assertNotIn("secret evidence", serialized)
         self.assertNotIn("secret forbidden", serialized)
         self.assertNotIn("expected_class", serialized)
         self.assertNotIn("expected_verdict", serialized)
 
-        packet = load_blind_packet(self.output)
+        packet = load_focused_packet(self.output)
         self.assertEqual(len(packet.cases), 2)
-        self.assertEqual(packet.cases[0].focus, "claim_one")
+        self.assertEqual(packet.cases[0].candidate_claim, "claim_one")
 
     def test_requires_audited_source_review(self) -> None:
         payload = json.loads(self.review.read_text(encoding="utf-8"))
         payload["audit_status"] = "AUDIT_FAIL"
         self.review.write_text(json.dumps(payload), encoding="utf-8")
         with self.assertRaisesRegex(SystemExit, "requires an audited source run"):
+            agent06_targeted_packet_cli.main(
+                [
+                    "--review",
+                    str(self.review),
+                    "--datasets-dir",
+                    str(self.datasets),
+                    "--output",
+                    str(self.output),
+                    "--rounds",
+                    "2",
+                ]
+            )
+
+    def test_label_change_after_review_is_rejected(self) -> None:
+        payload = json.loads(self.review.read_text(encoding="utf-8"))
+        payload["cases"][0]["expected_label"] = "changed_claim"
+        self.review.write_text(json.dumps(payload), encoding="utf-8")
+        with self.assertRaisesRegex(SystemExit, "label changed since locator-set review"):
             agent06_targeted_packet_cli.main(
                 [
                     "--review",
