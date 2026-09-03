@@ -6,7 +6,7 @@ from typing import Any
 from ..models import AgentRunResult
 from ..primary_context_payload import PrimaryContextPayload
 from .base import AgentContractError, StructuredModelClient
-from .prompts import VALIDATION_AGENT_SYSTEM
+from .prompts import FOCUSED_VALIDATION_AGENT_SYSTEM, VALIDATION_AGENT_SYSTEM
 
 
 _FOCUSED_VERDICTS = ("SUPPORTED", "CONTRADICTED", "INSUFFICIENT")
@@ -149,6 +149,7 @@ class IndependentValidationAgent:
         source_context = source_context.strip()
         if not source_context:
             raise AgentContractError("source_context is required")
+        system_prompt = FOCUSED_VALIDATION_AGENT_SYSTEM if focus else VALIDATION_AGENT_SYSTEM
 
         user_prompt = (
             f"VECTOR ID: {vector_id}\n"
@@ -159,12 +160,12 @@ class IndependentValidationAgent:
         constrained_generate = getattr(self.client, "generate_json_with_allowed_labels", None)
         if constrained_generate is not None and callable(constrained_generate):
             raw = constrained_generate(
-                system=VALIDATION_AGENT_SYSTEM,
+                system=system_prompt,
                 user=user_prompt,
                 allowed_labels=labels,
             )
         else:
-            raw = self.client.generate_json(system=VALIDATION_AGENT_SYSTEM, user=user_prompt)
+            raw = self.client.generate_json(system=system_prompt, user=user_prompt)
         return self._parse_decision(
             raw=raw,
             vector_id=vector_id,
@@ -210,6 +211,7 @@ class IndependentValidationAgent:
             raise AgentContractError("configured model client does not support primary images")
 
         source_text = payload.text if payload.text else "[No primary source text; inspect the attached primary source image evidence.]"
+        system_prompt = FOCUSED_VALIDATION_AGENT_SYSTEM if focus else VALIDATION_AGENT_SYSTEM
         user_prompt = (
             f"VECTOR ID: {vector_id}\n"
             f"SOURCE LOCATOR: {source_locator}\n"
@@ -220,14 +222,14 @@ class IndependentValidationAgent:
         )
         if constrained_multimodal_generate is not None and callable(constrained_multimodal_generate):
             raw = constrained_multimodal_generate(
-                system=VALIDATION_AGENT_SYSTEM,
+                system=system_prompt,
                 user=user_prompt,
                 images=payload.images,
                 allowed_labels=labels,
             )
         else:
             raw = multimodal_generate(
-                system=VALIDATION_AGENT_SYSTEM,
+                system=system_prompt,
                 user=user_prompt,
                 images=payload.images,
             )
