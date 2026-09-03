@@ -1,7 +1,7 @@
 # XAUUSD V2 — FU / ATT FU Evidence Cross-Map
 
 Date: 2026-09-03
-Status: ACTIVE RECONSTRUCTION / NOT CERTIFIED / NO LIVE AUTHORITY
+Status: PHASE-1 RESEARCH FOUNDATION / NOT CERTIFIED / NO LIVE AUTHORITY
 Scope: FU family only. HCS/Negation downstream use is referenced only where needed.
 
 ## Purpose
@@ -57,7 +57,7 @@ This is a conservative proxy, NOT the complete FU definition.
 
 ### Reconstruction conclusion
 
-Do not expand `basic_fu_candidate` ad hoc. Build a richer FU-family observability layer from source + supplied-code branches first, while preserving the semantic gate above it.
+Do not expand `basic_fu_candidate` ad hoc. The richer FU-family observability and break-sequence evidence layers now exist so source semantics and supplied-code mechanics can be compared without premature promotion.
 
 ---
 
@@ -147,7 +147,21 @@ Known limitation/conflict from tests:
 - Some Reflection Complete FU geometry maps to `ATT` in Casino_v7.
 - Some subset FU branches in Casino_v7 are unreachable because earlier branches capture them.
 
-Conclusion: Casino_v7 is valuable for candidate geometry and branch decomposition, but its output labels cannot be copied directly as final Reflection truth.
+### Doji / FU / ATT distinction encoded by Casino_v7
+
+The supplied code contains a configurable helper doji detector with default `BodyRatio=0.30`.
+That numeric value is an implementation parameter and is **not** promoted as Casino strategy truth.
+
+The important non-numeric behavior is:
+- the code comments explicitly distinguish doji from FU / ATT FU;
+- after the FU/ATT branch tree, a current candle classified as doji clears the ordinary `FU` flags;
+- that final step does **not** clear the `ATT FU` flags.
+
+This is high-value implementation evidence that ordinary/complete FU and ATT FU were intentionally treated differently around doji-like candles.
+
+Primary exercise material later labels a doji outside the last wick as an **Attempted FU**, which is conceptually consistent with that code-level distinction. This does not certify the helper's 30% body-ratio threshold.
+
+Conclusion: Casino_v7 is valuable for candidate geometry, branch decomposition and the complete-FU-vs-ATT doji distinction, but its output labels/thresholds cannot be copied directly as final Reflection truth.
 
 ---
 
@@ -171,28 +185,42 @@ Conclusion: BETA is especially useful for broader state-machine relationships an
 
 ---
 
-## 6. FU liquidity and sequence
+## 6. FU liquidity, structural break and sequence
 
 ### Source-backed principle
 
 FU is not a candle-shape pattern in isolation. Liquidity/context matters.
 Primary sources repeatedly warn against trading every FU and place FU inside manipulation/liquidity reasoning.
 
+Free Lessons states that the same candle takes liquidity and then breaks structure.
+The book states that a valid FU takes liquidity and breaks the previous candle high/low, but its available text does not safely establish a universal close-through requirement.
+Reflection later uses final close position to classify Complete versus ATT Form 2.
+
 ### Current V2 implementation
 
-`fu_liquidity_bridge.py` correctly requires an explicit marked-liquidity reference rather than guessing that every previous-candle extreme is the relevant liquidity.
+`fu_liquidity_bridge.py` requires an explicit marked-liquidity reference rather than guessing that every previous-candle extreme is the relevant liquidity.
 
-It separates:
-- objective liquidity interaction,
-- ordered opposite move after the take,
-- final semantic FU result.
+`fu_observables.py` now records the previous-OHLC relationships used by primary material and supplied code without deciding FU validity.
 
-`fu_intrabar_evidence.py` can inspect ordered child bars, but it deliberately does not invent a minimum reversal-distance threshold.
+`fu_break_evidence.py` separates:
+- no opposite previous-extreme break,
+- wick break without close-through,
+- close-through opposite extreme.
+
+`fu_intrabar_break_sequence.py` additionally distinguishes whether the opposite previous extreme is broken:
+- after the first marked-liquidity take,
+- in the same child bar as the take with unresolved order,
+- only before the take,
+- or not afterwards at all.
+
+All of these layers are non-certifying.
 
 ### Open boundary
 
 The exact sufficient opposite-move mechanic remains B-01.
-Tick/lower-timeframe path can be evidence for sequence in specific cases but is not the global strategy blocker.
+It is now a narrow selection/composition question over observable structural facts and ordered liquidity evidence, not an undefined candle-pattern question.
+
+Tick/lower-timeframe path can be evidence for specific cases but is not the global strategy blocker.
 
 ---
 
@@ -218,8 +246,6 @@ Primary HCS evidence allows components from:
 
 Therefore HCS cannot ultimately depend only on `basic_fu_candidate` nodes.
 
-This is the main reason Phase 1 FU-family consolidation must finish before Phase 2 HCS detector changes.
-
 The March 1975/1986 diagnostics remain useful examples, but they no longer drive the architecture by themselves.
 
 ---
@@ -235,44 +261,46 @@ The March 1975/1986 diagnostics remain useful examples, but they no longer drive
 - Strongness/quality is conceptually separate from FU validity.
 - HCS can use Strong FU / ATT FU / FU-negation family nodes.
 - FU should not be treated as an isolated candle pattern without liquidity/context.
+- Structural break evidence and final close position must be represented separately until B-01 is fully resolved.
 
-### HIGH-VALUE CODE EVIDENCE TO INTEGRATE
+### HIGH-VALUE CODE EVIDENCE INTEGRATED
 
 - Casino_v7 continuation / pullback / reversal branch geometry.
 - Casino_v7 close relationships relative to previous OHLC.
+- Casino_v7 ordinary-FU-vs-ATT doji distinction, without adopting its numeric doji threshold.
 - BETA broad FU/x3/self-negation exclusion ordering.
 - BETA state-machine interactions around FU/HCS/forming states.
 
 ### STILL OPEN
 
-- B-01 exact sufficient opposite-direction break/move mechanics.
+- B-01 exact sufficient opposite-direction break/move mechanics across contexts.
 - B-03 universal numeric Strong-FU threshold.
 - Exact mapping from every Casino_v7/BETA branch to Reflection Complete/ATT classes.
 - Exact raw detector for all valid liquidity forms before FU classification.
 
 ---
 
-## 10. Immediate executable work
+## 10. Phase-1 implementation status
 
-Do NOT rewrite the production/replay detector yet.
+DONE as research foundation:
+- source/user/code authority map;
+- FU/ATT source cross-map;
+- broad 69-case FU ground-truth inventory;
+- richer raw FU observables;
+- Casino_v7/BETA side-by-side shadow evidence;
+- Reflection Complete/ATT conditional classification;
+- directional previous-candle break evidence;
+- ordered intrabar marked-liquidity -> opposite-break evidence;
+- divergence/edge tests;
+- explicit B-01 and B-03 fail-closed boundaries.
 
-Next implementation step:
+NOT DONE / NOT CLAIMED:
+- universal certified FU detector;
+- universal Strong-FU numeric classifier;
+- semantic promotion of supplied helper labels;
+- performance/profitability validation;
+- live authority.
 
-1. Add a versioned `fu_family_observability` layer that records the union of objective branch facts needed by:
-   - primary semantics,
-   - Reflection completion classes,
-   - Casino_v7 continuation/pullback/reversal mechanics,
-   - BETA x3/self-negation exclusions.
-2. It must return observations/evidence, not `certified_fu=True`.
-3. Add table-driven tests covering:
-   - clear bullish/bearish Complete-FU candidates,
-   - ATT Form 1,
-   - ATT Form 2,
-   - Casino_v7 continuation/pullback/reversal branches,
-   - BETA x3 and self-negation exclusions,
-   - both-side ambiguity,
-   - doji/no-direction cases.
-4. Then cross-run known source-labelled examples and quantify which unresolved FU cases are due to B-01 versus actual code gaps.
-5. Only after that decide whether a new source-backed FU detector can replace/augment `basic_fu_candidate`.
+This is enough to move the project into Phase 2 HCS / FU Negation **using research FU-family node representations**, while every unresolved semantic field remains explicit and non-certifying.
 
-No user manual action is required for this phase.
+No user manual action is required.
