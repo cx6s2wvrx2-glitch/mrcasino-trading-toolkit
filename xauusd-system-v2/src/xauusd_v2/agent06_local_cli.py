@@ -19,6 +19,7 @@ _EXPECTED_BUNDLE_SHA256 = "6d3dea44ab528c240b05458628c93e38e8582a53d356bb5414aad
 _EXPECTED_MANIFEST_SHA256 = "e73568e4af896c4e4ffcb9bee7cbd694902d706003e2e594babeaa5faa422a37"
 _MANIFEST_NAME = "primary_context_bundle.json"
 _RUN_ID_RE = re.compile(r"agent06-anthropic-\d{8}T\d{6}Z")
+_MAX_SMOKE_CASES = 5
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -46,6 +47,15 @@ def _parser() -> argparse.ArgumentParser:
         help=(
             "Resume one interrupted run from its private per-case checkpoint. The current Git commit, "
             "packet, taxonomy, provider/model and primary evidence must match the checkpoint exactly."
+        ),
+    )
+    parser.add_argument(
+        "--smoke-cases",
+        type=int,
+        default=0,
+        help=(
+            "Run a low-cost live provider smoke test on the first N answer-free blind cases and stop "
+            "before ground-truth comparison. Allowed range: 1-5. Use 0 for the full 173-case run."
         ),
     )
     return parser
@@ -132,6 +142,38 @@ def _load_api_key() -> str:
     return value
 
 
+def _write_smoke_packet(source: Path, destination: Path, case_count: int) -> tuple[int, int]:
+    try:
+        payload = json.loads(source.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SystemExit("generated blind packet is unreadable for smoke selection") from exc
+    if not isinstance(payload, dict):
+        raise SystemExit("generated blind packet must be a JSON object")
+    if set(payload) != {"version", "dataset_name", "taxonomy", "cases"}:
+        raise SystemExit("generated blind packet schema mismatch during smoke selection")
+    taxonomy = payload.get("taxonomy")
+    cases = payload.get("cases")
+    if not isinstance(taxonomy, list) or len(taxonomy) < 2:
+        raise SystemExit("generated blind packet taxonomy is invalid during smoke selection")
+    if not isinstance(cases, list) or not cases:
+        raise SystemExit("generated blind packet cases are invalid during smoke selection")
+    if case_count < 1 or case_count > min(_MAX_SMOKE_CASES, len(cases)):
+        raise SystemExit(
+            f"smoke-cases must be between 1 and {min(_MAX_SMOKE_CASES, len(cases))}"
+        )
+    smoke_payload = {
+        "version": payload["version"],
+        "dataset_name": payload["dataset_name"],
+        "taxonomy": taxonomy,
+        "cases": cases[:case_count],
+    }
+    destination.write_text(
+        json.dumps(smoke_payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return len(cases), len(taxonomy)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     bundle = Path(args.bundle).expanduser().resolve()
@@ -139,9 +181,14 @@ def main(argv: list[str] | None = None) -> int:
     work_root = Path(args.work_root).expanduser().resolve()
     model = args.model.strip()
     resume_run_id = args.resume_run_id.strip()
+    smoke_cases = int(args.smoke_cases)
 
     if not model:
         raise SystemExit("explicit Anthropic model is required")
+    if smoke_cases < 0 or smoke_cases > _MAX_SMOKE_CASES:
+        raise SystemExit(f"smoke-cases must be between 0 and {_MAX_SMOKE_CASES}")
+    if resume_run_id and smoke_cases:
+        raise SystemExit("smoke mode cannot be combined with resume-run-id")
     if not bundle.is_file():
         raise SystemExit("private Agent-06 bundle does not exist")
     project_root = repo_root / "xauusd-system-v2"
@@ -160,17 +207,24 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     repo_commit = _git_head(repo_root)
+    timestamp = datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')
     if resume_run_id:
         if _RUN_ID_RE.fullmatch(resume_run_id) is None:
             raise SystemExit("resume-run-id has invalid Agent-06 run identifier format")
         run_id = resume_run_id
+    elif smoke_cases:
+        run_id = f"agent06-smoke-anthropic-{timestamp}"
     else:
-        run_id = f"agent06-anthropic-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}"
+        run_id = f"agent06-anthropic-{timestamp}"
 
-    run_root = work_root / "runs" / run_id
+    if smoke_cases:
+        run_root = work_root / "smoke-runs" / run_id
+    else:
+        run_root = work_root / "runs" / run_id
     staging_root = work_root / "staging" / run_id
     evidence_root = staging_root / "evidence"
     packet_path = staging_root / "blind_packet.json"
+    smoke_packet_path = staging_root / "blind_packet_smoke.json"
     work_root.mkdir(parents=True, exist_ok=True)
 
     if resume_run_id:
@@ -209,8 +263,23 @@ def main(argv: list[str] | None = None) -> int:
             ],
             cwd=staging_root,
             environment=sanitized_env,
-            stage="1/4 build frozen answer-free packet",
+            stage="1/4 build frozen answer-free packet" if not smoke_cases else "1/2 build frozen answer-free packet",
         )
+
+        provider_packet_path = packet_path
+        full_case_count = 173
+        taxonomy_count = 173
+        if smoke_cases:
+            full_case_count, taxonomy_count = _write_smoke_packet(
+                packet_path,
+                smoke_packet_path,
+                smoke_cases,
+            )
+            provider_packet_path = smoke_packet_path
+            print(
+                f"[smoke] selected {smoke_cases}/{full_case_count} blind cases; taxonomy remains {taxonomy_count}",
+                flush=True,
+            )
 
         api_key = _load_api_key()
         blind_env = dict(sanitized_env)
@@ -221,7 +290,7 @@ def main(argv: list[str] | None = None) -> int:
             "-m",
             "xauusd_v2.agent06_run_cli",
             "--packet",
-            str(packet_path),
+            str(provider_packet_path),
             "--bundle-root",
             str(evidence_root),
             "--manifest",
@@ -251,7 +320,11 @@ def main(argv: list[str] | None = None) -> int:
             blind_command,
             cwd=staging_root,
             environment=blind_env,
-            stage="2/4 execute 173-case isolated blind provider run",
+            stage=(
+                f"2/2 execute {smoke_cases}-case live provider smoke"
+                if smoke_cases
+                else "2/4 execute 173-case isolated blind provider run"
+            ),
         )
         del api_key
         blind_env.pop("ANTHROPIC_API_KEY", None)
@@ -263,6 +336,34 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit("blind run completed without required frozen outputs")
         predictions_sha256 = _sha256_file(predictions)
         runtime_manifest_sha256 = _sha256_file(runtime_manifest)
+
+        if smoke_cases:
+            smoke_summary = {
+                "status": "AGENT06_LIVE_SMOKE_PASS",
+                "run_id": run_id,
+                "repo_commit": repo_commit,
+                "provider": "anthropic",
+                "model": model,
+                "smoke_case_count": smoke_cases,
+                "full_case_count": full_case_count,
+                "taxonomy_count": taxonomy_count,
+                "bundle_sha256": bundle_sha256,
+                "primary_context_manifest_sha256": manifest_sha256,
+                "predictions_sha256": predictions_sha256,
+                "runtime_manifest_sha256": runtime_manifest_sha256,
+                "run_root": str(run_root),
+                "ground_truth_comparison_performed": False,
+                "api_key_written_to_disk": False,
+                "blind_process_loaded_ground_truth": False,
+                "promotion_allowed": False,
+            }
+            (run_root / "agent06_live_smoke_summary.json").write_text(
+                json.dumps(smoke_summary, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            print(json.dumps(smoke_summary, ensure_ascii=False, sort_keys=True))
+            return 0
+
         frozen_hashes_path = run_root / "agent06_frozen_output_hashes.json"
         frozen_hashes_path.write_text(
             json.dumps(
