@@ -22,6 +22,17 @@ class TimeframeRegistryTests(unittest.TestCase):
         for code in ("H3", "H5", "H7", "H11"):
             self.assertIn("swing", get_timeframe(code).roles)
 
+    def test_user_observed_common_htf_set_is_metadata_only(self) -> None:
+        observed = {
+            item.code for item in TIMEFRAME_REGISTRY if item.user_observed_common
+        }
+        self.assertEqual(observed, {"H1", "H2", "H3", "H5", "H7", "H11"})
+        h2 = get_timeframe("H2")
+        self.assertFalse(h2.beta_configured)
+        self.assertEqual(h2.broker_validation_status, "NOT_NATIVE_VALIDATED")
+        self.assertEqual(h2.reference_anchor_status, "UNVERIFIED")
+        self.assertIn("not asserted as a universal mandatory step", (h2.source_note or "").lower())
+
     def test_h11_fails_closed_under_b07(self) -> None:
         item = get_timeframe("H11")
         self.assertEqual(item.blocker, "B-07")
