@@ -1,0 +1,110 @@
+{
+  "schema_version": "xauusd_v2_checkpoint_v1",
+  "checkpoint_time": "2026-09-03T20:18:00+03:00",
+  "scope": {
+    "repository": "cx6s2wvrx2-glitch/mrcasino-trading-toolkit",
+    "branch": "xauusd-v2-foundation",
+    "project_root": "xauusd-system-v2/",
+    "non_xauusd_changes_allowed": false
+  },
+  "reference_feed": {
+    "required": "FOREXCOM:XAUUSD",
+    "status": "REQUIRED_DEFERRED_NOT_ALIGNED",
+    "broker_feed": "Exclusive Markets XAUUSD!",
+    "equivalence_established": false
+  },
+  "verified_snapshot": {
+    "normalized_sha256": "ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24",
+    "snapshot_id": "sha256:ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24"
+  },
+  "fu_criteria_gap_report": {
+    "status": "MARCH_HCS_FU_CRITERIA_GAP_DIAGNOSTIC_COMPLETE_NOT_CERTIFIED",
+    "report_sha256": "870db1f5f0dc77ea5d3bce2c0f6f81b6379df8b834e16d8bccf68c79038948e7",
+    "buy_1975": {
+      "level_touch_bar_count": 4,
+      "exact_latest_basic_fu_proxy_wick_retest_bar_count": 1,
+      "conditional_attempted_fu_form_2_on_exact_retest_bar_count": 1,
+      "conditional_complete_fu_on_exact_retest_bar_count": 0,
+      "diagnostic": "EXACT_RETEST_HAS_CONDITIONAL_ATTEMPTED_FU_FORM_2_BLOCKED_BY_FU_CRITERIA",
+      "critical_bar_open": "2023-03-30T12:31:00Z",
+      "critical_bar_ohlc": ["1974.24", "1975.35", "1973.12", "1975.06"],
+      "latest_prior_basic_fu_proxy_bar_open": "2023-03-30T12:28:00Z",
+      "latest_prior_basic_fu_proxy_direction": "bullish",
+      "latest_prior_basic_fu_proxy_wick": ["1973.34", "1973.75"],
+      "conditional_reflection_classification_if_fu_criteria_met": "attempted_fu_form_2",
+      "fu_criteria_certified": false,
+      "certified_hcs": false,
+      "do_not_merge_adjacent_1232_att_form_1": true
+    },
+    "sell_1986_control": {
+      "level_touch_bar_count": 8,
+      "exact_latest_basic_fu_proxy_wick_retest_bar_count": 4,
+      "conditional_attempted_fu_form_2_on_exact_retest_bar_count": 4,
+      "conditional_complete_fu_on_exact_retest_bar_count": 0,
+      "critical_control_bar_open": "2023-03-31T12:36:00Z",
+      "conditional_reflection_classification_if_fu_criteria_met": "attempted_fu_form_2",
+      "fu_criteria_certified": false,
+      "certified_hcs": false
+    }
+  },
+  "source_liquidity_boundary": {
+    "source_mentions_1974_91_1m_double_bottom_liquidity": true,
+    "prior_1230_bar_low": "1972.94",
+    "1974_91_assigned_as_1231_fu_take_reference": false,
+    "reason": "the prior M1 bar had already traded below 1974.91, so the narrative level is context rather than a certified first-take reference for the 12:31 FU candidate"
+  },
+  "mt5_tick_availability_probe": {
+    "cli": "xauusd-v2-march-mt5-tick-availability",
+    "windows": [
+      ["2023-03-30T12:31:00Z", "2023-03-30T12:32:00Z"],
+      ["2023-03-31T12:36:00Z", "2023-03-31T12:37:00Z"]
+    ],
+    "requires_time_msc": true,
+    "half_open_ranges": true,
+    "persists_content_addressed_ticks": true,
+    "marked_liquidity_reference_certified": false,
+    "fu_criteria_certified": false,
+    "semantic_stage_certification": false,
+    "strategy_truth_changed": false,
+    "performance_claim_allowed": false,
+    "promotion_allowed": false,
+    "live_execution_authorized": false
+  },
+  "implementation_commits": [
+    "1aec5666656b76d91809dc495eef53213991f371",
+    "28380c365d4daf0a70e3f42b6805d13cb3958be6",
+    "037b5780a08974361a4524491c7bf413a65ff114",
+    "effe8be55f51be212b1369376ec0b4a579afeb0e",
+    "8c12c8780ac599abee7ce0efef6ef659a90e8111",
+    "bb995af2b5bfc40cc5eb6403a271302e93b13074"
+  ],
+  "verified_ci_before_checkpoint": {
+    "workflow": "XAUUSD V2 Tests",
+    "run_number": 513,
+    "run_id": 33783735004,
+    "head_sha": "bb995af2b5bfc40cc5eb6403a271302e93b13074",
+    "conclusion": "success"
+  },
+  "next_action": "run_march_mt5_tick_availability_probe",
+  "governance": {
+    "fu_certified": false,
+    "hcs_certified": false,
+    "semantic_stage_certification": false,
+    "strategy_truth_changed": false,
+    "performance_claim_allowed": false,
+    "promotion_allowed": false,
+    "live_execution_authorized": false
+  },
+  "open_blockers": [
+    "B-01",
+    "B-02",
+    "B-03",
+    "B-04",
+    "B-05",
+    "B-06",
+    "B-07",
+    "B-08",
+    "trail-level selection boundary",
+    "FOREXCOM:XAUUSD reference alignment"
+  ]
+}
