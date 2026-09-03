@@ -9,6 +9,9 @@ from .base import AgentContractError, StructuredModelClient
 from .prompts import VALIDATION_AGENT_SYSTEM
 
 
+_FOCUSED_VERDICTS = ("SUPPORTED", "CONTRADICTED", "INSUFFICIENT")
+
+
 @dataclass(frozen=True, slots=True)
 class IndependentValidationDecision:
     vector_id: str
@@ -24,15 +27,16 @@ class IndependentValidationDecision:
 
 
 class IndependentValidationAgent:
-    """Blind validator.
+    """Independent source validator.
 
-    The agent is intentionally not given the expected/candidate label. It receives
-    only primary source evidence, source locator and the batch-wide label taxonomy.
-    Comparison with ground truth happens later in deterministic validation code.
+    Legacy V1 mode receives only primary source evidence, source locator and the
+    batch-wide label taxonomy. Focused V2 mode additionally receives one explicit
+    candidate claim/question, while the expected adjudication remains hidden.
+    Comparison/promotion always happens outside this agent.
     """
 
     name = "independent_validation_agent_06"
-    version = "0.3.0"
+    version = "0.4.0"
 
     def __init__(self, client: StructuredModelClient) -> None:
         self.client = client
@@ -51,6 +55,42 @@ class IndependentValidationAgent:
         if len(labels) < 2:
             raise AgentContractError("blind validation requires at least two allowed labels")
         return normalized_vector_id, normalized_locator, labels
+
+    @staticmethod
+    def _normalize_focus(focus: str, labels: tuple[str, ...]) -> str:
+        normalized = focus.strip()
+        if not normalized:
+            return ""
+        if tuple(labels) != _FOCUSED_VERDICTS:
+            raise AgentContractError(
+                "focused claim adjudication requires taxonomy SUPPORTED/CONTRADICTED/INSUFFICIENT"
+            )
+        return normalized
+
+    @staticmethod
+    def _label_contract(labels: tuple[str, ...], focus: str) -> str:
+        if not focus:
+            return (
+                f"ALLOWED LABEL TAXONOMY: {list(labels)!r}\n\n"
+                "LABEL CONTRACT: predicted_label must be either null or one exact string copied verbatim "
+                "from ALLOWED LABEL TAXONOMY. Never merge, concatenate, rename, summarize, or invent labels."
+            )
+
+        readable_focus = focus.replace("_", " ")
+        return (
+            "FOCUSED CLAIM ADJUDICATION MODE. The candidate claim below is the QUESTION being reviewed; "
+            "it is not an expected answer and it does not imply that the claim is correct.\n"
+            f"CANDIDATE CLAIM ID: {focus}\n"
+            f"CANDIDATE CLAIM TEXT: {readable_focus}\n"
+            f"ALLOWED VERDICTS: {list(labels)!r}\n\n"
+            "VERDICT CONTRACT:\n"
+            "- SUPPORTED: the supplied primary source directly and clearly supports the candidate claim as written.\n"
+            "- CONTRADICTED: the supplied primary source directly conflicts with the candidate claim as written.\n"
+            "- INSUFFICIENT: the source does not clearly establish the exact candidate claim, the claim overstates "
+            "the source, or material ambiguity remains.\n"
+            "Choose exactly one verdict when possible. Do not infer support merely from the wording of the claim; "
+            "inspect the actual primary source evidence."
+        )
 
     def _parse_decision(
         self,
@@ -98,12 +138,14 @@ class IndependentValidationAgent:
         source_locator: str,
         source_context: str,
         allowed_labels: tuple[str, ...],
+        focus: str = "",
     ) -> tuple[IndependentValidationDecision, AgentRunResult]:
         vector_id, source_locator, labels = self._normalize_inputs(
             vector_id=vector_id,
             source_locator=source_locator,
             allowed_labels=allowed_labels,
         )
+        focus = self._normalize_focus(focus, labels)
         source_context = source_context.strip()
         if not source_context:
             raise AgentContractError("source_context is required")
@@ -111,9 +153,7 @@ class IndependentValidationAgent:
         user_prompt = (
             f"VECTOR ID: {vector_id}\n"
             f"SOURCE LOCATOR: {source_locator}\n"
-            f"ALLOWED LABEL TAXONOMY: {list(labels)!r}\n\n"
-            "LABEL CONTRACT: predicted_label must be either null or one exact string copied verbatim "
-            "from ALLOWED LABEL TAXONOMY. Never merge, concatenate, rename, summarize, or invent labels.\n\n"
+            f"{self._label_contract(labels, focus)}\n\n"
             f"PRIMARY SOURCE CONTEXT:\n{source_context}"
         )
         constrained_generate = getattr(self.client, "generate_json_with_allowed_labels", None)
@@ -139,12 +179,14 @@ class IndependentValidationAgent:
         source_locator: str,
         source_context: PrimaryContextPayload,
         allowed_labels: tuple[str, ...],
+        focus: str = "",
     ) -> tuple[IndependentValidationDecision, AgentRunResult]:
         vector_id, source_locator, labels = self._normalize_inputs(
             vector_id=vector_id,
             source_locator=source_locator,
             allowed_labels=allowed_labels,
         )
+        focus = self._normalize_focus(focus, labels)
         payload = source_context.normalized()
         if not payload.images:
             return self.validate(
@@ -152,6 +194,7 @@ class IndependentValidationAgent:
                 source_locator=source_locator,
                 source_context=payload.text,
                 allowed_labels=labels,
+                focus=focus,
             )
 
         constrained_multimodal_generate = getattr(
@@ -170,9 +213,7 @@ class IndependentValidationAgent:
         user_prompt = (
             f"VECTOR ID: {vector_id}\n"
             f"SOURCE LOCATOR: {source_locator}\n"
-            f"ALLOWED LABEL TAXONOMY: {list(labels)!r}\n\n"
-            "LABEL CONTRACT: predicted_label must be either null or one exact string copied verbatim "
-            "from ALLOWED LABEL TAXONOMY. Never merge, concatenate, rename, summarize, or invent labels.\n\n"
+            f"{self._label_contract(labels, focus)}\n\n"
             f"PRIMARY SOURCE TEXT:\n{source_text}\n\n"
             f"PRIMARY SOURCE IMAGES: {len(payload.images)} file(s) supplied out-of-band. "
             "Inspect the actual image evidence; do not infer missing chart content from the locator."
