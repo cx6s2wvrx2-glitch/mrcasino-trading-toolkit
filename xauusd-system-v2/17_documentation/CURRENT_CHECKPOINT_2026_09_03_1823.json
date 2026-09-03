@@ -1,0 +1,133 @@
+{
+  "schema_version": "xauusd_v2_current_checkpoint_v1",
+  "checkpoint_id": "2026_09_03_1823",
+  "recorded_at": "2026-09-03T18:23:00+03:00",
+  "timezone": "Europe/Athens",
+  "repository": "cx6s2wvrx2-glitch/mrcasino-trading-toolkit",
+  "branch": "xauusd-v2-foundation",
+  "project_root": "xauusd-system-v2",
+  "scope_lock": {
+    "xauusd_only": true,
+    "modify_outside_project": false
+  },
+  "continuation": {
+    "previous_checkpoint": "CURRENT_CHECKPOINT_2026_09_03_1809",
+    "checkpoint_markdown": "17_documentation/CURRENT_CHECKPOINT_2026_09_03_1823.md",
+    "checkpoint_markdown_commit": "8b7c6044d703e8165961be1f180cf5aa73a326fd"
+  },
+  "reference_feed": {
+    "feed_id": "FOREXCOM:XAUUSD",
+    "required": true,
+    "aligned": false,
+    "state": "REQUIRED_DEFERRED_NOT_ALIGNED",
+    "defer_reason": "User explicitly chose not to purchase an expensive TradingView plan solely for historical March 2023 M1 reference data.",
+    "premium_purchase_required_now": false,
+    "requirement_waived": false,
+    "existing_comparator_ready": true,
+    "resume_when_valid_reference_sample_available": true,
+    "nearest_bar_substitution_allowed": false,
+    "price_tolerance_allowed": false
+  },
+  "march_replay": {
+    "status": "MARCH_2023_REPLAY_BUNDLE_BUILT_NOT_CERTIFIED",
+    "bundle_sha256": "f1bf8cb5a9e58d90279d4a38d7273b28d594716a1d0dd2642f9e5fcef4c4ddf6",
+    "normalized_sha256": "ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24",
+    "episodes": [
+      {
+        "label": "2023-03-30-buy",
+        "source_anchor_count": 3,
+        "matched_source_anchor_count": 3,
+        "basic_fu_candidate_count": 189,
+        "source_style_hcs_candidate_count": 728,
+        "generic_anchor_exact_bar_fu_correspondence_count": 0,
+        "generic_anchor_exact_bar_hcs_correspondence_count": 0
+      },
+      {
+        "label": "2023-03-31-sell",
+        "source_anchor_count": 5,
+        "matched_source_anchor_count": 5,
+        "basic_fu_candidate_count": 186,
+        "source_style_hcs_candidate_count": 1234,
+        "generic_anchor_exact_bar_fu_correspondence_count": 0,
+        "generic_anchor_exact_bar_hcs_correspondence_count": 0
+      }
+    ],
+    "interpretation_correction": "The generic source-fidelity anchors mix True Stop, HCS/re-entry, imbalance, liquidity and target roles. Generic 0/0 exact-bar correspondence must not be interpreted as proof that the primitive detector failed on all explicitly source-labelled FU/HCS examples."
+  },
+  "role_aware_semantic_probe": {
+    "implemented": true,
+    "fixture": "06_examples/MARCH_SOURCE_SEMANTIC_PROBES.json",
+    "module": "src/xauusd_v2/march_semantic_probe.py",
+    "cli_module": "src/xauusd_v2/march_semantic_probe_cli.py",
+    "command": "xauusd-v2-march-semantic-probe",
+    "test_file": "15_tests/test_march_semantic_probe.py",
+    "probes": [
+      {
+        "probe_id": "buy_1973_strongest_1m_fu_closure",
+        "source_role": "strongest_1m_fu_closure",
+        "primitive_family": "FU",
+        "level": "1973.00"
+      },
+      {
+        "probe_id": "buy_1975_1m_hcs_reentry",
+        "source_role": "easy_1m_hcs_reentry",
+        "primitive_family": "HCS",
+        "level": "1975.00"
+      },
+      {
+        "probe_id": "sell_1986_1m_hcs_entry",
+        "source_role": "clearest_1m_hcs_sell_entry",
+        "primitive_family": "HCS",
+        "level": "1986.00"
+      }
+    ],
+    "source_occurrence_timestamps_certified": false,
+    "occurrence_timestamp_inference_allowed": false,
+    "nearest_bar_substitution_allowed": false,
+    "price_tolerance_allowed": false,
+    "certifies_fu": false,
+    "certifies_hcs": false,
+    "strategy_truth_changed": false,
+    "performance_claim_allowed": false,
+    "promotion_allowed": false,
+    "live_execution_authorized": false
+  },
+  "engineering_validation": {
+    "engineering_head_before_checkpoint_docs": "23decb178cba93a5a47051dcd97663f7860be979",
+    "workflow": "XAUUSD V2 Tests",
+    "run_number": 487,
+    "run_id": 33772177116,
+    "job_id": 100704910006,
+    "conclusion": "SUCCESS",
+    "test_count": 822,
+    "test_runtime_seconds": 0.711
+  },
+  "blockers": {
+    "reference_feed_alignment": "DEFERRED_UNRESOLVED",
+    "B-01": "OPEN",
+    "B-02": "OPEN",
+    "B-03": "OPEN",
+    "B-04": "OPEN",
+    "B-05": "OPEN",
+    "B-06": "OPEN",
+    "B-07": "OPEN",
+    "B-08": "OPEN"
+  },
+  "single_next_action": {
+    "action": "RUN_MARCH_ROLE_AWARE_SEMANTIC_PROBE_ON_PERSISTED_LOCAL_M1_SNAPSHOT",
+    "requires_new_market_data": false,
+    "inspect_fields": [
+      "level_touch_bar_count",
+      "raw_requested_family_match_bar_count",
+      "diagnostic"
+    ],
+    "interpretation": "If matches exist, the old generic 0/0 result was at least partly a role-alignment limitation. If not, inspect detailed level-touch observations to identify the exact primitive condition that blocks correspondence before changing any rule. No certification follows automatically."
+  },
+  "governance": {
+    "semantic_stage_certification": false,
+    "performance_claim_allowed": false,
+    "strategy_truth_changed": false,
+    "promotion_allowed": false,
+    "live_execution_authorized": false
+  }
+}
