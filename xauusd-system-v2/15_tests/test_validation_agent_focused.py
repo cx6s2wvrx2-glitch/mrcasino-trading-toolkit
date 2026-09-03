@@ -8,12 +8,14 @@ from xauusd_v2.agents.validation_agent import IndependentValidationAgent
 
 class _CapturingClient:
     def __init__(self) -> None:
+        self.system = ""
         self.user = ""
         self.allowed_labels: tuple[str, ...] = ()
 
     def generate_json_with_allowed_labels(
         self, *, system: str, user: str, allowed_labels: tuple[str, ...]
     ) -> dict[str, object]:
+        self.system = system
         self.user = user
         self.allowed_labels = allowed_labels
         return {
@@ -40,6 +42,9 @@ class FocusedValidationAgentTests(unittest.TestCase):
             client.allowed_labels,
             ("SUPPORTED", "CONTRADICTED", "INSUFFICIENT"),
         )
+        self.assertIn("FOCUSED CLAIM ADJUDICATION", client.system)
+        self.assertIn("ordinary evidentiary uncertainty belongs under INSUFFICIENT", client.system)
+        self.assertNotIn("set predicted_label to null and explain the ambiguity", client.system)
         self.assertIn("CANDIDATE CLAIM ID: no_entry_without_1m_ts_sequence", client.user)
         self.assertIn("CANDIDATE CLAIM TEXT: no entry without 1m ts sequence", client.user)
         self.assertIn("SUPPORTED: the supplied primary source directly", client.user)
