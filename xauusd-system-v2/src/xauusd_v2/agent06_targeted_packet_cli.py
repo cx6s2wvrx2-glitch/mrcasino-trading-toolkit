@@ -5,15 +5,18 @@ import hashlib
 import json
 from pathlib import Path
 
-from .blind_validation_packet import BlindValidationCase, BlindValidationPacket
-from .blind_validation_packet_io import write_blind_packet
-from .blind_validation_runtime import blind_packet_sha256
+from .focused_validation_packet import (
+    FOCUSED_VERDICT_TAXONOMY,
+    FocusedValidationCase,
+    FocusedValidationPacket,
+    focused_packet_sha256,
+)
+from .focused_validation_packet_io import write_focused_packet
 from .validation import GroundTruthVector, load_ground_truth
 
 
 _DEFAULT_ROUNDS = tuple(range(2, 14))
 _TARGET_RESULTS = {"UNRESOLVED_DISAGREE", "ABSTAIN"}
-_VERDICT_TAXONOMY = ("SUPPORTED", "CONTRADICTED", "INSUFFICIENT")
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -71,22 +74,19 @@ def _load_vectors(datasets_dir: Path, rounds: tuple[int, ...]) -> dict[str, Grou
     return result
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = _parser().parse_args(argv)
-    rounds = tuple(args.rounds)
-    if not rounds or len(set(rounds)) != len(rounds):
-        raise SystemExit("rounds must be a non-empty unique list")
-
-    review_path = Path(args.review).expanduser().resolve()
-    datasets_dir = Path(args.datasets_dir).expanduser().resolve()
+def build_targeted_packet(
+    *,
+    review_path: Path,
+    datasets_dir: Path,
+    rounds: tuple[int, ...] = _DEFAULT_ROUNDS,
+) -> tuple[FocusedValidationPacket, dict[str, int], dict[str, object]]:
     review = _load_review(review_path)
     vectors = _load_vectors(datasets_dir, rounds)
-
     raw_cases = review.get("cases")
     if not isinstance(raw_cases, list):
         raise SystemExit("locator-set review cases are invalid")
 
-    selected: list[BlindValidationCase] = []
+    selected: list[FocusedValidationCase] = []
     counts = {key: 0 for key in sorted(_TARGET_RESULTS)}
     seen_ids: set[str] = set()
     for raw in raw_cases:
@@ -104,14 +104,11 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit(f"target vector is missing from selected ground truth datasets: {vector_id}")
         if vector.source_locator != source_locator:
             raise SystemExit(f"target vector source locator changed since locator-set review: {vector_id}")
-        # The candidate label is intentionally exposed as the question under review.
-        # Its expected adjudication is NOT exposed. Evidence, expected class and
-        # forbidden-inference metadata are also excluded from the provider packet.
         selected.append(
-            BlindValidationCase(
+            FocusedValidationCase(
                 vector_id=vector.id,
                 source_locator=vector.source_locator,
-                focus=vector.expected_label,
+                candidate_claim=vector.expected_label,
             )
         )
         seen_ids.add(vector_id)
@@ -124,14 +121,29 @@ def main(argv: list[str] | None = None) -> int:
     if expected_total != len(selected):
         raise SystemExit("locator-set review unresolved counts do not match selected target cases")
 
-    packet = BlindValidationPacket(
+    packet = FocusedValidationPacket(
         dataset_name=(
             f"XAUUSD V2 Agent-06 Focused Claim Adjudication from {str(review.get('run_id', '')).strip()}"
         ),
-        taxonomy=_VERDICT_TAXONOMY,
         cases=tuple(selected),
     )
-    write_blind_packet(packet, args.output)
+    return packet, counts, review
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
+    rounds = tuple(args.rounds)
+    if not rounds or len(set(rounds)) != len(rounds):
+        raise SystemExit("rounds must be a non-empty unique list")
+
+    review_path = Path(args.review).expanduser().resolve()
+    datasets_dir = Path(args.datasets_dir).expanduser().resolve()
+    packet, counts, review = build_targeted_packet(
+        review_path=review_path,
+        datasets_dir=datasets_dir,
+        rounds=rounds,
+    )
+    write_focused_packet(packet, args.output)
 
     summary = {
         "status": "AGENT06_TARGETED_PACKET_WRITTEN",
@@ -141,8 +153,8 @@ def main(argv: list[str] | None = None) -> int:
         "source_run_id": str(review.get("run_id", "")),
         "case_count": len(packet.cases),
         "selected_from": counts,
-        "verdict_taxonomy": list(packet.taxonomy),
-        "packet_sha256": blind_packet_sha256(packet),
+        "verdict_taxonomy": list(FOCUSED_VERDICT_TAXONOMY),
+        "packet_sha256": focused_packet_sha256(packet),
         "candidate_claim_visible": True,
         "contains_expected_verdicts": False,
         "contains_ground_truth_evidence": False,
