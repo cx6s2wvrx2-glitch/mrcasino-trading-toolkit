@@ -141,6 +141,7 @@ def execute_multimodal_blind_validation_runtime(
                 source_locator=case.source_locator,
                 source_context=payload,
                 allowed_labels=packet.taxonomy,
+                focus=case.focus,
             )
             audit = MultimodalRuntimeCaseAudit(
                 vector_id=case.vector_id,
