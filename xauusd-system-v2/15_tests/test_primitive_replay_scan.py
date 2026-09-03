@@ -39,7 +39,7 @@ class PrimitiveReplayScanTests(unittest.TestCase):
     def test_bullish_basic_fu_candidate_records_lower_wick_interval(self) -> None:
         bars = (
             self.bar(0, 100.0, 101.0, 99.0, 100.5),
-            self.bar(1, 100.2, 101.2, 98.5, 101.0),
+            self.bar(1, 100.2, 100.9, 98.5, 100.8),
         )
         result = self.scan(bars)
         self.assertEqual(len(result.fu_candidates), 1)
@@ -53,9 +53,10 @@ class PrimitiveReplayScanTests(unittest.TestCase):
     def test_bearish_basic_fu_candidate_records_upper_wick_interval(self) -> None:
         bars = (
             self.bar(0, 100.0, 101.0, 99.0, 99.5),
-            self.bar(1, 99.8, 101.5, 98.8, 99.0),
+            self.bar(1, 99.8, 101.5, 99.0, 99.2),
         )
         result = self.scan(bars)
+        self.assertEqual(len(result.fu_candidates), 1)
         event = result.fu_candidates[0]
         self.assertEqual(event.direction, CandidateDirection.BEARISH)
         self.assertEqual(event.candidate_wick_low, 99.8)
@@ -64,7 +65,7 @@ class PrimitiveReplayScanTests(unittest.TestCase):
     def test_same_direction_fu_candidate_on_wick_interaction_is_continuation_hcs_candidate(self) -> None:
         bars = (
             self.bar(0, 100.0, 101.0, 99.0, 100.5),
-            self.bar(1, 100.2, 101.2, 98.5, 101.0),
+            self.bar(1, 100.2, 100.9, 98.5, 100.8),
             self.bar(2, 101.0, 102.0, 100.5, 101.8),
             self.bar(3, 100.1, 101.9, 98.4, 101.5),
         )
@@ -84,8 +85,8 @@ class PrimitiveReplayScanTests(unittest.TestCase):
     def test_opposite_direction_fu_candidate_on_wick_interaction_is_negation_hcs_candidate(self) -> None:
         bars = (
             self.bar(0, 100.0, 101.0, 99.0, 100.5),
-            self.bar(1, 100.2, 101.2, 98.5, 101.0),
-            self.bar(2, 101.0, 102.0, 100.5, 101.8),
+            self.bar(1, 100.2, 100.9, 98.5, 100.8),
+            self.bar(2, 101.0, 102.0, 99.5, 101.8),
             self.bar(3, 101.0, 102.1, 99.7, 100.0),
         )
         result = self.scan(bars)
@@ -103,8 +104,8 @@ class PrimitiveReplayScanTests(unittest.TestCase):
     def test_plain_wick_interaction_is_observable_not_hcs_candidate(self) -> None:
         bars = (
             self.bar(0, 100.0, 101.0, 99.0, 100.5),
-            self.bar(1, 100.2, 101.2, 98.5, 101.0),
-            self.bar(2, 101.0, 101.1, 99.9, 100.8),
+            self.bar(1, 100.2, 100.9, 98.5, 100.8),
+            self.bar(2, 100.4, 100.8, 99.9, 100.3),
         )
         result = self.scan(bars)
         item = next(
@@ -125,15 +126,16 @@ class PrimitiveReplayScanTests(unittest.TestCase):
         self.assertEqual(result.ambiguous_basic_fu_bars, 1)
         self.assertEqual(result.fu_candidates, ())
 
-    def test_provisional_bars_are_ignored(self) -> None:
+    def test_provisional_bar_removal_creates_gap_and_pair_is_not_classified(self) -> None:
         bars = (
             self.bar(0, 100.0, 101.0, 99.0, 100.5),
-            self.bar(1, 100.2, 101.2, 98.5, 101.0, closed=False),
-            self.bar(2, 100.2, 101.2, 98.5, 101.0),
+            self.bar(1, 100.2, 100.9, 98.5, 100.8, closed=False),
+            self.bar(2, 100.2, 100.9, 98.5, 100.8),
         )
         result = self.scan(bars)
         self.assertEqual(result.bar_count, 2)
-        self.assertEqual(len(result.fu_candidates), 1)
+        self.assertEqual(result.fu_candidates, ())
+        self.assertEqual(result.adjacency_gap_pairs_skipped, 1)
 
     def test_explicit_research_window_safety_limit_fails_closed(self) -> None:
         bars = tuple(
@@ -152,7 +154,7 @@ class PrimitiveReplayScanTests(unittest.TestCase):
     def test_naive_scan_time_is_rejected(self) -> None:
         bars = (
             self.bar(0, 100.0, 101.0, 99.0, 100.5),
-            self.bar(1, 100.2, 101.2, 98.5, 101.0),
+            self.bar(1, 100.2, 100.9, 98.5, 100.8),
         )
         with self.assertRaisesRegex(PrimitiveReplayScanError, "timezone-aware"):
             scan_primitive_replay_window(
