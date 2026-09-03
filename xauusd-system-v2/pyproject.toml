@@ -23,6 +23,7 @@ xauusd-v2-agent06-review = "xauusd_v2.agent06_review_cli:main"
 xauusd-v2-agent06-locator-review = "xauusd_v2.agent06_locator_set_review_cli:main"
 xauusd-v2-agent06-targeted-packet = "xauusd_v2.agent06_targeted_packet_cli:main"
 xauusd-v2-agent06-targeted-local = "xauusd_v2.agent06_targeted_local_cli:main"
+xauusd-v2-agent06-focused-finalize = "xauusd_v2.agent06_focused_finalize_cli:main"
 xauusd-v2-risk-policy-check = "xauusd_v2.risk_policy_cli:main"
 
 [tool.setuptools.packages.find]
