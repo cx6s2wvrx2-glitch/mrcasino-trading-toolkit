@@ -1,0 +1,46 @@
+{
+  "schema_version": "march_source_semantic_probes_v1",
+  "probes": [
+    {
+      "probe_id": "buy_1973_strongest_1m_fu_closure",
+      "episode_id": "mr-casino-2023-03-30-buy-sequence",
+      "source_ref": "PRIMARY_NARRATIVE_2023_03_30_31#locator-b-continuation",
+      "source_role": "strongest_1m_fu_closure",
+      "primitive_family": "FU",
+      "level": "1973.00",
+      "timeframe_seconds": 60,
+      "window_start": "2023-03-30T00:00:00Z",
+      "window_end": "2023-03-31T00:00:00Z",
+      "note": "The source explicitly labels the strongest 1m FU closure around 1973 after buys were established. The preserved narrative does not expose an exact occurrence timestamp, so every closed M1 bar whose range contains exactly 1973.00 is observed; no nearest-bar or time inference is allowed."
+    },
+    {
+      "probe_id": "buy_1975_1m_hcs_reentry",
+      "episode_id": "mr-casino-2023-03-30-buy-sequence",
+      "source_ref": "PRIMARY_NARRATIVE_2023_03_30_31#locator-b-continuation",
+      "source_role": "easy_1m_hcs_reentry",
+      "primitive_family": "HCS",
+      "level": "1975.00",
+      "timeframe_seconds": 60,
+      "window_start": "2023-03-30T00:00:00Z",
+      "window_end": "2023-03-31T00:00:00Z",
+      "note": "The source explicitly labels 1975 as the easier 1m HCS re-entry setup. The preserved narrative does not expose an exact occurrence timestamp, so every closed M1 bar whose range contains exactly 1975.00 is observed; no nearest-bar or time inference is allowed."
+    },
+    {
+      "probe_id": "sell_1986_1m_hcs_entry",
+      "episode_id": "mr-casino-2023-03-31-sell-sequence",
+      "source_ref": "PRIMARY_NARRATIVE_2023_03_30_31#locator-c",
+      "source_role": "clearest_1m_hcs_sell_entry",
+      "primitive_family": "HCS",
+      "level": "1986.00",
+      "timeframe_seconds": 60,
+      "window_start": "2023-03-31T00:00:00Z",
+      "window_end": "2023-04-01T00:00:00Z",
+      "note": "The source explicitly identifies the 1m HCS at 1986 as the clearest sell entry in the stated manipulation zone/context. The preserved narrative does not expose an exact occurrence timestamp, so every closed M1 bar whose range contains exactly 1986.00 is observed; no nearest-bar or time inference is allowed."
+    }
+  ],
+  "source_occurrence_timestamps_certified": false,
+  "semantic_stage_certification": false,
+  "performance_claim_allowed": false,
+  "promotion_allowed": false,
+  "live_execution_authorized": false
+}
