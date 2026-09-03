@@ -193,6 +193,7 @@ def acquire_march_mt5_tick_availability(
             "marked_liquidity_reference_certified": False,
             "fu_criteria_certified": False,
             "semantic_stage_certification": False,
+            "strategy_truth_changed": False,
             "performance_claim_allowed": False,
             "promotion_allowed": False,
             "live_execution_authorized": False,
@@ -226,6 +227,26 @@ def acquire_march_mt5_tick_availability(
                         "status": "MT5_TICK_RANGE_REQUEST_FAILED",
                         "mt5_last_error": repr(provider.last_error()),
                         "tick_count": 0,
+                        "first_tick_utc": None,
+                        "last_tick_utc": None,
+                        "ticks_sha256": None,
+                        "ticks_bytes": None,
+                    }
+                )
+                continue
+
+            if len(raw_ticks) == 0:
+                windows.append(
+                    {
+                        "window_id": spec.window_id,
+                        "source_role": spec.source_role,
+                        "start_utc": spec.parent_bar_open.isoformat().replace("+00:00", "Z"),
+                        "end_utc_exclusive": spec.end.isoformat().replace("+00:00", "Z"),
+                        "status": "MT5_TICKS_UNAVAILABLE_FOR_RANGE",
+                        "mt5_last_error": repr(provider.last_error()),
+                        "tick_count": 0,
+                        "first_tick_utc": None,
+                        "last_tick_utc": None,
                         "ticks_sha256": None,
                         "ticks_bytes": None,
                     }
@@ -239,19 +260,37 @@ def acquire_march_mt5_tick_availability(
                 start=spec.parent_bar_open,
                 end=spec.end,
             )
+            if not rows:
+                windows.append(
+                    {
+                        "window_id": spec.window_id,
+                        "source_role": spec.source_role,
+                        "start_utc": spec.parent_bar_open.isoformat().replace("+00:00", "Z"),
+                        "end_utc_exclusive": spec.end.isoformat().replace("+00:00", "Z"),
+                        "status": "MT5_RETURNED_NO_TICKS_INSIDE_HALF_OPEN_RANGE",
+                        "mt5_last_error": repr(provider.last_error()),
+                        "tick_count": 0,
+                        "first_tick_utc": None,
+                        "last_tick_utc": None,
+                        "ticks_sha256": None,
+                        "ticks_bytes": None,
+                    }
+                )
+                continue
+
             payload = _tick_bytes(rows)
-            digest = hashlib.sha256(payload).hexdigest() if rows else None
+            digest = hashlib.sha256(payload).hexdigest()
             windows.append(
                 {
                     "window_id": spec.window_id,
                     "source_role": spec.source_role,
                     "start_utc": spec.parent_bar_open.isoformat().replace("+00:00", "Z"),
                     "end_utc_exclusive": spec.end.isoformat().replace("+00:00", "Z"),
-                    "status": "MT5_TICKS_AVAILABLE" if rows else "MT5_TICKS_UNAVAILABLE_FOR_RANGE",
-                    "mt5_last_error": None if rows else repr(provider.last_error()),
+                    "status": "MT5_TICKS_AVAILABLE",
+                    "mt5_last_error": None,
                     "tick_count": len(rows),
-                    "first_tick_utc": rows[0]["timestamp_utc"] if rows else None,
-                    "last_tick_utc": rows[-1]["timestamp_utc"] if rows else None,
+                    "first_tick_utc": rows[0]["timestamp_utc"],
+                    "last_tick_utc": rows[-1]["timestamp_utc"],
                     "ticks_sha256": digest,
                     "ticks_bytes": payload,
                 }
