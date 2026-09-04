@@ -1,0 +1,46 @@
+{
+  "schema_version": "xauusd_v2_checkpoint_v1",
+  "checkpoint_id": "CURRENT_CHECKPOINT_2026_09_04_0755",
+  "status": "INDICATOR_FIRST_HISTORICAL_RUNNER_READY_FOR_REAL_MARCH_REPLAY",
+  "branch": "xauusd-v2-foundation",
+  "code_head_before_checkpoint": "a829953df79c66aea09d6a862709d66071592c5d",
+  "ci": {
+    "workflow": "XAUUSD V2 Tests",
+    "run_number": 574,
+    "run_id": 33838399174,
+    "head_sha": "a829953df79c66aea09d6a862709d66071592c5d",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "implemented": [
+    "user-clarified four-color Strong FU / Attempted FU directional legend",
+    "normalized supplied-code Casino indicator event model",
+    "supplied BETA HCS Xn shadow",
+    "supplied BETA HCS retest shadow",
+    "supplied BETA negation and HCS-context adapters",
+    "closed-bar left-to-right historical indicator runner",
+    "Casino_v7 Strong/ATT helper shadow with supplied current-candle doji filter",
+    "single-timeframe BETA broad FU/SN tracked-box HCS state",
+    "verified persisted MT5 snapshot to indicator-history report bridge",
+    "governed M1/M5/M10/M15/M30/H1/H4/H8/D1 replay support",
+    "xauusd-v2-indicator-history CLI"
+  ],
+  "real_data_next_test": {
+    "manifest": "$HOME/.xauusd-v2/mt5/ingestions/691c1c2e9793e5eaea3291bf215147c0e02113ec910a5fc96fa751e2f8c84bc0--ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24.json",
+    "timeframe": "M15",
+    "window_start_utc": "2023-03-30T00:00:00Z",
+    "window_end_utc": "2023-04-01T00:00:00Z"
+  },
+  "reference_feed": {
+    "required": "FOREXCOM:XAUUSD",
+    "state": "REQUIRED_DEFERRED_NOT_ALIGNED",
+    "alignment_complete": false
+  },
+  "broker_research_feed": "Exclusive Markets XAUUSD!",
+  "strategy_semantics_certified": false,
+  "performance_claim_allowed": false,
+  "promotion_allowed": false,
+  "live_execution_authorized": false,
+  "supabase_changed": false,
+  "next_action": "run the verified M15 indicator-history report on the persisted March snapshot and inspect real Strong/ATT/HCS event output before adding multi-timeframe negation composition"
+}
