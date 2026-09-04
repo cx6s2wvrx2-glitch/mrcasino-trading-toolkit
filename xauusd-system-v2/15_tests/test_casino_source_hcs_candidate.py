@@ -47,10 +47,15 @@ class CasinoSourceHCSMarkerProxyTests(unittest.TestCase):
         candidate = run.candidates[0]
         self.assertEqual(candidate.form, SourceHCSMarkerProxyForm.STRONG_STRONG)
         self.assertEqual(candidate.source_strength_label_proxy, "L3_PROXY")
+        self.assertEqual(candidate.first_semantic_role, "strong_fu")
+        self.assertEqual(candidate.second_semantic_role, "strong_fu")
+        self.assertFalse(candidate.first_is_fu_negation_proxy)
+        self.assertFalse(candidate.second_is_fu_negation_proxy)
         self.assertTrue(candidate.exact_last_marker_wick_retest)
         self.assertTrue(candidate.same_direction)
         self.assertEqual(candidate.latest_prior_marker_node_count, 1)
         self.assertFalse(candidate.source_hcs_semantics_certified)
+        self.assertTrue(run.fu_negation_nodes_integrated)
         self.assertFalse(run.reference_feed_alignment_complete)
         self.assertFalse(run.live_execution_authorized)
 
@@ -68,6 +73,29 @@ class CasinoSourceHCSMarkerProxyTests(unittest.TestCase):
         self.assertEqual(candidate.source_strength_label_proxy, "L2_PROXY")
         self.assertFalse(candidate.same_direction)
         self.assertFalse(run.same_direction_required)
+
+    def test_attempted_plus_opposite_strong_negation_is_one_physical_hcs_node_pair(self) -> None:
+        bars = (
+            self._bar(0, open=100.0, high=105.0, low=95.0, close=100.0),
+            # Bull ATT, directional wick [94, 101].
+            self._bar(15, open=101.0, high=107.0, low=94.0, close=104.0),
+            # Opposite Bear Strong at +1; also retests the ATT wick.
+            self._bar(30, open=103.0, high=108.0, low=91.0, close=92.0),
+        )
+        run = run_source_hcs_marker_proxy(bars=bars)
+
+        self.assertEqual(run.marker_node_count, 2)
+        self.assertEqual(run.candidate_count, 1)
+        candidate = run.candidates[0]
+        self.assertEqual(candidate.form, SourceHCSMarkerProxyForm.ATTEMPTED_NEGATION)
+        self.assertEqual(candidate.source_strength_label_proxy, "L1_PROXY_SOURCE_WEAK_FORM")
+        self.assertEqual(candidate.first_semantic_role, "attempted_fu")
+        self.assertEqual(candidate.second_semantic_role, "fu_negation")
+        self.assertFalse(candidate.first_is_fu_negation_proxy)
+        self.assertTrue(candidate.second_is_fu_negation_proxy)
+        self.assertFalse(candidate.same_direction)
+        self.assertTrue(run.fu_negation_role_is_proxy_only)
+        self.assertFalse(candidate.source_hcs_semantics_certified)
 
     def test_latest_prior_marker_rule_does_not_reach_back_to_older_marker_wick(self) -> None:
         bars = (
