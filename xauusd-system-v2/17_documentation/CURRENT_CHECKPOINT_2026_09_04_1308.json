@@ -1,0 +1,76 @@
+{
+  "schema_version": "xauusd_v2_checkpoint_v1",
+  "checkpoint_time": "2026-09-04T13:08:00+03:00",
+  "timezone": "Europe/Athens",
+  "scope": "xauusd-system-v2/",
+  "branch": "xauusd-v2-foundation",
+  "phase_3": {
+    "status": "SOURCE_VS_BROKER_STAGE_COMPARISON_IMPLEMENTED_NOT_CERTIFIED",
+    "core_files": [
+      "src/xauusd_v2/phase3_stage_comparison.py",
+      "src/xauusd_v2/phase3_broker_evidence.py",
+      "src/xauusd_v2/phase3_stage_comparison_review.py"
+    ],
+    "tests": [
+      "15_tests/test_phase3_stage_comparison.py",
+      "15_tests/test_phase3_broker_evidence.py",
+      "15_tests/test_phase3_stage_comparison_review.py",
+      "15_tests/test_phase3_march_stage_comparison_fixtures.py"
+    ],
+    "broker_packets": [
+      "06_examples/PHASE3_BROKER_STAGE_EVIDENCE_2023_03_30_BUY.json",
+      "06_examples/PHASE3_BROKER_STAGE_EVIDENCE_2023_03_31_SELL.json"
+    ],
+    "human_comparison": "17_documentation/PHASE3_SOURCE_BROKER_COMPARISON_2023_03_30_31.md"
+  },
+  "comparison_contract": {
+    "source_label_is_broker_path": false,
+    "broker_path_is_semantic_stage": false,
+    "semantic_stage_is_canonical_equivalence_without_reference_alignment": false,
+    "canonical_equivalence_requires_source_observed_broker_semantic_observed_and_reference_aligned": true
+  },
+  "march_buy": {
+    "hcs_zone_reaction": "source_observed_broker_path_only",
+    "tfs": "source_observed_broker_blocked",
+    "laol_met": "both_blocked",
+    "true_stop_respected": "source_observed_broker_path_only_1972_70_with_prior_1972_69",
+    "ten_min_true_stop_established": "both_blocked",
+    "targets_and_timing": "source_blocked_broker_path_observed_1984_19",
+    "canonical_equivalence_allowed_any_stage": false,
+    "r143_first_unresolved_stage": "LAOL_MET"
+  },
+  "march_sell": {
+    "hcs_zone_reaction": "source_observed_broker_path_only_1986_region",
+    "tfs": "both_blocked",
+    "laol_met": "both_blocked",
+    "true_stop_respected": "both_blocked",
+    "ten_min_true_stop_established": "both_blocked",
+    "targets_and_timing": "source_blocked_broker_path_observed_1973",
+    "canonical_equivalence_allowed_any_stage": false,
+    "r143_first_unresolved_stage": "TFS"
+  },
+  "march_boundaries": {
+    "1973": "clean_supplied_helper_strong_fu_observation",
+    "1975": "unresolved_do_not_force_match",
+    "1986": "source_labelled_hcs_control_and_broker_path_fingerprint_not_universal_certification",
+    "merge_1231_1232_allowed": false
+  },
+  "reference_feed": {
+    "required": "FOREXCOM:XAUUSD",
+    "state": "REQUIRED_DEFERRED_NOT_ALIGNED",
+    "broker_feed": "Exclusive Markets XAUUSD!",
+    "equivalence_allowed": false
+  },
+  "supabase_writes": false,
+  "strategy_truth_changed": false,
+  "fu_certified": false,
+  "hcs_certified": false,
+  "tfs_certified": false,
+  "true_stop_certified": false,
+  "r143_certified": false,
+  "r145_certified": false,
+  "performance_claim_allowed": false,
+  "promotion_allowed": false,
+  "live_execution_authorized": false,
+  "next_step": "build_timed_phase3_source_broker_reconstruction_view_for_final_greek_visual_validation_artifact"
+}
