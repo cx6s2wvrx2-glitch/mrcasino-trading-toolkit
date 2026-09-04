@@ -18,7 +18,7 @@ from .casino_indicator_event_stream import (
     HCSCounterEventInput,
     build_supplied_indicator_event_frame,
 )
-from .helper_fu_doji_shadow import apply_casino_v7_current_doji_filter
+from .helper_fu_doji_shadow import apply_casino_v7_default_visible_filters
 from .helper_fu_shadow import beta_fu_core_shadow, casino_v7_core_shadow
 
 
@@ -461,7 +461,7 @@ def run_supplied_indicator_history(
             previous_low=previous.low,
             previous_close=previous.close,
         )
-        filtered = apply_casino_v7_current_doji_filter(
+        filtered = apply_casino_v7_default_visible_filters(
             open=current.open,
             high=current.high,
             low=current.low,
@@ -522,7 +522,13 @@ def run_supplied_indicator_history(
     )
 
 
-def _beta_sn_candidates(*, previous: MarketBar, current: MarketBar, is_x3: bool) -> tuple[bool, bool]:
+def _beta_sn_candidates(
+    *,
+    previous: MarketBar,
+    current: MarketBar,
+    is_x3: bool,
+) -> tuple[bool, bool]:
+    both_sides = max(current.open, current.close) < current.high and min(current.open, current.close) > current.low
     bull = (
         current.high > previous.high
         and current.low < previous.low
@@ -530,6 +536,7 @@ def _beta_sn_candidates(*, previous: MarketBar, current: MarketBar, is_x3: bool)
         and min(current.open, current.close) > previous.low
         and current.open < current.close
         and not is_x3
+        and both_sides
     )
     bear = (
         current.high > previous.high
@@ -538,65 +545,72 @@ def _beta_sn_candidates(*, previous: MarketBar, current: MarketBar, is_x3: bool)
         and max(current.open, current.close) < previous.high
         and current.open > current.close
         and not is_x3
+        and both_sides
     )
     return bull, bear
 
 
-def _casino_direction(direction: BetaHCSDirection) -> CasinoMarkerDirection:
-    if direction is BetaHCSDirection.BULL:
-        return CasinoMarkerDirection.BULLISH
-    return CasinoMarkerDirection.BEARISH
-
-
-def _epoch_ms(value: datetime) -> int:
-    return int(value.astimezone(UTC).timestamp() * 1000)
-
-
-def _is_beta_entry_timeframe(timeframe_seconds: int) -> bool:
-    return timeframe_seconds % 60 == 0 and 1 <= timeframe_seconds // 60 <= 5
-
-
-def _beta_timeframe_string(timeframe_seconds: int) -> str:
-    if timeframe_seconds % 60 == 0:
-        return str(timeframe_seconds // 60)
-    return str(timeframe_seconds)
-
-
-def _display_timeframe(timeframe_seconds: int) -> str:
-    if timeframe_seconds % 3600 == 0:
-        return f"{timeframe_seconds // 3600}h"
-    if timeframe_seconds % 60 == 0:
-        return f"{timeframe_seconds // 60}m"
-    return f"{timeframe_seconds}s"
-
-
-def _validate_history_input(*, bars: tuple[MarketBar, ...], timeframe_seconds: int, symbol: str) -> None:
+def _validate_history_input(
+    *,
+    bars: tuple[MarketBar, ...],
+    timeframe_seconds: int,
+    symbol: str,
+) -> None:
     if timeframe_seconds <= 0:
         raise ValueError("timeframe_seconds must be positive")
-    if not symbol.strip():
-        raise ValueError("symbol is required")
+    if symbol.strip().upper() != "XAUUSD":
+        raise ValueError("historical indicator runner is XAUUSD-only")
     if len(bars) < 2:
-        raise ValueError("at least two historical bars are required")
+        raise ValueError("at least two bars are required")
 
-    previous_time: datetime | None = None
     provisional_seen = False
+    previous_time: datetime | None = None
     for index, bar in enumerate(bars):
+        values = (bar.open, bar.high, bar.low, bar.close)
+        if not all(isfinite(value) for value in values):
+            raise ValueError(f"bar {index} has non-finite OHLC")
+        if bar.low > min(bar.open, bar.close) or bar.high < max(bar.open, bar.close) or bar.low > bar.high:
+            raise ValueError(f"bar {index} has invalid OHLC")
         if bar.timestamp.tzinfo is None or bar.timestamp.utcoffset() is None:
             raise ValueError(f"bar {index} timestamp must be timezone-aware")
         if previous_time is not None and bar.timestamp <= previous_time:
             raise ValueError("bars must be strictly increasing")
         previous_time = bar.timestamp
-        values = (bar.open, bar.high, bar.low, bar.close)
-        if not all(isfinite(value) for value in values):
-            raise ValueError(f"bar {index} contains non-finite OHLC")
-        if bar.low > min(bar.open, bar.close) or bar.high < max(bar.open, bar.close) or bar.low > bar.high:
-            raise ValueError(f"bar {index} has invalid OHLC geometry")
         if not bar.is_closed:
             if index != len(bars) - 1:
-                raise ValueError("only the final historical bar may be provisional")
+                raise ValueError("only the final bar may be provisional")
             provisional_seen = True
         elif provisional_seen:
             raise ValueError("closed bar cannot follow a provisional bar")
 
     if sum(1 for bar in bars if bar.is_closed) < 2:
         raise ValueError("at least two closed bars are required")
+
+
+def _epoch_ms(value: datetime) -> int:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError("timestamp must be timezone-aware")
+    return int(value.astimezone(UTC).timestamp() * 1000)
+
+
+def _display_timeframe(timeframe_seconds: int) -> str:
+    if timeframe_seconds % 60 == 0:
+        return f"M{timeframe_seconds // 60}"
+    return f"{timeframe_seconds}s"
+
+
+def _beta_timeframe_string(timeframe_seconds: int) -> str:
+    if timeframe_seconds % 60 != 0:
+        return ""
+    minutes = timeframe_seconds // 60
+    return str(minutes)
+
+
+def _is_beta_entry_timeframe(timeframe_seconds: int) -> bool:
+    return timeframe_seconds % 60 == 0 and 1 <= timeframe_seconds // 60 <= 5
+
+
+def _casino_direction(direction: BetaHCSDirection) -> CasinoMarkerDirection:
+    if direction is BetaHCSDirection.BEAR:
+        return CasinoMarkerDirection.BEARISH
+    return CasinoMarkerDirection.BULLISH
