@@ -76,7 +76,9 @@ class MarchIndicatorSourceProbeTests(unittest.TestCase):
         bars = (
             self._bar(0, open=100.0, high=105.0, low=95.0, close=100.0),
             self._bar(1, open=101.0, high=107.0, low=94.0, close=106.0),
-            self._bar(2, open=106.5, high=109.0, low=93.0, close=108.0),
+            # Body is deliberately >30% of range so the supplied helper doji filter
+            # cannot erase the otherwise-strong continuation marker.
+            self._bar(2, open=102.0, high=109.0, low=93.0, close=108.0),
             self._bar(3, open=108.0, high=110.0, low=99.0, close=109.0, closed=False),
         )
 
