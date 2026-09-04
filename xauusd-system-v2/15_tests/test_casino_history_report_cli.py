@@ -6,7 +6,7 @@ from xauusd_v2.casino_history_report_cli import build_summary_text
 
 
 class CasinoHistoryReportCLITests(unittest.TestCase):
-    def test_summary_surfaces_beta_source_hcs_negation_composite_and_marker_rows(self) -> None:
+    def test_summary_surfaces_beta_source_hcs_negation_composite_unified_and_marker_rows(self) -> None:
         report = {
             "status": "SUPPLIED_INDICATOR_HISTORY_REPLAY_COMPLETE_NOT_CERTIFIED",
             "snapshot_id": "sha256:test",
@@ -24,12 +24,20 @@ class CasinoHistoryReportCLITests(unittest.TestCase):
             "source_hcs_marker_proxy_candidate_count": 1,
             "source_marker_fu_negation_proxy_candidate_count": 1,
             "source_hcs_plus_negation_proxy_candidate_count": 1,
+            "analysis_event_stream_frame_count": 2,
+            "analysis_event_stream_event_count": 4,
             "window_gap_affected_derived_bar_count": 0,
             "events_on_gap_affected_derived_bars": 0,
             "reference_feed_alignment_complete": False,
             "strategy_semantics_certified": False,
             "event_counts_by_kind": {"hcs": 1, "strong_fu": 2},
             "event_counts_by_direction": {"bullish": 2, "bearish": 1},
+            "analysis_event_stream_counts_by_kind": {
+                "attempted_fu": 1,
+                "fu_negation_proxy": 1,
+                "hcs_plus_negation_proxy": 1,
+                "source_hcs_proxy": 1,
+            },
             "source_hcs_marker_proxy_counts_by_form": {"strong_attempted": 1},
             "hcs_implementation_vs_source_marker_proxy": {
                 "beta_hcs_event_bar_count": 1,
@@ -95,9 +103,47 @@ class CasinoHistoryReportCLITests(unittest.TestCase):
                     "derived_bar_gap_affected": False,
                 }
             ],
+            "analysis_event_stream_frames": [
+                {
+                    "bar_time_utc": "2023-03-30T12:30:00Z",
+                    "derived_bar_gap_affected": False,
+                    "events": [
+                        {
+                            "kind": "attempted_fu",
+                            "direction": "bearish",
+                            "provenance": "supplied_casino_helper",
+                            "candidate_only": False,
+                        },
+                        {
+                            "kind": "source_hcs_proxy",
+                            "direction": "bearish",
+                            "provenance": "source_marker_proxy",
+                            "candidate_only": True,
+                        },
+                    ],
+                },
+                {
+                    "bar_time_utc": "2023-03-30T12:45:00Z",
+                    "derived_bar_gap_affected": False,
+                    "events": [
+                        {
+                            "kind": "fu_negation_proxy",
+                            "direction": "bullish",
+                            "provenance": "source_marker_proxy",
+                            "candidate_only": True,
+                        },
+                        {
+                            "kind": "hcs_plus_negation_proxy",
+                            "direction": "bullish",
+                            "provenance": "source_marker_proxy",
+                            "candidate_only": True,
+                        },
+                    ],
+                },
+            ],
         }
 
-        text = build_summary_text(report, marker_limit=1)
+        text = build_summary_text(report, marker_limit=2)
         self.assertIn("HCS IMPLEMENTATION vs SOURCE-MARKER PROXY", text)
         self.assertIn("BETA HCS EVENTS: 1", text)
         self.assertIn("SOURCE-STYLE HCS MARKER PROXY CANDIDATES: 1", text)
@@ -107,8 +153,22 @@ class CasinoHistoryReportCLITests(unittest.TestCase):
         self.assertIn("att_fu->fu", text)
         self.assertIn("SOURCE HCS + NEGATION PROXY CANDIDATES: 1", text)
         self.assertIn("NEG -> 2023-03-30T12:45:00Z", text)
+        self.assertIn("analysis_event_stream_counts_by_kind", text)
+        self.assertIn("FIRST 2 UNIFIED ANALYSIS FRAMES", text)
+        self.assertIn(
+            "attempted_fu:bearish@supplied_casino_helper",
+            text,
+        )
+        self.assertIn(
+            "source_hcs_proxy:bearish@source_marker_proxy [candidate]",
+            text,
+        )
+        self.assertIn(
+            "hcs_plus_negation_proxy:bullish@source_marker_proxy [candidate]",
+            text,
+        )
         self.assertIn("offset=+1", text)
-        self.assertIn("FIRST 1 STRONG/ATT EVENTS", text)
+        self.assertIn("FIRST 2 STRONG/ATT EVENTS", text)
         self.assertIn("bright_green", text)
 
     def test_negative_marker_limit_is_rejected(self) -> None:
