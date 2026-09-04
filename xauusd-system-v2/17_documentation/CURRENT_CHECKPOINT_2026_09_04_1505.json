@@ -1,0 +1,83 @@
+{
+  "schema_version": "xauusd_v2_checkpoint_v1",
+  "checkpoint_local_time": "2026-09-04T15:05:00+03:00",
+  "branch": "xauusd-v2-foundation",
+  "scope": "xauusd-system-v2 only",
+  "latest_green_head_before_checkpoint": "8dfbdb7b1b0e507d1793e7c1d0f0db0d2a62f9eb",
+  "latest_green_ci_before_checkpoint": {
+    "workflow": "XAUUSD V2 Tests",
+    "run_id": 33870978242,
+    "run_number": 682,
+    "conclusion": "success"
+  },
+  "completed_since_prior_checkpoint": [
+    "canonical eight-agent reality audit JSON and Greek documentation",
+    "AGENTS_STATUS.md refreshed to current 2026-09-04 truth",
+    "agent reality regression invariants",
+    "master validation pack JSON and Greek documentation",
+    "master validation pack regression invariants",
+    "CURRENT_PROJECT_HANDOFF.md refreshed from stale 2026-09-02 assumptions",
+    "START_HERE_NEW_CHAT.md repointed to current master/handoff state",
+    "second independent source-exhaustion pass for LAOL_MET and TFS_CONFIRMED",
+    "R-180/R-182/R-208/R-214/R-217 source findings integrated without promotion",
+    "strengthened source-frontier regression invariants"
+  ],
+  "current_agent_truth": {
+    "canonical_agent_foundations": 8,
+    "continuous_background_swarm_observed": false,
+    "orchestrator_version": "0.6.0",
+    "agent06_blind_corpus_cases": 173,
+    "completed_audited_full_external_agent06_run_observed": false
+  },
+  "current_live_supabase_snapshot": {
+    "user_approved_sources": 29,
+    "examples": 215,
+    "knowledge_claims": 195,
+    "verified_knowledge_claims": 0,
+    "rules": 23,
+    "verified_rules": 0,
+    "open_disagreements": 14,
+    "stored_agent_support_runs": 32
+  },
+  "current_march_frontiers": {
+    "2023-03-30_buy": {
+      "source_semantic_frontier": "LAOL_MET",
+      "broker_semantic_frontier": "HCS_ZONE_REACTION",
+      "reference_feed_alignment_complete": false
+    },
+    "2023-03-31_sell": {
+      "source_semantic_frontier": "TFS_CONFIRMED",
+      "broker_semantic_frontier": "HCS_ZONE_REACTION",
+      "reference_feed_alignment_complete": false
+    }
+  },
+  "second_source_pass_findings": {
+    "R-180": "established HCS requires prior left-FU retest; otherwise next valid point becomes EST TFS POI",
+    "R-182": "TFS entry occurs on retest of established TFS with confirmed prevalent direction",
+    "R-208": "practical LAOL is target of the liquidity grab that started the move and is refined lower",
+    "R-214": "LAOL is last area of liquidity inside the reversal POI",
+    "R-217": "ESTABLISHED TFS means confirmed prevalent direction; AS FORMING presupposes an already established prevalent TFS",
+    "frontier_effect": "definitions narrowed, neither March source frontier closed"
+  },
+  "next_user_gate": {
+    "id": "UQ-01",
+    "topic": "LAOL_MET",
+    "ask_one_question_only": true,
+    "question": "What exact event or criterion counts as R-143 LAOL met, and in the March 30 BUY sequence which event/level satisfies it?",
+    "must_not_seed_as_answer": [
+      "1972.19 liquidity left behind",
+      "LAOL respected",
+      "LAOL taken",
+      "broker touch"
+    ]
+  },
+  "after_uq01": "capture the user's clarification as explicit user authority with provenance, update truth map/frontier tests, then ask UQ-02 TFS_CONFIRMED only if still required",
+  "authority": {
+    "strategy_certified": false,
+    "performance_claim_allowed": false,
+    "production_risk_ready": false,
+    "promotion_allowed": false,
+    "live_execution_authorized": false,
+    "reference_feed_alignment_complete": false
+  }
+}
