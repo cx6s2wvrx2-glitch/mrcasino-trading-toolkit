@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any
 
 from .casino_history_report import build_verified_indicator_history_report
+from .casino_human_review import build_greek_human_review
 
 
 def _datetime(value: str) -> datetime:
@@ -207,8 +208,11 @@ def main() -> int:
     parser.add_argument("--timeframe", default="M15", help="M1, M5, M10, M15, M30, H1, H4, H8 or D1")
     parser.add_argument("--start", required=True, type=_datetime)
     parser.add_argument("--end", required=True, type=_datetime)
-    parser.add_argument("--summary", action="store_true", help="print a concise comparison-oriented summary instead of full JSON")
+    output_group = parser.add_mutually_exclusive_group()
+    output_group.add_argument("--summary", action="store_true", help="print a technical comparison-oriented summary instead of full JSON")
+    output_group.add_argument("--review", action="store_true", help="print a compact Greek human-readable review")
     parser.add_argument("--marker-limit", type=int, default=40, help="rows to print from the unified timeline and Strong/ATT list with --summary")
+    parser.add_argument("--compound-limit", type=int, default=12, help="compound unified frames to print with --review")
     args = parser.parse_args()
 
     report = build_verified_indicator_history_report(
@@ -217,7 +221,9 @@ def main() -> int:
         start_utc=args.start,
         end_utc=args.end,
     )
-    if args.summary:
+    if args.review:
+        print(build_greek_human_review(report, compound_limit=args.compound_limit))
+    elif args.summary:
         print(build_summary_text(report, marker_limit=args.marker_limit))
     else:
         print(json.dumps(report, indent=2, sort_keys=True))
