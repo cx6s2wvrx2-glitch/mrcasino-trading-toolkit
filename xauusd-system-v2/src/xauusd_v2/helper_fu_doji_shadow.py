@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from math import isfinite
 
 from .helper_fu_shadow import CasinoV7ShadowResult, HelperFUClass
@@ -68,4 +68,49 @@ def apply_casino_v7_current_doji_filter(
         bearish_after_filter=bearish_after,
         helper_parameter_is_strategy_truth=False,
         strategy_truth_changed=False,
+    )
+
+
+def apply_casino_v7_default_visible_filters(
+    *,
+    open: float,
+    high: float,
+    low: float,
+    close: float,
+    branch_result: CasinoV7ShadowResult,
+    body_ratio_threshold: float = 0.30,
+) -> CasinoV7DojiFilterShadowResult:
+    """Replay the default visible Casino_v7 filters used after its FU branches.
+
+    Casino_v7 defaults ``useBearBull`` to true. After the optional MA / leading-doji
+    gates (both default false), the script removes a bearish ATT marker from a bullish
+    candle and removes a bullish ATT marker from a bearish candle. The later current-
+    candle doji gate then removes only ordinary FU markers. This helper reproduces the
+    default visible output order without enabling the optional MA or leading-doji gates.
+
+    This remains supplied-code implementation evidence only; it does not certify the
+    strategy semantics or promote the helper's 0.30 doji parameter to strategy truth.
+    """
+
+    filtered = apply_casino_v7_current_doji_filter(
+        open=open,
+        high=high,
+        low=low,
+        close=close,
+        branch_result=branch_result,
+        body_ratio_threshold=body_ratio_threshold,
+    )
+    bullish_after = filtered.bullish_after_filter
+    bearish_after = filtered.bearish_after_filter
+
+    # Supplied Casino_v7 default: useBearBull = true.
+    if open < close and bearish_after is HelperFUClass.ATT:
+        bearish_after = HelperFUClass.NONE
+    elif open > close and bullish_after is HelperFUClass.ATT:
+        bullish_after = HelperFUClass.NONE
+
+    return replace(
+        filtered,
+        bullish_after_filter=bullish_after,
+        bearish_after_filter=bearish_after,
     )
