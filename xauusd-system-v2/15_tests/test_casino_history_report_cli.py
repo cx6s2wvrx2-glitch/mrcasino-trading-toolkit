@@ -6,7 +6,7 @@ from xauusd_v2.casino_history_report_cli import build_summary_text
 
 
 class CasinoHistoryReportCLITests(unittest.TestCase):
-    def test_summary_surfaces_beta_vs_source_proxy_and_marker_rows(self) -> None:
+    def test_summary_surfaces_beta_source_hcs_negation_and_marker_rows(self) -> None:
         report = {
             "status": "SUPPLIED_INDICATOR_HISTORY_REPLAY_COMPLETE_NOT_CERTIFIED",
             "snapshot_id": "sha256:test",
@@ -22,6 +22,7 @@ class CasinoHistoryReportCLITests(unittest.TestCase):
             "window_event_frame_count": 3,
             "window_event_count": 3,
             "source_hcs_marker_proxy_candidate_count": 1,
+            "source_marker_fu_negation_proxy_candidate_count": 1,
             "window_gap_affected_derived_bar_count": 0,
             "events_on_gap_affected_derived_bars": 0,
             "reference_feed_alignment_complete": False,
@@ -66,6 +67,19 @@ class CasinoHistoryReportCLITests(unittest.TestCase):
                     "derived_bar_gap_affected": False,
                 }
             ],
+            "source_marker_fu_negation_proxy_candidates": [
+                {
+                    "original_bar_time_utc": "2023-03-30T12:30:00Z",
+                    "negating_bar_time_utc": "2023-03-30T12:45:00Z",
+                    "original_direction": "bearish",
+                    "negating_direction": "bullish",
+                    "original_helper_class": "att_fu",
+                    "negating_helper_class": "fu",
+                    "candle_offset": 1,
+                    "latest_prior_marker_node_count": 1,
+                    "derived_bar_gap_affected": False,
+                }
+            ],
         }
 
         text = build_summary_text(report, marker_limit=1)
@@ -73,6 +87,9 @@ class CasinoHistoryReportCLITests(unittest.TestCase):
         self.assertIn("BETA HCS EVENTS: 1", text)
         self.assertIn("SOURCE-STYLE HCS MARKER PROXY CANDIDATES: 1", text)
         self.assertIn("L2_PROXY", text)
+        self.assertIn("SOURCE-MARKER FU NEGATION PROXY CANDIDATES: 1", text)
+        self.assertIn("att_fu->fu", text)
+        self.assertIn("offset=+1", text)
         self.assertIn("FIRST 1 STRONG/ATT EVENTS", text)
         self.assertIn("bright_green", text)
 
