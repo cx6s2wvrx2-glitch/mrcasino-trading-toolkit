@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from datetime import datetime
+from typing import Any
 
 from .casino_history_report import build_verified_indicator_history_report
 
@@ -20,6 +21,118 @@ def _datetime(value: str) -> datetime:
     return parsed
 
 
+def build_summary_text(report: dict[str, Any], *, marker_limit: int = 40) -> str:
+    if marker_limit < 0:
+        raise ValueError("marker_limit must be non-negative")
+    lines: list[str] = ["========== VERIFIED INDICATOR HISTORY REPLAY =========="]
+    for key in (
+        "status",
+        "snapshot_id",
+        "normalized_sha256",
+        "broker_name",
+        "broker_symbol",
+        "broker_timezone",
+        "timeframe",
+        "window_start_utc",
+        "window_end_utc",
+        "replay_bar_count_before_window_clip",
+        "window_evaluated_bar_count",
+        "window_event_frame_count",
+        "window_event_count",
+        "source_hcs_marker_proxy_candidate_count",
+        "window_gap_affected_derived_bar_count",
+        "events_on_gap_affected_derived_bars",
+        "reference_feed_alignment_complete",
+        "strategy_semantics_certified",
+    ):
+        lines.append(f"{key}: {report.get(key)}")
+
+    lines.append("")
+    lines.append("event_counts_by_kind:")
+    for key, value in report.get("event_counts_by_kind", {}).items():
+        lines.append(f"  {key}: {value}")
+
+    lines.append("")
+    lines.append("event_counts_by_direction:")
+    for key, value in report.get("event_counts_by_direction", {}).items():
+        lines.append(f"  {key}: {value}")
+
+    lines.append("")
+    lines.append("source_hcs_marker_proxy_counts_by_form:")
+    for key, value in report.get("source_hcs_marker_proxy_counts_by_form", {}).items():
+        lines.append(f"  {key}: {value}")
+
+    comparison = report.get("hcs_implementation_vs_source_marker_proxy", {})
+    lines.append("")
+    lines.append("HCS IMPLEMENTATION vs SOURCE-MARKER PROXY:")
+    for key in (
+        "beta_hcs_event_bar_count",
+        "source_marker_proxy_bar_count",
+        "overlap_bar_count",
+        "beta_only_bar_count",
+        "source_proxy_only_bar_count",
+    ):
+        lines.append(f"  {key}: {comparison.get(key)}")
+
+    beta_hcs = [item for item in report.get("events", []) if item.get("kind") == "hcs"]
+    lines.append("")
+    lines.append(f"BETA HCS EVENTS: {len(beta_hcs)}")
+    for item in beta_hcs:
+        lines.append(
+            " | ".join(
+                (
+                    str(item.get("bar_time_utc")),
+                    str(item.get("direction")),
+                    str(item.get("marker_text")),
+                    f"hcs_count={item.get('hcs_count')}",
+                    f"gap={item.get('derived_bar_gap_affected')}",
+                )
+            )
+        )
+
+    source_candidates = report.get("source_hcs_marker_proxy_candidates", [])
+    lines.append("")
+    lines.append(f"SOURCE-STYLE HCS MARKER PROXY CANDIDATES: {len(source_candidates)}")
+    for item in source_candidates:
+        lines.append(
+            " | ".join(
+                (
+                    f"{item.get('first_bar_time_utc')} -> {item.get('second_bar_time_utc')}",
+                    f"{item.get('first_direction')}->{item.get('second_direction')}",
+                    str(item.get("form")),
+                    str(item.get("source_strength_label_proxy")),
+                    f"same_direction={item.get('same_direction')}",
+                    f"latest_nodes={item.get('latest_prior_marker_node_count')}",
+                    f"gap={item.get('derived_bar_gap_affected')}",
+                )
+            )
+        )
+
+    lines.append("")
+    lines.append(f"FIRST {marker_limit} STRONG/ATT EVENTS:")
+    shown = 0
+    for item in report.get("events", []):
+        if item.get("kind") not in {"strong_fu", "attempted_fu"}:
+            continue
+        lines.append(
+            " | ".join(
+                (
+                    str(item.get("bar_time_utc")),
+                    str(item.get("kind")),
+                    str(item.get("direction")),
+                    str(item.get("visual_cue")),
+                    f"gap={item.get('derived_bar_gap_affected')}",
+                )
+            )
+        )
+        shown += 1
+        if shown >= marker_limit:
+            break
+
+    lines.append("=======================================================")
+    return "\n".join(lines)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Replay supplied Casino/BETA indicator events from a verified persisted XAUUSD MT5 snapshot."
@@ -28,6 +141,8 @@ def main() -> int:
     parser.add_argument("--timeframe", default="M15", help="M1, M5, M10, M15, M30, H1, H4, H8 or D1")
     parser.add_argument("--start", required=True, type=_datetime)
     parser.add_argument("--end", required=True, type=_datetime)
+    parser.add_argument("--summary", action="store_true", help="print a concise comparison-oriented summary instead of full JSON")
+    parser.add_argument("--marker-limit", type=int, default=40, help="Strong/ATT rows to print with --summary")
     args = parser.parse_args()
 
     report = build_verified_indicator_history_report(
@@ -36,7 +151,10 @@ def main() -> int:
         start_utc=args.start,
         end_utc=args.end,
     )
-    print(json.dumps(report, indent=2, sort_keys=True))
+    if args.summary:
+        print(build_summary_text(report, marker_limit=args.marker_limit))
+    else:
+        print(json.dumps(report, indent=2, sort_keys=True))
     return 0
 
 
