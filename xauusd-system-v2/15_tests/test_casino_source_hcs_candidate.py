@@ -37,7 +37,7 @@ class CasinoSourceHCSMarkerProxyTests(unittest.TestCase):
         bars = (
             self._bar(0, open=100.0, high=105.0, low=95.0, close=100.0),
             self._bar(15, open=101.0, high=107.0, low=94.0, close=106.0),
-            self._bar(30, open=106.5, high=109.0, low=93.0, close=108.0),
+            self._bar(30, open=102.0, high=109.0, low=93.0, close=108.0),
         )
         run = run_source_hcs_marker_proxy(bars=bars)
 
@@ -91,7 +91,7 @@ class CasinoSourceHCSMarkerProxyTests(unittest.TestCase):
         bars = (
             self._bar(0, open=100.0, high=105.0, low=95.0, close=100.0),
             self._bar(15, open=101.0, high=107.0, low=94.0, close=106.0),
-            self._bar(30, open=106.5, high=109.0, low=93.0, close=108.0, closed=False),
+            self._bar(30, open=102.0, high=109.0, low=93.0, close=108.0, closed=False),
         )
         run = run_source_hcs_marker_proxy(bars=bars)
 
