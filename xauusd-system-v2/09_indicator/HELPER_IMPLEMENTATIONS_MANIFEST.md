@@ -1,6 +1,8 @@
 # XAUUSD V2 — Helper Implementations Manifest
 
-These artifacts are implementation references only. They are NOT strategy-authority sources and must never override approved Reflection / Mr Casino knowledge.
+These supplied artifacts are **high-value operational detector / implementation references**. They contain substantial Casino mechanics and should be used actively to reproduce the chart event stream (Strong FU, Attempted FU and downstream manipulation states) before inventing replacement detectors.
+
+They are still not allowed to override an explicit Mr Casino / Reflection source statement or an explicit user clarification when a real conflict exists.
 
 ## 1) Casino_v7.txt
 
@@ -10,7 +12,14 @@ These artifacts are implementation references only. They are NOT strategy-author
 - License header: Mozilla Public License 2.0
 - Main implemented concepts: FU, Attempted FU, Doji, FVG/Imbalance, alerts
 - Explicit non-strategy options in source: SMA confluence and inside bars are labelled `Not part of Casino strategy`
-- Status: REFERENCE / REVIEW
+- User-clarified visible legend:
+  - `F` = Strong FU
+  - `A` = Attempted FU
+  - bright green = bullish Strong FU
+  - faded green = bullish Attempted FU
+  - bright red = bearish Strong FU
+  - faded red = bearish Attempted FU
+- Status: OPERATIONAL DETECTOR REFERENCE / REVIEW
 
 ### Known implementation hazards
 
@@ -18,7 +27,7 @@ These artifacts are implementation references only. They are NOT strategy-author
 2. Multiple reversal branches are duplicates/subsets of earlier branches, making some intended FU states unreachable.
 3. Equivalent unreachable/subset logic is present in the bearish reversal section.
 4. The two-candle-combination block is explicitly marked `Experimental!!!!` and computes OHLC variables without promoting them into the FU detector.
-5. Therefore this script is a prototype/reference and cannot be copied as the canonical V2 detector without source-rule comparison and test vectors.
+5. These hazards must be preserved and tested when reproducing indicator behavior; they must not be silently "fixed" and then presented as faithful equivalence.
 
 ## 2) MMB_AFU_v1.ex5
 
@@ -42,12 +51,25 @@ These artifacts are implementation references only. They are NOT strategy-author
 - Status: BLACK-BOX REFERENCE / REVIEW
 - Rule: do not infer the exact meaning of `SFU` from filename alone; validate in MT5 against labelled charts.
 
-## V2 policy for helper code
+## 4) BETA 1 + LAOL.txt
 
-`Strategy sources -> canonical rule model -> test vectors -> compare helper implementation -> accept/reject behavior`
+- Type: Pine Script v6 multi-timeframe state machine supplied by the user
+- Important operational concepts include FU, self-negation, x3-family states, LAOL, HCS formation/counting, HCS boxes/retests and broader establishment logic.
+- The code explicitly tracks `bear_hcs` / `bull_hcs`, increments `hcs_count`, renders `HCS Xn`, and tracks `Bear/Bull HCS RETESTING` states.
+- Status: HIGH-VALUE OPERATIONAL STATE-MACHINE REFERENCE / REPAINTING REPORTED BY USER
+
+The repainting warning means historical outputs must be tested for timing/finality. It does not make the code irrelevant to strategy understanding.
+
+## V2 policy for supplied code
+
+Preferred reconstruction path:
+
+`explicit source/user semantics -> faithfully reproduce supplied indicator event stream -> compare labelled examples -> compose strategy -> historical replay/backtest`
+
+Raw OHLC reconstruction remains a diagnostic tool when the supplied indicator and source examples disagree. It is not the default reason to rediscover every Strong FU / ATT FU / HCS primitive from zero.
 
 Never:
 
-`old helper code -> strategy definition`
-
-The future TradingView and MQL5 V2 implementations will be generated from the canonical approved rule model and independently tested against labelled examples. Helper artifacts are useful for comparison, regression discovery and understanding prior implementation attempts only.
+- silently change supplied-code behavior while claiming exact reproduction;
+- let helper behavior override an explicit source/user rule conflict;
+- treat indicator agreement alone as profitability/live certification.
