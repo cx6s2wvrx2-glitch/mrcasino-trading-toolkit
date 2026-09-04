@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import unittest
 
-from xauusd_v2.helper_fu_doji_shadow import apply_casino_v7_current_doji_filter
+from xauusd_v2.helper_fu_doji_shadow import (
+    apply_casino_v7_current_doji_filter,
+    apply_casino_v7_default_visible_filters,
+)
 from xauusd_v2.helper_fu_shadow import CasinoV7ShadowResult, HelperFUClass
 
 
@@ -83,6 +86,38 @@ class CasinoV7DojiFilterShadowTests(unittest.TestCase):
         self.assertTrue(result.is_doji_by_helper_parameter)
         self.assertFalse(result.helper_parameter_is_strategy_truth)
         self.assertFalse(result.strategy_truth_changed)
+
+    def test_default_visible_filter_removes_bearish_att_from_bullish_candle(self) -> None:
+        result = apply_casino_v7_default_visible_filters(
+            open=100.0,
+            high=112.0,
+            low=90.0,
+            close=109.0,
+            branch_result=CasinoV7ShadowResult(
+                bullish=HelperFUClass.FU,
+                bearish=HelperFUClass.ATT,
+                bullish_branch="test_fu",
+                bearish_branch="test_att",
+            ),
+        )
+        self.assertEqual(result.bullish_after_filter, HelperFUClass.FU)
+        self.assertEqual(result.bearish_after_filter, HelperFUClass.NONE)
+
+    def test_default_visible_filter_removes_bullish_att_from_bearish_candle(self) -> None:
+        result = apply_casino_v7_default_visible_filters(
+            open=109.0,
+            high=112.0,
+            low=90.0,
+            close=100.0,
+            branch_result=CasinoV7ShadowResult(
+                bullish=HelperFUClass.ATT,
+                bearish=HelperFUClass.FU,
+                bullish_branch="test_att",
+                bearish_branch="test_fu",
+            ),
+        )
+        self.assertEqual(result.bullish_after_filter, HelperFUClass.NONE)
+        self.assertEqual(result.bearish_after_filter, HelperFUClass.FU)
 
 
 if __name__ == "__main__":
