@@ -5,6 +5,13 @@ from enum import StrEnum
 from typing import Iterable
 
 from .backtest_sequence import BacktestSequenceResult, evaluate_r143_sequence
+from .ltf_execution import (
+    LTFExecutionMode,
+    LTFExecutionResult,
+    LTFExecutionState,
+    LTFExecutionTrigger,
+    evaluate_r145_ltf_execution,
+)
 
 
 class EvidenceState(StrEnum):
@@ -22,6 +29,8 @@ class StrategyEvidenceStage(StrEnum):
     LAOL_MET = "laol_met"
     TRUE_STOP_RESPECTED = "true_stop_respected"
     TEN_MIN_TRUE_STOP_ESTABLISHED = "ten_min_true_stop_established"
+    TEN_MIN_TRUE_STOP_FORMING = "ten_min_true_stop_forming"
+    FULL_TFS_FACTORS = "full_tfs_factors"
     RETAIL_LIQUIDITY_MANIPULATED = "retail_liquidity_manipulated"
     LTF_LAOL_TAKEN = "ltf_laol_taken"
     LTF_TRIGGER = "ltf_trigger"
@@ -148,3 +157,59 @@ def evaluate_r143_evidence(records: Iterable[StrategyEvidenceRecord]) -> Backtes
     }
 
     return evaluate_r143_sequence(**values)
+
+
+def evaluate_r145_evidence(
+    records: Iterable[StrategyEvidenceRecord],
+    *,
+    trigger: LTFExecutionTrigger | None,
+    mode: LTFExecutionMode,
+) -> LTFExecutionResult:
+    """Run R-145 from provenance-bearing evidence without creating direction.
+
+    The source order retail-liquidity manipulation -> LTF LAOL taken -> approved
+    LTF trigger is preserved by the existing evaluator. Confirmed and aggressive
+    10m/TFS prerequisites remain separate exactly as implemented there.
+    """
+    indexed = index_evidence(records)
+
+    retail = evidence_state_to_optional_bool(indexed.get(StrategyEvidenceStage.RETAIL_LIQUIDITY_MANIPULATED))
+    ltf_laol = evidence_state_to_optional_bool(indexed.get(StrategyEvidenceStage.LTF_LAOL_TAKEN))
+    trigger_record = indexed.get(StrategyEvidenceStage.LTF_TRIGGER)
+
+    if trigger_record is None or trigger_record.state is EvidenceState.BLOCKED:
+        effective_trigger = None
+    elif trigger_record.state is EvidenceState.MISSING:
+        if retail is True and ltf_laol is True:
+            return LTFExecutionResult(
+                LTFExecutionState.WAIT,
+                None,
+                mode,
+                "R-145 context is present but the approved LTF trigger has not been observed",
+            )
+        effective_trigger = None
+    else:
+        if trigger is None:
+            return LTFExecutionResult(
+                LTFExecutionState.NOT_CERTIFIED,
+                None,
+                mode,
+                "LTF trigger evidence is observed but the approved trigger type was not supplied",
+            )
+        effective_trigger = trigger
+
+    return evaluate_r145_ltf_execution(
+        retail_liquidity_manipulated=retail,
+        ltf_laol_taken=ltf_laol,
+        trigger=effective_trigger,
+        mode=mode,
+        ten_min_ts_established=evidence_state_to_optional_bool(
+            indexed.get(StrategyEvidenceStage.TEN_MIN_TRUE_STOP_ESTABLISHED)
+        ),
+        ten_min_ts_forming=evidence_state_to_optional_bool(
+            indexed.get(StrategyEvidenceStage.TEN_MIN_TRUE_STOP_FORMING)
+        ),
+        full_tfs_factors_present=evidence_state_to_optional_bool(
+            indexed.get(StrategyEvidenceStage.FULL_TFS_FACTORS)
+        ),
+    )
