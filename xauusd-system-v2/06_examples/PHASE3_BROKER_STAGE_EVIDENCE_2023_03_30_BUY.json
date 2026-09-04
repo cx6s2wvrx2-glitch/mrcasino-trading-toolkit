@@ -1,0 +1,81 @@
+{
+  "schema_version": "phase3_broker_stage_evidence_v1",
+  "episode_id": "mr-casino-2023-03-30-buy-sequence",
+  "broker": "Exclusive Markets Ltd.",
+  "broker_symbol": "XAUUSD!",
+  "reference_feed_required": "FOREXCOM:XAUUSD",
+  "reference_feed_aligned": false,
+  "source_reconstruction_ref": "17_documentation/SOURCE_NARRATED_OUTCOME_RECON_2023_03_30_31.md#reconstruction-a",
+  "records": [
+    {
+      "stage": "hcs_zone_reaction",
+      "semantic_state": "blocked",
+      "broker_path_observed": true,
+      "evidence_ref": "SOURCE_NARRATED_OUTCOME_RECON_2023_03_30_31#reconstruction-a:1972-area",
+      "event_time": "2023-03-30T15:52:00Z",
+      "timeframe_minutes": 1,
+      "machine_stage_certified": false,
+      "reference_feed_aligned": false,
+      "note": "Exclusive Markets reaches the source-described 1972 manipulation area, but broker path interaction does not machine-certify the HCS-zone-reaction semantic stage."
+    },
+    {
+      "stage": "tfs_confirmed",
+      "semantic_state": "blocked",
+      "broker_path_observed": null,
+      "evidence_ref": null,
+      "event_time": null,
+      "timeframe_minutes": null,
+      "machine_stage_certified": false,
+      "reference_feed_aligned": false,
+      "note": "The broker reconstruction preserves the source-labelled price path but does not independently certify the required TFS establishment state."
+    },
+    {
+      "stage": "laol_met",
+      "semantic_state": "blocked",
+      "broker_path_observed": null,
+      "evidence_ref": null,
+      "event_time": null,
+      "timeframe_minutes": null,
+      "machine_stage_certified": false,
+      "reference_feed_aligned": false,
+      "note": "No broker-side machine-certified canonical LAOL_MET event exists for this episode."
+    },
+    {
+      "stage": "true_stop_respected",
+      "semantic_state": "blocked",
+      "broker_path_observed": true,
+      "evidence_ref": "SOURCE_NARRATED_OUTCOME_RECON_2023_03_30_31#reconstruction-a:1972.70",
+      "event_time": "2023-03-30T15:53:00Z",
+      "timeframe_minutes": 1,
+      "machine_stage_certified": false,
+      "reference_feed_aligned": false,
+      "note": "Exclusive prints an exact 1972.70 low at 15:53Z, but 15:52Z prints 1972.69. Therefore the price anchor is observed while exact source True-Stop-respect equivalence remains blocked and feed-sensitive."
+    },
+    {
+      "stage": "ten_min_true_stop_established",
+      "semantic_state": "blocked",
+      "broker_path_observed": null,
+      "evidence_ref": null,
+      "event_time": null,
+      "timeframe_minutes": 10,
+      "machine_stage_certified": false,
+      "reference_feed_aligned": false,
+      "note": "No broker-side machine-certified 10m True Stop establishment event has been produced for the March buy episode."
+    },
+    {
+      "stage": "targets_and_timing",
+      "semantic_state": "blocked",
+      "broker_path_observed": true,
+      "evidence_ref": "SOURCE_NARRATED_OUTCOME_RECON_2023_03_30_31#reconstruction-a:1984.19",
+      "event_time": "2023-03-30T16:49:00Z",
+      "timeframe_minutes": 1,
+      "machine_stage_certified": false,
+      "reference_feed_aligned": false,
+      "note": "Exclusive first trades through the source-labelled 1984.19 target after the reconstructed sequence, but one reached price target does not certify the complete R-143 target-and-timing stage."
+    }
+  ],
+  "strategy_truth_changed": false,
+  "performance_claim_allowed": false,
+  "promotion_allowed": false,
+  "live_execution_authorized": false
+}
