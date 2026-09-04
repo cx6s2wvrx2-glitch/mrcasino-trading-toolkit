@@ -12,7 +12,11 @@ from xauusd_v2.strategy_evidence_sequence import (
     evaluate_pre_entry_context,
     evaluate_r143_evidence,
     evaluate_r145_evidence,
+    evaluate_true_stop_entry_evidence,
+    evaluate_true_stop_main_poi_evidence,
+    evaluate_true_stop_respect_evidence,
 )
+from xauusd_v2.true_stop_semantic import LTFTrigger, TrueStopEntryState, TrueStopState
 
 
 def observed(stage: StrategyEvidenceStage) -> StrategyEvidenceRecord:
@@ -104,6 +108,55 @@ class StrategyEvidenceSequenceTests(unittest.TestCase):
         )
         self.assertEqual(result.state, SequenceState.INVALID_ORDER)
         self.assertEqual(result.next_required_stage, BacktestStage.LAOL_MET)
+
+    def test_true_stop_main_poi_composes_existing_semantics(self) -> None:
+        result = evaluate_true_stop_main_poi_evidence(
+            [
+                observed(StrategyEvidenceStage.ALL_REQUIRED_10M_PLUS_TFS_FACTORS),
+                observed(StrategyEvidenceStage.TEN_MIN_PLUS_HCS_NEGATION_MANIPULATION),
+            ]
+        )
+        self.assertEqual(result.state, TrueStopState.MAIN_POI_CANDIDATE)
+
+    def test_true_stop_main_poi_blocked_factor_fails_closed(self) -> None:
+        result = evaluate_true_stop_main_poi_evidence(
+            [
+                blocked(StrategyEvidenceStage.ALL_REQUIRED_10M_PLUS_TFS_FACTORS),
+                observed(StrategyEvidenceStage.TEN_MIN_PLUS_HCS_NEGATION_MANIPULATION),
+            ]
+        )
+        self.assertEqual(result.state, TrueStopState.NOT_CERTIFIED)
+
+    def test_true_stop_respect_is_separate_from_main_poi_creation(self) -> None:
+        result = evaluate_true_stop_respect_evidence(
+            [
+                observed(StrategyEvidenceStage.TRUE_STOP_MAIN_POI_CONFIRMED),
+                observed(StrategyEvidenceStage.TRUE_STOP_POI_RESPECTED),
+            ]
+        )
+        self.assertEqual(result.state, TrueStopState.RESPECTED)
+
+    def test_true_stop_entry_waits_for_ltf_trigger(self) -> None:
+        result = evaluate_true_stop_entry_evidence(
+            [
+                observed(StrategyEvidenceStage.TRUE_STOP_RESPECTED),
+                observed(StrategyEvidenceStage.FINAL_LIQUIDITY_CALCULATION),
+                missing(StrategyEvidenceStage.LTF_TRIGGER),
+            ],
+            trigger=None,
+        )
+        self.assertEqual(result.state, TrueStopEntryState.WAIT)
+
+    def test_true_stop_entry_candidate_keeps_downstream_risk_gate_outside(self) -> None:
+        result = evaluate_true_stop_entry_evidence(
+            [
+                observed(StrategyEvidenceStage.TRUE_STOP_RESPECTED),
+                observed(StrategyEvidenceStage.FINAL_LIQUIDITY_CALCULATION),
+                observed(StrategyEvidenceStage.LTF_TRIGGER),
+            ],
+            trigger=LTFTrigger.HCS,
+        )
+        self.assertEqual(result.state, TrueStopEntryState.ENTRY_CANDIDATE)
 
     def test_r145_confirmed_path_requires_established_10m_true_stop(self) -> None:
         result = evaluate_r145_evidence(
