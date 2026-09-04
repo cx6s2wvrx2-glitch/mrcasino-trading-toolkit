@@ -1,0 +1,59 @@
+{
+  "schema_version": "xauusd_v2_checkpoint_2026_09_04_0857_v1",
+  "scope": "xauusd-system-v2-only",
+  "real_m15_replay": {
+    "snapshot_sha256": "ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24",
+    "broker": "Exclusive Markets Ltd.",
+    "broker_symbol": "XAUUSD!",
+    "timeframe": "M15",
+    "window_start_utc": "2023-03-30T00:00:00Z",
+    "window_end_utc": "2023-04-01T00:00:00Z",
+    "attempted_fu": 33,
+    "strong_fu": 7,
+    "beta_hcs": 8,
+    "source_marker_proxy_candidates": 20,
+    "source_marker_proxy_second_node_bars": 15,
+    "source_marker_proxy_forms": {
+      "attempted_attempted": 11,
+      "strong_attempted": 8,
+      "strong_strong": 1
+    },
+    "beta_vs_source_proxy": {
+      "beta_hcs_bars": 8,
+      "source_proxy_bars": 15,
+      "overlap_bars": 1,
+      "beta_only_bars": 7,
+      "source_proxy_only_bars": 14
+    },
+    "window_gap_affected_derived_bar_count": 0,
+    "events_on_gap_affected_derived_bars": 0
+  },
+  "conclusion": "BETA_HCS_AND_NARROW_SOURCE_MARKER_PROXY_MATERIALLY_DIVERGE_ON_REAL_M15_DATA",
+  "new_diagnostic": {
+    "module": "src/xauusd_v2/march_indicator_source_probe.py",
+    "tests": "15_tests/test_march_indicator_source_probe.py",
+    "target_timeframe": "M1",
+    "source_levels": [
+      {"level": "1973.00", "role": "strongest_1m_fu_closure"},
+      {"level": "1975.00", "role": "easy_1m_hcs_reentry"},
+      {"level": "1986.00", "role": "clearest_1m_hcs_sell_entry"}
+    ],
+    "purpose": "LOCALIZE_SOURCE_LABELLED_MARCH_EXAMPLES_USING_SUPPLIED_CASINO_STRONG_ATT_AND_BETA_SOURCE_PROXY_HCS_OUTPUT"
+  },
+  "code_ci": {
+    "head": "a50f817ce6a1fdaa9e443ad7911808a5e6b69ddf",
+    "conclusion": "success"
+  },
+  "reference_feed": {
+    "required": "FOREXCOM:XAUUSD",
+    "state": "REQUIRED_DEFERRED_NOT_ALIGNED"
+  },
+  "certification": {
+    "source_occurrence_timestamps_certified": false,
+    "strategy_semantics_certified": false,
+    "performance_claim_allowed": false,
+    "promotion_allowed": false,
+    "live_execution_authorized": false
+  },
+  "supabase_changes": false
+}
