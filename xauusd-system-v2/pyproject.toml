@@ -28,6 +28,7 @@ xauusd-v2-march-hcs-second-node = "xauusd_v2.march_hcs_second_node_probe_cli:mai
 xauusd-v2-march-hcs-fu-criteria-gap = "xauusd_v2.march_hcs_fu_criteria_gap_probe_cli:main"
 xauusd-v2-march-mt5-tick-availability = "xauusd_v2.march_mt5_tick_availability_cli:main"
 xauusd-v2-march-mt5-terminal-tick-import = "xauusd_v2.march_mt5_terminal_tick_import_cli:main"
+xauusd-v2-indicator-history = "xauusd_v2.casino_history_report_cli:main"
 xauusd-v2-anthropic-runner = "xauusd_v2.anthropic_model_runner:main"
 xauusd-v2-agent06-packet = "xauusd_v2.agent06_packet_cli:main"
 xauusd-v2-agent06-readiness = "xauusd_v2.agent06_readiness_cli:main"
