@@ -42,6 +42,8 @@ def build_summary_text(report: dict[str, Any], *, marker_limit: int = 40) -> str
         "source_hcs_marker_proxy_candidate_count",
         "source_marker_fu_negation_proxy_candidate_count",
         "source_hcs_plus_negation_proxy_candidate_count",
+        "analysis_event_stream_frame_count",
+        "analysis_event_stream_event_count",
         "window_gap_affected_derived_bar_count",
         "events_on_gap_affected_derived_bars",
         "reference_feed_alignment_complete",
@@ -57,6 +59,11 @@ def build_summary_text(report: dict[str, Any], *, marker_limit: int = 40) -> str
     lines.append("")
     lines.append("event_counts_by_direction:")
     for key, value in report.get("event_counts_by_direction", {}).items():
+        lines.append(f"  {key}: {value}")
+
+    lines.append("")
+    lines.append("analysis_event_stream_counts_by_kind:")
+    for key, value in report.get("analysis_event_stream_counts_by_kind", {}).items():
         lines.append(f"  {key}: {value}")
 
     lines.append("")
@@ -146,6 +153,27 @@ def build_summary_text(report: dict[str, Any], *, marker_limit: int = 40) -> str
             )
         )
 
+    analysis_frames = report.get("analysis_event_stream_frames", [])
+    lines.append("")
+    lines.append(f"FIRST {marker_limit} UNIFIED ANALYSIS FRAMES:")
+    for frame in analysis_frames[:marker_limit]:
+        event_text = []
+        for event in frame.get("events", []):
+            candidate_suffix = " [candidate]" if event.get("candidate_only") else ""
+            event_text.append(
+                f"{event.get('kind')}:{event.get('direction')}"
+                f"@{event.get('provenance')}{candidate_suffix}"
+            )
+        lines.append(
+            " | ".join(
+                (
+                    str(frame.get("bar_time_utc")),
+                    "; ".join(event_text) if event_text else "no_events",
+                    f"gap={frame.get('derived_bar_gap_affected')}",
+                )
+            )
+        )
+
     lines.append("")
     lines.append(f"FIRST {marker_limit} STRONG/ATT EVENTS:")
     shown = 0
@@ -180,7 +208,7 @@ def main() -> int:
     parser.add_argument("--start", required=True, type=_datetime)
     parser.add_argument("--end", required=True, type=_datetime)
     parser.add_argument("--summary", action="store_true", help="print a concise comparison-oriented summary instead of full JSON")
-    parser.add_argument("--marker-limit", type=int, default=40, help="Strong/ATT rows to print with --summary")
+    parser.add_argument("--marker-limit", type=int, default=40, help="rows to print from the unified timeline and Strong/ATT list with --summary")
     args = parser.parse_args()
 
     report = build_verified_indicator_history_report(
