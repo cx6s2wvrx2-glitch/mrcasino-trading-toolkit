@@ -9,6 +9,7 @@ from typing import Any
 from .agents.data_agent import MarketBar
 from .casino_historical_event_runner import run_supplied_indicator_history
 from .casino_source_hcs_candidate import run_source_hcs_marker_proxy
+from .casino_source_negation_candidate import run_source_marker_fu_negation_proxy
 from .mt5_snapshot_load import load_verified_persisted_mt5_snapshot
 from .mtf_aggregation import (
     MinuteOHLC,
@@ -33,11 +34,11 @@ def build_verified_indicator_history_report(
     """Replay supplied indicator behavior from a verified persisted MT5 snapshot.
 
     Replay state is built from all available closed history before ``end_utc`` so an
-    HCS in the requested window can depend on an earlier tracked box. The returned
-    event list is then clipped to ``[start_utc, end_utc)``. A separate source-style
-    HCS marker proxy is also calculated from Casino Strong/ATT output so the BETA HCS
-    implementation can be compared with the governed source concept without silently
-    treating either one as certified strategy truth.
+    HCS or negation candidate in the requested window can depend on earlier supplied
+    indicator markers. The returned event list is then clipped to
+    ``[start_utc, end_utc)``. Source-style HCS and FU-negation marker proxies are
+    calculated separately from BETA implementation behavior and never promoted to
+    certified strategy truth.
     """
 
     start = _aware_utc(start_utc, field="start_utc")
@@ -124,11 +125,18 @@ def build_verified_indicator_history_report(
         timeframe=code,
     )
     source_proxy = run_source_hcs_marker_proxy(bars=replay_bars)
+    source_negation_proxy = run_source_marker_fu_negation_proxy(bars=replay_bars)
+
     selected_frames = tuple(
         frame for frame in run.frames if start <= frame.bar_time_utc < end
     )
     selected_source_candidates = tuple(
         item for item in source_proxy.candidates if start <= item.second_bar_time_utc < end
+    )
+    selected_negation_candidates = tuple(
+        item
+        for item in source_negation_proxy.candidates
+        if start <= item.negating_bar_time_utc < end
     )
 
     kind_counts: Counter[str] = Counter()
@@ -191,6 +199,27 @@ def build_verified_indicator_history_report(
         for item in selected_source_candidates
     ]
 
+    negation_candidate_records = [
+        {
+            "original_bar_time_utc": _z(item.original_bar_time_utc),
+            "negating_bar_time_utc": _z(item.negating_bar_time_utc),
+            "candle_offset": item.candle_offset,
+            "original_direction": item.original_direction.value,
+            "negating_direction": item.negating_direction.value,
+            "original_helper_class": item.original_helper_class.value,
+            "negating_helper_class": item.negating_helper_class.value,
+            "original_wick_low": str(item.original_wick_low),
+            "original_wick_high": str(item.original_wick_high),
+            "negating_wick_low": str(item.negating_wick_low),
+            "negating_wick_high": str(item.negating_wick_high),
+            "latest_prior_marker_node_count": item.latest_prior_marker_node_count,
+            "helper_strong_used_as_complete_fu_proxy": item.helper_strong_used_as_complete_fu_proxy,
+            "derived_bar_gap_affected": item.negating_bar_time_utc.astimezone(UTC) in gap_affected_times,
+            "raw_negation_semantics_certified": False,
+        }
+        for item in selected_negation_candidates
+    ]
+
     selected_diag_count = sum(
         1 for item in run.diagnostics if start <= item.bar_time_utc < end
     )
@@ -200,7 +229,7 @@ def build_verified_indicator_history_report(
     source_only = source_hcs_bar_times - beta_hcs_bar_times
 
     return {
-        "schema_version": "casino_verified_indicator_history_report_v2",
+        "schema_version": "casino_verified_indicator_history_report_v3",
         "status": run.status,
         "snapshot_id": verified.snapshot.snapshot_id,
         "normalized_sha256": verified.normalized_sha256,
@@ -223,6 +252,9 @@ def build_verified_indicator_history_report(
         "source_hcs_marker_proxy_candidate_count": len(selected_source_candidates),
         "source_hcs_marker_proxy_counts_by_form": dict(sorted(source_form_counts.items())),
         "source_hcs_marker_proxy_candidates": source_candidate_records,
+        "source_marker_fu_negation_proxy_status": source_negation_proxy.status,
+        "source_marker_fu_negation_proxy_candidate_count": len(selected_negation_candidates),
+        "source_marker_fu_negation_proxy_candidates": negation_candidate_records,
         "hcs_implementation_vs_source_marker_proxy": {
             "beta_hcs_event_bar_count": len(beta_hcs_bar_times),
             "source_marker_proxy_bar_count": len(source_hcs_bar_times),
@@ -242,17 +274,26 @@ def build_verified_indicator_history_report(
             for item in selected_source_candidates
             if item.second_bar_time_utc.astimezone(UTC) in gap_affected_times
         ),
+        "source_marker_fu_negation_candidates_on_gap_affected_derived_bars": sum(
+            1
+            for item in selected_negation_candidates
+            if item.negating_bar_time_utc.astimezone(UTC) in gap_affected_times
+        ),
         "coverage_boundary": {
-            "strong_attempted_source": "supplied Casino_v7 helper shadow plus supplied current-candle doji filter",
+            "strong_attempted_source": "supplied Casino_v7 helper shadow plus supplied default visible filters",
             "hcs_source": "supplied BETA broad FU/SN tracked-box HCS state machine",
             "hcs_retest_source": "supplied BETA 50/60-minute HCS box manager only",
             "source_hcs_marker_proxy": "latest prior supplied Casino Strong/ATT marker directional wick + exact OHLC intersection",
             "source_hcs_marker_proxy_same_direction_required": False,
             "source_hcs_marker_proxy_fu_negation_integrated": False,
             "source_hcs_marker_proxy_near_enough_retest_integrated": False,
+            "fu_negation_source_marker_proxy": "latest prior visible Strong/ATT manipulation + opposite visible Strong/F within candle +1/+2",
+            "fu_negation_source_marker_proxy_requires_negating_strong": True,
+            "fu_negation_source_marker_proxy_allows_attempted_original": True,
+            "fu_negation_x3_exception_integrated": False,
             "multi_timeframe_negation_integrated": False,
-            "fu_negation_source_semantics_integrated": False,
-            "note": "Implementation replay and source-style marker proxy are deliberately separate from source-semantic certification.",
+            "fu_negation_source_semantics_integrated": "proxy_only_not_certified",
+            "note": "Implementation replay and source-style marker proxies are deliberately separate from source-semantic certification.",
         },
         "reference_feed_required_for_feed_sensitive_geometry": "FOREXCOM:XAUUSD",
         "reference_feed_alignment_complete": False,
