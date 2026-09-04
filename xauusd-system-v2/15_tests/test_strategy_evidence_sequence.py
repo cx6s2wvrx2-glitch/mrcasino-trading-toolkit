@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from xauusd_v2.backtest_sequence import BacktestStage, SequenceState
+from xauusd_v2.ltf_execution import LTFExecutionMode, LTFExecutionState, LTFExecutionTrigger
 from xauusd_v2.strategy_evidence_sequence import (
     ContextGateState,
     EvidenceState,
@@ -10,6 +11,7 @@ from xauusd_v2.strategy_evidence_sequence import (
     StrategyEvidenceStage,
     evaluate_pre_entry_context,
     evaluate_r143_evidence,
+    evaluate_r145_evidence,
 )
 
 
@@ -102,6 +104,72 @@ class StrategyEvidenceSequenceTests(unittest.TestCase):
         )
         self.assertEqual(result.state, SequenceState.INVALID_ORDER)
         self.assertEqual(result.next_required_stage, BacktestStage.LAOL_MET)
+
+    def test_r145_confirmed_path_requires_established_10m_true_stop(self) -> None:
+        result = evaluate_r145_evidence(
+            [
+                observed(StrategyEvidenceStage.RETAIL_LIQUIDITY_MANIPULATED),
+                observed(StrategyEvidenceStage.LTF_LAOL_TAKEN),
+                observed(StrategyEvidenceStage.LTF_TRIGGER),
+                missing(StrategyEvidenceStage.TEN_MIN_TRUE_STOP_ESTABLISHED),
+            ],
+            trigger=LTFExecutionTrigger.ONE_MIN_NEGATION,
+            mode=LTFExecutionMode.CONFIRMED,
+        )
+        self.assertEqual(result.state, LTFExecutionState.WAIT)
+
+    def test_r145_confirmed_path_reaches_entry_candidate_only_after_all_gates(self) -> None:
+        result = evaluate_r145_evidence(
+            [
+                observed(StrategyEvidenceStage.RETAIL_LIQUIDITY_MANIPULATED),
+                observed(StrategyEvidenceStage.LTF_LAOL_TAKEN),
+                observed(StrategyEvidenceStage.LTF_TRIGGER),
+                observed(StrategyEvidenceStage.TEN_MIN_TRUE_STOP_ESTABLISHED),
+            ],
+            trigger=LTFExecutionTrigger.THREE_MIN_HCS_NEGATION,
+            mode=LTFExecutionMode.CONFIRMED,
+        )
+        self.assertEqual(result.state, LTFExecutionState.ENTRY_CANDIDATE)
+
+    def test_r145_trigger_missing_waits_after_liquidity_sequence(self) -> None:
+        result = evaluate_r145_evidence(
+            [
+                observed(StrategyEvidenceStage.RETAIL_LIQUIDITY_MANIPULATED),
+                observed(StrategyEvidenceStage.LTF_LAOL_TAKEN),
+                missing(StrategyEvidenceStage.LTF_TRIGGER),
+                observed(StrategyEvidenceStage.TEN_MIN_TRUE_STOP_ESTABLISHED),
+            ],
+            trigger=None,
+            mode=LTFExecutionMode.CONFIRMED,
+        )
+        self.assertEqual(result.state, LTFExecutionState.WAIT)
+
+    def test_r145_blocked_liquidity_fails_closed(self) -> None:
+        result = evaluate_r145_evidence(
+            [
+                blocked(StrategyEvidenceStage.RETAIL_LIQUIDITY_MANIPULATED),
+                observed(StrategyEvidenceStage.LTF_LAOL_TAKEN),
+                observed(StrategyEvidenceStage.LTF_TRIGGER),
+                observed(StrategyEvidenceStage.TEN_MIN_TRUE_STOP_ESTABLISHED),
+            ],
+            trigger=LTFExecutionTrigger.ONE_MIN_NEGATION,
+            mode=LTFExecutionMode.CONFIRMED,
+        )
+        self.assertEqual(result.state, LTFExecutionState.NOT_CERTIFIED)
+
+    def test_r145_aggressive_path_keeps_forming_and_full_tfs_separate(self) -> None:
+        result = evaluate_r145_evidence(
+            [
+                observed(StrategyEvidenceStage.RETAIL_LIQUIDITY_MANIPULATED),
+                observed(StrategyEvidenceStage.LTF_LAOL_TAKEN),
+                observed(StrategyEvidenceStage.LTF_TRIGGER),
+                observed(StrategyEvidenceStage.TEN_MIN_TRUE_STOP_FORMING),
+                observed(StrategyEvidenceStage.FULL_TFS_FACTORS),
+            ],
+            trigger=LTFExecutionTrigger.ONE_MIN_NEGATION,
+            mode=LTFExecutionMode.AGGRESSIVE,
+        )
+        self.assertEqual(result.state, LTFExecutionState.ENTRY_CANDIDATE)
 
     def test_observed_record_requires_provenance(self) -> None:
         with self.assertRaises(ValueError):
