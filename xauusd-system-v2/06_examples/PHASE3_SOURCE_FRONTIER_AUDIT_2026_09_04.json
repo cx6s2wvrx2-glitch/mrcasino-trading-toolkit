@@ -1,18 +1,52 @@
 {
-  "schema_version": "xauusd_v2_phase3_source_frontier_audit_v1",
+  "schema_version": "xauusd_v2_phase3_source_frontier_audit_v2",
   "date": "2026-09-04",
   "scope": "xauusd-system-v2",
   "source_exhaustion_completed": true,
+  "second_independent_source_pass_completed": true,
   "strategy_truth_changed": false,
   "promotion_allowed": false,
   "performance_claim_allowed": false,
   "live_execution_authorized": false,
-  "authority_boundary": "approved primary source material may define strategy semantics; broker price-path similarity and helper implementations may not fill missing source semantics",
+  "authority_boundary": "approved primary source material may define strategy semantics; broker price-path similarity, extracted unverified knowledge rows, and helper implementations may not fill missing source semantics",
   "reviewed_source_families": [
     "GIANNO_CASINO_REFLECTION_MASTER.pdf",
     "Pasted markdown(6).md / Price Action Reflection March 30-31 narrative",
+    "PRIMARY_NARRATIVE_2023_03_30_31.md source-preservation record",
     "approved Supabase v2_knowledge rows from user-approved sources",
     "existing V2 validation drafts and source manifests"
+  ],
+  "second_pass_source_locators": [
+    {
+      "locator": "Reflection Master p.97 · R-180 occurrence 2",
+      "finding": "HCS is ESTABLISHED only if the left FU was retested first; otherwise the next valid point becomes EST TFS POI.",
+      "effect_on_frontier": "narrows TFS structural interpretation but does not identify the actual March-31 pre-1986 established-TFS event"
+    },
+    {
+      "locator": "Reflection Master p.97 · R-182",
+      "finding": "TFS entry is on RETEST of established TFS with confirmed prevalent direction.",
+      "effect_on_frontier": "confirms that generic timeframe-strength wording cannot substitute for an identified established-TFS occurrence"
+    },
+    {
+      "locator": "Reflection Master p.113 · R-208",
+      "finding": "Practical LAOL is the target of the liquidity grab that started the move; each reversal starts there and is refined lower.",
+      "effect_on_frontier": "clarifies LAOL identity but not the operational meaning of R-143 LAOL met"
+    },
+    {
+      "locator": "Reflection Master p.118 · R-214",
+      "finding": "LAOL is the last area of liquidity inside the reversal POI.",
+      "effect_on_frontier": "clarifies where LAOL belongs but not what event counts as LAOL met"
+    },
+    {
+      "locator": "Reflection Master p.118 · R-217",
+      "finding": "ESTABLISHED TFS is confirmed prevalent direction; AS FORMING is only used on an already established prevalent TFS.",
+      "effect_on_frontier": "reinforces the March-31 fail-closed boundary"
+    },
+    {
+      "locator": "Reflection Master p.39 · R-143",
+      "finding": "Official sequence contains HCS zone reaction -> TFS -> LAOL met -> TS respected -> 10m TS established -> targets/timing.",
+      "effect_on_frontier": "preserves LAOL met as its own ordered stage"
+    }
   ],
   "resolved_from_source_exhaustion": [
     {
@@ -21,9 +55,19 @@
       "conclusion": "TFS means confirmed prevalent direction; forming/contextual timeframe-strength evidence is not automatically established TFS."
     },
     {
+      "concept": "tfs_entry_relationship",
+      "status": "clear_boundary",
+      "conclusion": "The approved source ties TFS entry to retest of established TFS with confirmed prevalent direction; this strengthens the requirement for an identified establishment/retest relationship rather than generic context."
+    },
+    {
+      "concept": "laol_identity",
+      "status": "clear_partial_definition",
+      "conclusion": "LAOL is the last area of liquidity inside the reversal POI and is described as the target of the liquidity grab that started the move, with lower-timeframe refinement."
+    },
+    {
       "concept": "laol_term_separation",
       "status": "clear_boundary",
-      "conclusion": "LAOL respected, LAOL taken, and the R-143 wording LAOL met are distinct source phrasings and are not automatically interchangeable."
+      "conclusion": "LAOL respected, LAOL taken, liquidity left behind, and the R-143 wording LAOL met are not automatically interchangeable machine events."
     },
     {
       "concept": "later_confirmation_lookahead",
@@ -35,8 +79,8 @@
     {
       "episode_id": "mr-casino-2023-03-30-buy-sequence",
       "stage": "LAOL_MET",
-      "status": "USER_CLARIFICATION_REQUIRED_AFTER_SOURCE_EXHAUSTION",
-      "why_blocked": "The March narrative says 1972.19 liquidity is being left behind and separately describes True Stop respect, but it does not explicitly identify the canonical R-143 LAOL_MET occurrence. The broader approved source corpus separately uses LAOL respected and LAOL taken and does not authorize silently mapping either term to LAOL met.",
+      "status": "USER_CLARIFICATION_REQUIRED_AFTER_TWO_SOURCE_PASSES",
+      "why_blocked": "The March narrative says 1972.19 liquidity is being left behind and separately describes True Stop respect, but it does not explicitly identify the canonical R-143 LAOL_MET occurrence. R-208/R-214 clarify LAOL identity/location but do not define the event semantics of the word met. The broader corpus separately uses LAOL respected and LAOL taken and does not authorize silently mapping either term to LAOL met.",
       "what_would_close_it": "Explicit user/source authority defining what LAOL met means operationally in R-143 and, for this March BUY episode, which event/level satisfies it.",
       "must_not_assume": [
         "1972.19 liquidity left behind equals LAOL met",
@@ -48,9 +92,9 @@
     {
       "episode_id": "mr-casino-2023-03-31-sell-sequence",
       "stage": "TFS_CONFIRMED",
-      "status": "USER_CLARIFICATION_REQUIRED_AFTER_SOURCE_EXHAUSTION",
-      "why_blocked": "Before the source-labelled 1986 sell entry, the narrative says the market is in the right place to form the daily FU downside and that the setup makes sense according to timeframe strength. Approved source definitions require confirmed prevalent direction for established TFS. A later 4h close exists in the narrative but is later information and cannot retroactively certify the earlier entry decision.",
-      "what_would_close_it": "Explicit user/source authority identifying the already-established TFS before the 1986 entry, including its timeframe/event, or explicitly clarifying that the cited source wording is sufficient to count the R-143 TFS stage in this episode.",
+      "status": "USER_CLARIFICATION_REQUIRED_AFTER_TWO_SOURCE_PASSES",
+      "why_blocked": "Before the source-labelled 1986 sell entry, the narrative says the market is in the right place to form the daily FU downside and that the setup makes sense according to timeframe strength. R-217 requires established TFS to be confirmed prevalent direction, and R-182 frames entry on retest of established TFS. R-180 gives a structural HCS/EST-TFS-POI relationship but the preserved March narrative still does not expose the actual already-established pre-1986 TFS event. A later 4h close cannot retroactively close that gap.",
+      "what_would_close_it": "Explicit user/source authority identifying the already-established TFS before the 1986 entry, including its timeframe/event, or explicitly clarifying that the cited March wording is sufficient to count the R-143 TFS stage in this episode.",
       "must_not_assume": [
         "forming daily FU equals established TFS",
         "generic timeframe-strength agreement equals confirmed TFS occurrence",
@@ -58,10 +102,15 @@
       ]
     }
   ],
-  "not_user_questions_yet": [
+  "not_user_questions": [
     "March broker HCS-zone machine certification remains an engineering/reference-feed issue, not a user-definition question.",
     "FOREXCOM:XAUUSD alignment remains deferred and is not a user-definition question.",
     "1975 Exclusive mismatch remains unresolved and must not be force-fitted."
   ],
-  "next_action": "finish component/agent status audit and validation-pack backbone; then ask only the two frontier clarifications if no stronger approved source evidence appears"
+  "assistant_side_prerequisites_completed": {
+    "agent_reality_audit": true,
+    "master_validation_pack": true,
+    "continuation_handoff_refresh": true
+  },
+  "next_strategy_semantic_gate": "ask UQ-01 LAOL_MET first; after its answer is captured and governed, proceed to UQ-02 TFS_CONFIRMED"
 }
