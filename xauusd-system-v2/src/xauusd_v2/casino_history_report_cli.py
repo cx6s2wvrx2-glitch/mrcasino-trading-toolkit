@@ -41,6 +41,7 @@ def build_summary_text(report: dict[str, Any], *, marker_limit: int = 40) -> str
         "window_event_count",
         "source_hcs_marker_proxy_candidate_count",
         "source_marker_fu_negation_proxy_candidate_count",
+        "source_hcs_plus_negation_proxy_candidate_count",
         "window_gap_affected_derived_bar_count",
         "events_on_gap_affected_derived_bars",
         "reference_feed_alignment_complete",
@@ -95,12 +96,14 @@ def build_summary_text(report: dict[str, Any], *, marker_limit: int = 40) -> str
     lines.append("")
     lines.append(f"SOURCE-STYLE HCS MARKER PROXY CANDIDATES: {len(source_candidates)}")
     for item in source_candidates:
+        role_text = f"{item.get('first_semantic_role')}->{item.get('second_semantic_role')}"
         lines.append(
             " | ".join(
                 (
                     f"{item.get('first_bar_time_utc')} -> {item.get('second_bar_time_utc')}",
                     f"{item.get('first_direction')}->{item.get('second_direction')}",
                     str(item.get("form")),
+                    role_text,
                     str(item.get("source_strength_label_proxy")),
                     f"same_direction={item.get('same_direction')}",
                     f"latest_nodes={item.get('latest_prior_marker_node_count')}",
@@ -121,6 +124,23 @@ def build_summary_text(report: dict[str, Any], *, marker_limit: int = 40) -> str
                     f"{item.get('original_helper_class')}->{item.get('negating_helper_class')}",
                     f"offset=+{item.get('candle_offset')}",
                     f"latest_nodes={item.get('latest_prior_marker_node_count')}",
+                    f"gap={item.get('derived_bar_gap_affected')}",
+                )
+            )
+        )
+
+    hcs_negation_candidates = report.get("source_hcs_plus_negation_proxy_candidates", [])
+    lines.append("")
+    lines.append(f"SOURCE HCS + NEGATION PROXY CANDIDATES: {len(hcs_negation_candidates)}")
+    for item in hcs_negation_candidates:
+        lines.append(
+            " | ".join(
+                (
+                    f"HCS {item.get('hcs_first_bar_time_utc')} -> {item.get('hcs_bar_time_utc')}",
+                    f"NEG -> {item.get('negating_bar_time_utc')}",
+                    f"{item.get('hcs_direction')}->{item.get('negating_direction')}",
+                    str(item.get("hcs_form")),
+                    f"offset=+{item.get('negation_candle_offset')}",
                     f"gap={item.get('derived_bar_gap_affected')}",
                 )
             )
