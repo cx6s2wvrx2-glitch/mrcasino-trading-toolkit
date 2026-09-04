@@ -1,91 +1,141 @@
 # XAUUSD V2 — Canonical Agent Status
 
-Status date: 2026-09-02
+Status date: 2026-09-04
 
-| ID | Agent | Current state | Connection | Authority boundary |
+This file is the current short-form operational status. Detailed audit: `17_documentation/AGENT_REALITY_AUDIT_2026_09_04.md`. Machine-readable audit: `06_examples/AGENT_REALITY_AUDIT_2026_09_04.json`.
+
+## Critical interpretation
+
+Eight agent foundations are implemented, but **eight autonomous agents are not continuously running in the background**. The project contains deterministic engines, provider-dependent agents, explicit run pipelines and a deterministic orchestrator. Runs occur when invoked; stored `agent_runs` rows are history, not active processes.
+
+| ID | Agent | Implementation | Runtime reality | Authority boundary / current frontier |
 |---|---|---|---|---|
-| 01 | Knowledge / Understanding | IMPLEMENTED v0.1 | provider-neutral; no production model adapter | Approved sources only; output starts UNVERIFIED |
-| 02 | Strategy Formalization | IMPLEMENTED v0.1 | provider-neutral | DRAFT/candidate rules only; cannot promote |
-| 03 | XAUUSD Data | IMPLEMENTED v0.1 | immutable snapshots + broker precision; no MT5 yet | Validates data/provenance/time; no trade authority |
-| 04 | Market State / Context | IMPLEMENTED v0.1 | consumes confirmed/provisional semantic context | aligned/conflicting/ambiguous only; no trade authority |
-| 05 | Quant Research | IMPLEMENTED v0.1 | reproducible research gate; R-143/R-215 layers available | Cannot change strategy or authorize trades |
-| 06 | Independent Validation | IMPLEMENTED infrastructure v0.2 | 38-case multi-round leakage-safe packet + primary-context resolver + downstream comparison; no production independent provider yet | Never sees case answers/evidence; may abstain; cannot promote |
-| 07 | Risk Engine | IMPLEMENTED v0.1 | no broker/account connection; production policy unset | Hard veto; no default 3%/5%; cannot create signals |
-| 08 | Continuous Improvement | IMPLEMENTED v0.1 | proposal/governance foundation | Propose only; every change re-enters certification |
-
-## Strategy/evidence implementation
-
-- FU: semantic criteria, conservative raw candidate, Complete/ATT classification, threshold-free quality metrics, Casino_v7/BETA shadow comparison.
-- Liquidity: marked-level interaction + R-207 30m+ core taxonomy + threshold-free doji-liquidity semantics.
-- Doji liquidity: unmanipulated/core vs manipulated/not-core vs outside-previous-wick Attempted-FU context, without inventing a doji body-ratio threshold.
-- Zones: later Reflection lifecycle/geometry remains separate from the older classic-zone confirmation model; source evolution is not silently collapsed.
-- HCS, negation, final R-213 x3, TFS established/as-forming, True Stop, R-145 LTF execution, R-143 sequence and target hierarchy use fail-closed gates.
-- Imbalanced-candle observables remain separate from classic imbalance/FVG; no canonical `is_imbalance` classifier yet.
-- Broker precision requires explicit broker/source symbol, digits and tick size.
-- Historical component replay distinguishes `occurred_at` from `available_at`; future evidence is hidden.
-- Replay candidate registry currently has 0 READY sessions: Reflection sequence is timestamp-blocked, top-down sequence is raw-data-blocked, exercise protocol is context-only.
-
-## Ground truth
-
-- Round 02: 20 primary-labelled cases — 12 EXECUTABLE, 7 PARTIAL, 1 CONTEXT_ONLY.
-- Round 03: 7 explicit primary visual labels — 6 PARTIAL, 1 RAW_BLOCKED.
-- Round 04: 6 explicit FU-retest/zone primary cases — 6 PARTIAL with preserved cross-version/raw blockers.
-- Round 05: 5 primary negative/edge cases — 5 semantic EXECUTABLE, 0 VERIFIED.
-- Total R02–R05: **38 labelled cases** — **17 EXECUTABLE, 19 PARTIAL, 1 RAW_BLOCKED, 1 CONTEXT_ONLY**.
-- Supabase examples: **71**.
-- VERIFIED promotions from these datasets: **0**.
-
-## Blind validation
-
-Agent 06 can now receive one multi-round R02–R05 packet containing 38 cases.
-
-Per case, the packet schema is only:
-- `vector_id`
-- `source_locator`
-
-Expected label, expected class, analyst evidence and forbidden-inference notes are not present. A shared multi-option taxonomy is batch-wide only. Duplicate vector IDs across rounds are rejected before the run; missing predictions become AMBIGUOUS; all-agree still cannot promote.
-
-A real independent production provider/model validation run has not yet occurred.
+| 01 | Knowledge / Understanding | `KnowledgeAgent` v0.1.0 | provider-dependent; live DB run history exists; no background runtime observed | Approved sources only; claims start UNVERIFIED; 195 knowledge claims, 0 VERIFIED |
+| 02 | Strategy Formalization | `RulesAgent` v0.1.0 | provider-dependent; live DB run history exists; no background runtime observed | DRAFT rules only; 23 rules, 0 VERIFIED; cannot promote |
+| 03 | XAUUSD Data | `XAUUSDDataAgent` v0.1.0 + broader MT5/replay layer | deterministic validator; real Exclusive Markets March broker evidence/replay infrastructure exists; no background runtime observed | Data/provenance only; `FOREXCOM:XAUUSD` reference alignment remains incomplete |
+| 04 | Market State / Context | `MarketStateAgent` v0.1.0 | deterministic consistency gate; no background runtime observed | aligned/conflicting/ambiguous only; does not create primitives; unresolved TFS must remain ambiguous |
+| 05 | Quant Research / Backtesting | `QuantitativeResearchAgent` v0.2.0 | deterministic reproducibility/design gate; no background runtime observed | Cannot modify strategy or authorize trades; credible performance research remains upstream-blocked |
+| 06 | Independent Validation | `IndependentValidationAgent` v0.3.0 + blind/audit runtime | provider-dependent; 173-case blind corpus; checkpoint/resume/audit/multimodal infrastructure; no background runtime observed | No currently observed completed+audited full external 173-case result; never auto-promotes |
+| 07 | Deterministic Risk Engine | `DeterministicRiskEngine` v0.2.0 | deterministic hard-veto gate; no background runtime observed | No default production percentages; B-08 numeric policy unapproved; cannot create signals or directly authorize execution |
+| 08 | Continuous Improvement | `ContinuousImprovementAgent` v0.1.0 | deterministic governance/proposal gate; no background runtime observed | PROPOSAL_ONLY / rejected incomplete; no self-modification or direct promotion |
 
 ## Orchestration
 
-Current orchestrator: **v0.5**.
+Current orchestrator: **`AgentPipelineCoordinator` v0.6.0**.
 
-Critical gates do not accept free readiness booleans:
-- strategy candidate consumes actual blind-validation and historical-replay reports;
-- research reruns the full strategy evidence gate;
-- execution consumes the actual strategy readiness report;
-- a blocked report cannot be relabelled ready downstream;
-- live execution authorization remains false by construction.
+Strategy-candidate readiness consumes actual evidence-bearing reports for:
+- market data;
+- market context;
+- R-143 sequence;
+- R-145 LTF execution;
+- blind independent validation;
+- historical replay reproducibility.
 
-Canonical specification: `07_agents/PIPELINE_ORCHESTRATION_V0_5.md`.
+Research readiness additionally requires provenance-bearing source approval, strategy freeze, ground truth and a reproducible research design.
 
-## Live Supabase snapshot
+Execution-candidate readiness additionally requires a clean deterministic risk decision.
 
-- 29 active user-approved sources
-- 71 examples
-- 195 knowledge claims
-- 23 rules
-- 11 open disagreement/certification records
-- 32 agent runs
-- 0 VERIFIED knowledge claims
-- 0 VERIFIED rules
+`live_execution_authorized` remains **false by construction**.
+
+## Strategy/evidence implementation
+
+- FU: source semantic criteria, conservative observables/candidates, Complete/ATT classification, threshold-free quality measurements, helper/code shadow comparisons and intrabar evidence tooling.
+- Liquidity: explicit marked-level interaction, 30m+ core taxonomy and doji-liquidity semantics without invented thresholds.
+- HCS / negation: source-backed node grammar with fail-closed temporal/co-location and certification boundaries; March `12:31 + 12:32` staged merge remains forbidden without authority.
+- Zones / POI: dedicated geometry/lifecycle layers; source evolution and helper implementations remain separate.
+- TFS / True Stop / R-143 / R-145: explicit fail-closed semantic and sequence gates.
+- Imbalanced candle: raw observables exist; no universal broker-independent canonical classifier has been invented.
+- Broker precision: source/broker identity, digits and tick size remain explicit; no silent rounding/equivalence.
+- Replay: lookahead-safe `occurred_at` / `available_at` model and immutable broker snapshots/bundles.
+
+## Real March Phase-3 state
+
+### 2023-03-30 BUY
+- source semantic frontier: **LAOL**;
+- broker semantic frontier: **Zone/POI/HCS stage**;
+- distinctive Exclusive Markets path exists;
+- `1975` remains unresolved rather than force-matched.
+
+### 2023-03-31 SELL
+- source semantic frontier: **TFS**;
+- broker semantic frontier: **Zone/POI/HCS stage**;
+- `1986` remains useful source-labelled/control context and broker path fingerprint, not universal HCS certification.
+
+Reference state for both:
+
+`FOREXCOM:XAUUSD = REQUIRED / DEFERRED / NOT ALIGNED`
+
+Exclusive Markets `XAUUSD!` is broker/execution research geometry and must not be silently treated as canonical source geometry.
+
+## Blind validation
+
+Persisted blind corpus R02–R13: **173 cases**.
+
+Per-case expected answers and analyst evidence are hidden from Agent 06. Primary source text/image context is resolved separately. The pipeline supports strict taxonomy transport, abstention, checkpoint/resume, immutable/frozen outputs, deterministic post-run comparison and post-run audit.
+
+Current connected-state truth:
+- infrastructure implemented: YES;
+- full 173-case corpus: YES;
+- canonical Agent-06 DB row: `needs_review`, provider `none`, model `not_connected`;
+- currently observed completed and audited full external 173-case provider run: **NO**;
+- auto-promotion: **FORBIDDEN**.
+
+## Live Supabase snapshot — 2026-09-04 read-only check
+
+- 29 user-approved sources;
+- 215 examples;
+- 195 knowledge claims;
+- 23 rules;
+- 14 unresolved disagreement/certification rows;
+- 32 stored agent/support runs;
+- 0 VERIFIED knowledge claims;
+- 0 VERIFIED rules.
+
+Stored run rows are historical records. They are not proof of active background workers.
 
 ## Test status
 
-Latest confirmed GitHub Actions full regression: **347/347 PASS** on Python 3.12, run `33592412316`, job `100128924887`, commit `75fa69afcc5369d474bfd5b53646cd9a1ade7d9c`.
+Latest confirmed full regression before this status refresh:
+- workflow: `XAUUSD V2 Tests`;
+- run id: `33863854316`;
+- run number: `670`;
+- head: `99553aa65872ba16b9ace93812218ca1edabc28a`;
+- Python 3.12;
+- **1044 tests / OK**.
+
+Documentation/status commits after that checkpoint trigger their own CI and must be checked on the final head before claiming a newer green checkpoint.
+
+## Open canonical blocker families
+
+- B-01 — exact sufficient opposite-direction move/break mechanics for FU.
+- B-02 — exact R-54 70% Fibonacci anchor/orientation.
+- B-03 — universal numeric Strong-FU threshold, if one exists.
+- B-04 — broker-specific Imbalanced-Candle calibration.
+- B-05 — raw OHLC grammar for x3-by-x3.
+- B-06 — exact numeric/dynamic Accepted RR definition.
+- B-07 — synthetic 11h candle/session anchor.
+- B-08 — explicit user-approved production risk policy.
+
+Additional current semantic frontiers:
+- March BUY exact `LAOL met` meaning/application;
+- March SELL exact pre-entry `TFS` establishment evidence;
+- HCS temporal/co-location boundary;
+- canonical `FOREXCOM:XAUUSD` alignment;
+- trail-level selection boundary.
 
 ## Non-negotiable rules
 
 1. No agent self-promotes strategy truth.
 2. Ambiguity is fail-closed.
 3. Provisional bars cannot satisfy confirmed conditions.
-4. Agent 06 never receives the expected case answer or analyst-authored evidence.
-5. Actual primary context must be available for blind validation; no summary fallback.
-6. Helper code is implementation evidence only, never strategy authority.
-7. R-143 stage order cannot be skipped.
-8. Research requires frozen/versioned strategy, clean data, explicit costs and proper time splits.
-9. Risk veto outranks strategy readiness.
-10. Production risk limits require explicit approved policy.
-11. No LLM is permitted in the latency-critical live order path.
-12. EXECUTABLE coverage means implementation coverage only; it is not raw-OHLC certification and never means VERIFIED.
+4. Agent 06 never receives expected case answers or analyst-authored ground-truth evidence.
+5. Helper code is implementation evidence only, never strategy authority.
+6. R-143 stage order cannot be skipped.
+7. A broker price/path observation is not automatically a source semantic event.
+8. `LAOL respected`, `LAOL taken`, `liquidity left behind` and `LAOL met` are not silently interchangeable.
+9. Forming FU / general timeframe-strength context is not silently promoted to established TFS.
+10. Later evidence cannot retroactively certify an earlier decision point.
+11. Research requires frozen/versioned strategy, clean immutable data, explicit parameters/costs and proper time splits.
+12. Risk veto outranks strategy readiness; production risk requires explicit approved policy.
+13. No LLM is permitted in the latency-critical live order path.
+14. No profitability, production readiness, promotion or live-execution claim is allowed from the current state.
