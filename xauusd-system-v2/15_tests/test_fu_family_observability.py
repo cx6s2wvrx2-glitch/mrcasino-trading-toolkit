@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest
 
+from xauusd_v2.casino_marker_semantics import CasinoVisibleMarker
 from xauusd_v2.fu_basic_candidate import BasicFUCandidateState
 from xauusd_v2.fu_completion import FUCompletionClass
 from xauusd_v2.fu_family_observability import observe_fu_family
@@ -36,6 +37,8 @@ class FUFamilyObservabilityTests(unittest.TestCase):
         self.assertFalse(result.reflection_conditional_is_counterfactual)
         self.assertEqual(result.casino_v7_bullish, HelperFUClass.NONE)
         self.assertEqual(result.casino_v7_bearish, HelperFUClass.NONE)
+        self.assertIsNone(result.casino_v7_bullish_visible_marker)
+        self.assertIsNone(result.casino_v7_bearish_visible_marker)
         self.assertFalse(result.beta_bullish_fu_candidate)
         self.assertFalse(result.beta_bearish_fu_candidate)
         self._assert_non_certifying(result)
@@ -54,6 +57,7 @@ class FUFamilyObservabilityTests(unittest.TestCase):
         self.assertEqual(result.reflection_conditional_if_fu_criteria_met, FUCompletionClass.COMPLETE_FU)
         self.assertTrue(result.reflection_conditional_is_counterfactual)
         self.assertEqual(result.casino_v7_bullish, HelperFUClass.ATT)
+        self.assertEqual(result.casino_v7_bullish_visible_marker, CasinoVisibleMarker.ATTEMPTED_FU)
         self.assertEqual(result.casino_v7_bullish_branch, "bull_reversal_att_1")
         self.assertTrue(result.beta_bullish_fu_candidate)
         self.assertFalse(result.beta_bearish_fu_candidate)
@@ -74,6 +78,7 @@ class FUFamilyObservabilityTests(unittest.TestCase):
         self.assertEqual(result.reflection_conditional_if_fu_criteria_met, FUCompletionClass.ATTEMPTED_FU_FORM_2)
         self.assertTrue(result.reflection_conditional_is_counterfactual)
         self.assertEqual(result.casino_v7_bullish, HelperFUClass.ATT)
+        self.assertEqual(result.casino_v7_bullish_visible_marker, CasinoVisibleMarker.ATTEMPTED_FU)
         self.assertEqual(result.casino_v7_bullish_branch, "bull_continuation_att")
         self.assertTrue(result.beta_bullish_fu_candidate)
         self.assertTrue(result.beta_bearish_fu_candidate)
@@ -92,6 +97,7 @@ class FUFamilyObservabilityTests(unittest.TestCase):
         self.assertTrue(result.swept_both_sides)
         self.assertEqual(result.basic_fu_proxy, BasicFUCandidateState.AMBIGUOUS)
         self.assertEqual(result.casino_v7_bullish, HelperFUClass.FU)
+        self.assertEqual(result.casino_v7_bullish_visible_marker, CasinoVisibleMarker.STRONG_FU)
         self.assertEqual(result.casino_v7_bullish_branch, "bull_continuation_fu")
         self.assertTrue(result.beta_is_x3)
         self.assertFalse(result.beta_bullish_fu_candidate)
