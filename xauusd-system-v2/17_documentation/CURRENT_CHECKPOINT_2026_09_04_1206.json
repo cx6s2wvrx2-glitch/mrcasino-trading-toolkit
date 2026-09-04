@@ -1,0 +1,97 @@
+{
+  "checkpoint": "CURRENT_CHECKPOINT_2026_09_04_1206",
+  "created_local": "2026-09-04T12:06:00+03:00",
+  "scope": "xauusd-system-v2 only",
+  "branch": "xauusd-v2-foundation",
+  "pre_checkpoint_head": "d361e373937a536e9f78fb8c89987421dfcc7f0d",
+  "pre_checkpoint_ci": {
+    "check_run_id": 100972111638,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "history_report_schema": "casino_verified_indicator_history_report_v6",
+  "unified_event_kinds": [
+    "strong_fu",
+    "attempted_fu",
+    "beta_hcs",
+    "source_hcs_proxy",
+    "hcs_retest",
+    "beta_negation",
+    "fu_negation_proxy",
+    "hcs_plus_negation_proxy"
+  ],
+  "provenance_values": [
+    "supplied_casino_helper",
+    "supplied_beta_state_machine",
+    "source_marker_proxy"
+  ],
+  "implemented_observability": {
+    "strong_attempted": true,
+    "source_hcs_proxy": true,
+    "source_fu_negation_proxy": true,
+    "fu_negation_as_hcs_semantic_role": true,
+    "source_hcs_plus_negation_proxy": true,
+    "unified_analysis_timeline": true,
+    "summary_surfaces_unified_timeline": true
+  },
+  "fu_negation_proxy_contract": {
+    "original_may_be_strong_or_attempted": true,
+    "negating_marker_must_be_opposite_strong": true,
+    "allowed_offsets": [1, 2],
+    "latest_prior_visible_manipulation_only": true,
+    "attempted_to_opposite_attempted_is_negation": false,
+    "x3_exception_integrated": false,
+    "certified": false
+  },
+  "hcs_plus_negation_proxy_contract": {
+    "hcs_must_form_first": true,
+    "negation_must_target_hcs_second_physical_node": true,
+    "allowed_offsets": [1, 2],
+    "negation_of_negation_x3_excluded": true,
+    "certified": false
+  },
+  "march_interpretation": {
+    "1973": "clean bullish Strong FU observation in corrected supplied-helper replay",
+    "1986": "ATT-to-ATT retest remains source-style HCS control and is not promoted to FU Negation",
+    "1975": "unresolved; do not force-match",
+    "staged_1231_1232_merge": false
+  },
+  "reference_feed": {
+    "canonical": "FOREXCOM:XAUUSD",
+    "state": "REQUIRED / DEFERRED / NOT ALIGNED",
+    "broker_research_feed": "Exclusive Markets XAUUSD!"
+  },
+  "certification_flags": {
+    "fu": false,
+    "hcs": false,
+    "true_stop": false,
+    "tfs": false,
+    "r143_automation": false,
+    "performance": false,
+    "production_risk": false,
+    "promotion": false,
+    "live_execution": false
+  },
+  "open_blockers": [
+    "B-01",
+    "B-02",
+    "B-03",
+    "B-04",
+    "B-05",
+    "B-06",
+    "B-07",
+    "B-08",
+    "trail-level selection boundary",
+    "exact FOREXCOM:XAUUSD alignment",
+    "unresolved raw x3 / negation-of-negation grammar"
+  ],
+  "next_step": "Run verified March M1 and M15 history summaries and inspect the real unified analysis timeline.",
+  "final_user_validation_artifact": {
+    "required": true,
+    "visual_architecture_diagram": true,
+    "annotated_real_replay_timeline": true,
+    "must_show_provenance": true,
+    "must_show_unresolved_boundaries": true,
+    "must_not_present_candidates_as_certified_truth": true
+  }
+}
