@@ -40,7 +40,7 @@ class CasinoSourceMarkerFUNegationProxyTests(unittest.TestCase):
             # Bull ATT: manipulates below previous low but closes below previous high.
             self._bar(1, open=101.0, high=107.0, low=94.0, close=104.0),
             # Bear Strong: opposite full/helper-F close on the next candle.
-            self._bar(2, open=103.0, high=108.0, low=92.0, close=91.0),
+            self._bar(2, open=103.0, high=108.0, low=91.0, close=92.0),
         )
         run = run_source_marker_fu_negation_proxy(bars=bars)
 
@@ -95,7 +95,7 @@ class CasinoSourceMarkerFUNegationProxyTests(unittest.TestCase):
             self._bar(0, open=100.0, high=105.0, low=95.0, close=100.0),
             self._bar(1, open=101.0, high=107.0, low=94.0, close=106.0),  # bull Strong
             self._bar(2, open=105.0, high=108.0, low=95.0, close=103.0),  # bear ATT
-            self._bar(3, open=104.0, high=109.0, low=93.0, close=92.0),   # bear Strong
+            self._bar(3, open=104.0, high=109.0, low=92.0, close=93.0),   # bear Strong
         )
         run = run_source_marker_fu_negation_proxy(bars=bars)
 
@@ -108,7 +108,7 @@ class CasinoSourceMarkerFUNegationProxyTests(unittest.TestCase):
         bars = (
             self._bar(0, open=100.0, high=105.0, low=95.0, close=100.0),
             self._bar(1, open=101.0, high=107.0, low=94.0, close=104.0),
-            self._bar(2, open=103.0, high=108.0, low=92.0, close=91.0, closed=False),
+            self._bar(2, open=103.0, high=108.0, low=91.0, close=92.0, closed=False),
         )
         run = run_source_marker_fu_negation_proxy(bars=bars)
 
