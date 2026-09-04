@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .casino_marker_semantics import CasinoVisibleMarker, visible_marker_from_legacy_helper_class
 from .fu_basic_candidate import BasicFUCandidateState, classify_basic_fu_candidate
 from .fu_break_evidence import (
     FUCandidateDirection,
@@ -21,6 +22,11 @@ class FUFamilyObservability:
     relationships, direction-specific structural-break facts, the current narrow
     V2 proxy, Reflection completion evidence and the user-supplied Casino_v7/BETA
     implementation evidence side by side so divergences remain visible.
+
+    The user-clarified visible Casino legend is exposed explicitly as well:
+    ``A`` = Attempted FU and ``F`` = Strong FU. That marker meaning is stronger
+    than the legacy helper enum name, but it still does not certify the raw
+    strategy semantics behind a marker.
 
     No field in this object certifies FU semantics, Strong FU, HCS, strategy
     readiness, performance, promotion or live execution.
@@ -60,6 +66,8 @@ class FUFamilyObservability:
     casino_v7_bearish: HelperFUClass
     casino_v7_bullish_branch: str
     casino_v7_bearish_branch: str
+    casino_v7_bullish_visible_marker: CasinoVisibleMarker | None
+    casino_v7_bearish_visible_marker: CasinoVisibleMarker | None
 
     beta_bullish_fu_candidate: bool
     beta_bearish_fu_candidate: bool
@@ -197,6 +205,8 @@ def observe_fu_family(
         casino_v7_bearish=v7.bearish,
         casino_v7_bullish_branch=v7.bullish_branch,
         casino_v7_bearish_branch=v7.bearish_branch,
+        casino_v7_bullish_visible_marker=visible_marker_from_legacy_helper_class(v7.bullish),
+        casino_v7_bearish_visible_marker=visible_marker_from_legacy_helper_class(v7.bearish),
         beta_bullish_fu_candidate=beta.bullish_fu_candidate,
         beta_bearish_fu_candidate=beta.bearish_fu_candidate,
         beta_is_x3=beta.is_x3,
