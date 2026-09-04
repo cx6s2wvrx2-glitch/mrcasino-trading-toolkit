@@ -40,6 +40,7 @@ def build_summary_text(report: dict[str, Any], *, marker_limit: int = 40) -> str
         "window_event_frame_count",
         "window_event_count",
         "source_hcs_marker_proxy_candidate_count",
+        "source_marker_fu_negation_proxy_candidate_count",
         "window_gap_affected_derived_bar_count",
         "events_on_gap_affected_derived_bars",
         "reference_feed_alignment_complete",
@@ -102,6 +103,23 @@ def build_summary_text(report: dict[str, Any], *, marker_limit: int = 40) -> str
                     str(item.get("form")),
                     str(item.get("source_strength_label_proxy")),
                     f"same_direction={item.get('same_direction')}",
+                    f"latest_nodes={item.get('latest_prior_marker_node_count')}",
+                    f"gap={item.get('derived_bar_gap_affected')}",
+                )
+            )
+        )
+
+    negation_candidates = report.get("source_marker_fu_negation_proxy_candidates", [])
+    lines.append("")
+    lines.append(f"SOURCE-MARKER FU NEGATION PROXY CANDIDATES: {len(negation_candidates)}")
+    for item in negation_candidates:
+        lines.append(
+            " | ".join(
+                (
+                    f"{item.get('original_bar_time_utc')} -> {item.get('negating_bar_time_utc')}",
+                    f"{item.get('original_direction')}->{item.get('negating_direction')}",
+                    f"{item.get('original_helper_class')}->{item.get('negating_helper_class')}",
+                    f"offset=+{item.get('candle_offset')}",
                     f"latest_nodes={item.get('latest_prior_marker_node_count')}",
                     f"gap={item.get('derived_bar_gap_affected')}",
                 )
