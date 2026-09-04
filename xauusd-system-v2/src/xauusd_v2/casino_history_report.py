@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .agents.data_agent import MarketBar
+from .casino_analysis_event_stream import build_casino_analysis_event_stream
 from .casino_historical_event_runner import run_supplied_indicator_history
 from .casino_source_hcs_candidate import run_source_hcs_marker_proxy
 from .casino_source_hcs_negation_context import run_source_hcs_plus_negation_proxy
@@ -38,8 +39,9 @@ def build_verified_indicator_history_report(
     HCS or negation candidate in the requested window can depend on earlier supplied
     indicator markers. The returned event list is then clipped to
     ``[start_utc, end_utc)``. Source-style HCS, FU-negation and HCS+negation marker
-    proxies are calculated separately from BETA implementation behavior and never
-    promoted to certified strategy truth.
+    proxies are calculated separately from BETA implementation behavior and merged
+    into one provenance-aware analysis timeline. Nothing is promoted to certified
+    strategy truth.
     """
 
     start = _aware_utc(start_utc, field="start_utc")
@@ -132,6 +134,12 @@ def build_verified_indicator_history_report(
         hcs_run=source_proxy,
         negation_run=source_negation_proxy,
     )
+    analysis_stream = build_casino_analysis_event_stream(
+        supplied_run=run,
+        source_hcs_run=source_proxy,
+        source_negation_run=source_negation_proxy,
+        source_hcs_negation_run=source_hcs_negation_proxy,
+    )
 
     selected_frames = tuple(
         frame for frame in run.frames if start <= frame.bar_time_utc < end
@@ -148,6 +156,9 @@ def build_verified_indicator_history_report(
         item
         for item in source_hcs_negation_proxy.candidates
         if start <= item.negating_bar_time_utc < end
+    )
+    selected_analysis_frames = tuple(
+        frame for frame in analysis_stream.frames if start <= frame.bar_time_utc < end
     )
 
     kind_counts: Counter[str] = Counter()
@@ -254,6 +265,38 @@ def build_verified_indicator_history_report(
         for item in selected_hcs_negation_candidates
     ]
 
+    analysis_kind_counts: Counter[str] = Counter()
+    analysis_event_count = 0
+    analysis_frame_records: list[dict[str, Any]] = []
+    for frame in selected_analysis_frames:
+        frame_time = frame.bar_time_utc.astimezone(UTC)
+        frame_events: list[dict[str, Any]] = []
+        for event in frame.events:
+            analysis_kind_counts[event.kind.value] += 1
+            analysis_event_count += 1
+            frame_events.append(
+                {
+                    "kind": event.kind.value,
+                    "direction": event.direction.value,
+                    "provenance": event.provenance.value,
+                    "label": event.label,
+                    "relation": event.relation,
+                    "detail": event.detail,
+                    "candidate_only": event.candidate_only,
+                    "strategy_semantics_certified": event.strategy_semantics_certified,
+                    "reference_feed_alignment_complete": event.reference_feed_alignment_complete,
+                }
+            )
+        analysis_frame_records.append(
+            {
+                "bar_time_utc": _z(frame.bar_time_utc),
+                "timeframe": frame.timeframe,
+                "event_count": len(frame_events),
+                "events": frame_events,
+                "derived_bar_gap_affected": frame_time in gap_affected_times,
+            }
+        )
+
     selected_diag_count = sum(
         1 for item in run.diagnostics if start <= item.bar_time_utc < end
     )
@@ -263,7 +306,7 @@ def build_verified_indicator_history_report(
     source_only = source_hcs_bar_times - beta_hcs_bar_times
 
     return {
-        "schema_version": "casino_verified_indicator_history_report_v5",
+        "schema_version": "casino_verified_indicator_history_report_v6",
         "status": run.status,
         "snapshot_id": verified.snapshot.snapshot_id,
         "normalized_sha256": verified.normalized_sha256,
@@ -292,6 +335,10 @@ def build_verified_indicator_history_report(
         "source_hcs_plus_negation_proxy_status": source_hcs_negation_proxy.status,
         "source_hcs_plus_negation_proxy_candidate_count": len(selected_hcs_negation_candidates),
         "source_hcs_plus_negation_proxy_candidates": hcs_negation_candidate_records,
+        "analysis_event_stream_frame_count": len(selected_analysis_frames),
+        "analysis_event_stream_event_count": analysis_event_count,
+        "analysis_event_stream_counts_by_kind": dict(sorted(analysis_kind_counts.items())),
+        "analysis_event_stream_frames": analysis_frame_records,
         "hcs_implementation_vs_source_marker_proxy": {
             "beta_hcs_event_bar_count": len(beta_hcs_bar_times),
             "source_marker_proxy_bar_count": len(source_hcs_bar_times),
@@ -340,6 +387,8 @@ def build_verified_indicator_history_report(
             "hcs_plus_negation_composite_integrated": True,
             "hcs_plus_negation_composite_rule": "source-style HCS second physical node becomes latest manipulation and is negated by opposite Strong/F at +1/+2",
             "hcs_plus_negation_negation_of_negation_x3_excluded": True,
+            "unified_analysis_event_stream_integrated": True,
+            "unified_analysis_event_stream_preserves_provenance": True,
             "note": "Implementation replay and source-style marker proxies are deliberately separate from source-semantic certification.",
         },
         "reference_feed_required_for_feed_sensitive_geometry": "FOREXCOM:XAUUSD",
