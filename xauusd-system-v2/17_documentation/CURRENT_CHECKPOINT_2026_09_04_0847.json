@@ -1,0 +1,89 @@
+{
+  "schema_version": "xauusd_v2_current_checkpoint_v1",
+  "checkpoint_time": "2026-09-04T08:47:00+03:00",
+  "scope": "xauusd-system-v2 only",
+  "branch": "xauusd-v2-foundation",
+  "code_head_before_checkpoint_docs": "1f8096064e5a4ab57ecb9fb78ecf4c156bd537f3",
+  "checkpoint_markdown_commit": "1ece8c86442b3ebdf2d81047ad0da0a24787ea18",
+  "latest_verified_code_ci": {
+    "workflow": "XAUUSD V2 Tests",
+    "run_number": 582,
+    "run_id": 33841712832,
+    "head_sha": "1f8096064e5a4ab57ecb9fb78ecf4c156bd537f3",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "reference_feed": {
+    "required": "FOREXCOM:XAUUSD",
+    "state": "REQUIRED / DEFERRED / NOT ALIGNED"
+  },
+  "persisted_march_snapshot": {
+    "normalized_sha256": "ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24",
+    "snapshot_id": "sha256:ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24",
+    "user_local_manifest": "$HOME/.xauusd-v2/mt5/ingestions/691c1c2e9793e5eaea3291bf215147c0e02113ec910a5fc96fa751e2f8c84bc0--ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24.json"
+  },
+  "implemented": {
+    "sequential_indicator_history_runner": true,
+    "verified_persisted_mt5_history_report": true,
+    "source_style_hcs_marker_proxy_diagnostic": true,
+    "beta_vs_source_marker_proxy_comparison": true,
+    "concise_cli_summary": true,
+    "provisional_bar_exclusion": true,
+    "derived_bar_gap_observability": true
+  },
+  "source_hcs_marker_proxy": {
+    "latest_prior_marker_bar_only": true,
+    "exact_directional_wick_intersection_only": true,
+    "same_direction_required": false,
+    "strong_strong": "L3_PROXY",
+    "strong_attempted": "L2_PROXY",
+    "attempted_attempted": "L1_PROXY",
+    "fu_negation_integrated": false,
+    "source_confirmed_near_enough_retest_integrated": false,
+    "source_hcs_semantics_certified": false
+  },
+  "preserved_march_evidence": {
+    "1975": {
+      "bar_open_utc": "2023-03-30T12:31:00Z",
+      "exact_latest_basic_fu_proxy_wick_retest": true,
+      "second_basic_fu_proxy_present": false,
+      "conditional_attempted_fu_form_2_if_fu_criteria_met": true,
+      "fu_criteria_certified": false,
+      "certified_hcs": false
+    },
+    "1986": {
+      "bar_open_utc": "2023-03-31T12:36:00Z",
+      "exact_latest_basic_fu_proxy_wick_retest": true,
+      "strict_latest_wick_basic_hcs_proxy": true,
+      "certified_hcs": false
+    }
+  },
+  "next_required_action": {
+    "requires_user_local_machine": true,
+    "reason": "The verified persisted MT5 snapshot and ingestion manifest live only in the user's local $HOME/.xauusd-v2/mt5 store.",
+    "target_timeframe": "M15",
+    "window_start_utc": "2023-03-30T00:00:00Z",
+    "window_end_utc": "2023-04-01T00:00:00Z",
+    "output": "CLI --summary comparison of Strong/ATT, BETA HCS, source-style HCS marker proxy and gap diagnostics"
+  },
+  "open_blockers": [
+    "B-01 opposite-direction FU move/break mechanics",
+    "B-02 full-FU 70% fib anchor/orientation",
+    "B-03 universal numeric Strong-FU threshold",
+    "B-04 broker-specific Imbalanced-Candle calibration",
+    "B-05 x3-by-x3 raw OHLC grammar",
+    "B-06 Accepted RR numeric/dynamic definition",
+    "B-07 synthetic 11h candle/session anchor",
+    "B-08 production numeric risk policy",
+    "trail-level selection boundary",
+    "exact FOREXCOM:XAUUSD reference alignment"
+  ],
+  "governance": {
+    "strategy_semantics_certified": false,
+    "performance_claim_allowed": false,
+    "promotion_allowed": false,
+    "live_execution_authorized": false,
+    "supabase_changed": false,
+    "unrelated_projects_touched": false
+  }
+}
