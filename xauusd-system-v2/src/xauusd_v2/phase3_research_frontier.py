@@ -37,15 +37,101 @@ class ResearchFrontierResult:
     reason: str
 
 
+def find_first_source_semantic_frontier(
+    source_records: Iterable[StrategyEvidenceRecord],
+) -> ResearchFrontierResult:
+    """Return the first unresolved R-143 strategy-source stage.
+
+    This is the source-research frontier. It deliberately ignores broker price
+    success because broker geometry cannot define a missing strategy semantic.
+    """
+    source_index = index_evidence(source_records)
+    for stage in _R143_ORDER:
+        source = source_index.get(stage)
+        if source is None:
+            return ResearchFrontierResult(
+                FrontierState.MISSING_EVIDENCE,
+                stage,
+                None,
+                None,
+                None,
+                False,
+                "required source stage record is absent",
+            )
+        if source.state is not EvidenceState.OBSERVED:
+            return ResearchFrontierResult(
+                FrontierState.SOURCE_SEMANTIC_FRONTIER,
+                stage,
+                source.state,
+                None,
+                None,
+                False,
+                "this is the first unresolved strategy-source stage in R-143 order",
+            )
+
+    return ResearchFrontierResult(
+        FrontierState.COMPLETE_AT_THIS_LAYER,
+        None,
+        None,
+        None,
+        None,
+        False,
+        "all six source stages are explicit at this layer; machine/reference/risk gates still remain",
+    )
+
+
+def find_first_broker_semantic_frontier(
+    broker_records: Iterable[BrokerStageEvidenceRecord],
+) -> ResearchFrontierResult:
+    """Return the first broker semantic stage not machine-observed.
+
+    Broker path observations remain diagnostic only and never count as semantic
+    completion.
+    """
+    broker_index = index_broker_evidence(broker_records)
+    for stage in _R143_ORDER:
+        broker = broker_index.get(stage)
+        if broker is None:
+            return ResearchFrontierResult(
+                FrontierState.MISSING_EVIDENCE,
+                stage,
+                None,
+                None,
+                None,
+                False,
+                "required broker stage record is absent",
+            )
+        if broker.semantic_state is not EvidenceState.OBSERVED:
+            return ResearchFrontierResult(
+                FrontierState.BROKER_SEMANTIC_FRONTIER,
+                stage,
+                None,
+                broker.semantic_state,
+                broker.broker_path_observed,
+                False,
+                "this is the first unresolved broker semantic stage; price/path evidence cannot close it",
+            )
+
+    return ResearchFrontierResult(
+        FrontierState.COMPLETE_AT_THIS_LAYER,
+        None,
+        None,
+        None,
+        None,
+        False,
+        "all six broker semantic stages are machine-observed at this layer; reference/certification/risk gates still remain",
+    )
+
+
 def find_first_research_frontier(
     source_records: Iterable[StrategyEvidenceRecord],
     broker_records: Iterable[BrokerStageEvidenceRecord],
 ) -> ResearchFrontierResult:
-    """Find the first R-143 stage that must be resolved before downstream promotion.
+    """Find the first unresolved stage across source and broker semantic layers.
 
-    Source semantic truth is checked first because broker geometry cannot define
-    strategy truth. Broker price/path observations are preserved for diagnostics
-    but never allow a blocked source semantic stage to be skipped.
+    This combined gate is stricter than the source-research frontier. It is useful
+    before semantic promotion, while `find_first_source_semantic_frontier` is the
+    correct guide for deciding which strategy definition to research next.
     """
     source_index = index_evidence(source_records)
     broker_index = index_broker_evidence(broker_records)
