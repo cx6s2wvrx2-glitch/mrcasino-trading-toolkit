@@ -1,0 +1,98 @@
+{
+  "schema_version": "xauusd_v2_checkpoint_v1",
+  "checkpoint_time": "2026-09-04T12:55:00+03:00",
+  "timezone": "Europe/Athens",
+  "scope": "xauusd-system-v2/",
+  "branch": "xauusd-v2-foundation",
+  "verified_head_before_checkpoint": "9cdb566fef8e8a3deea7cb6847c63c7eda0b5078",
+  "ci": {
+    "check_run_id": 100984013237,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "phase_2": {
+    "status": "RESEARCH_FOUNDATION_COMPLETE_NOT_STRATEGY_CERTIFIED",
+    "event_language": [
+      "strong_fu",
+      "attempted_fu",
+      "hcs",
+      "fu_negation",
+      "hcs_plus_negation"
+    ]
+  },
+  "phase_3": {
+    "status": "STARTED_RESEARCH_ARCHITECTURE_NOT_STRATEGY_CERTIFIED",
+    "architecture_document": "17_documentation/PHASE3_STRATEGY_SEQUENCE_ARCHITECTURE_2026_09_04.md",
+    "evidence_states": [
+      "observed",
+      "missing",
+      "blocked"
+    ],
+    "implemented": [
+      "provenance_bearing_strategy_evidence_records",
+      "universal_pre_entry_context_gate",
+      "r143_evidence_adapter",
+      "true_stop_main_poi_evidence_adapter",
+      "true_stop_respect_evidence_adapter",
+      "true_stop_entry_evidence_adapter",
+      "r145_ltf_execution_evidence_adapter",
+      "greek_human_strategy_sequence_review"
+    ],
+    "files": [
+      "src/xauusd_v2/strategy_evidence_sequence.py",
+      "src/xauusd_v2/strategy_sequence_review.py",
+      "15_tests/test_strategy_evidence_sequence.py",
+      "15_tests/test_strategy_sequence_review.py"
+    ]
+  },
+  "source_sequences_preserved": {
+    "r143": [
+      "hcs_zone_reaction",
+      "tfs",
+      "laol_met",
+      "true_stop_respected",
+      "ten_min_true_stop_established",
+      "core_major_laol_targets_and_timing"
+    ],
+    "r145": [
+      "retail_liquidity_manipulated",
+      "ltf_laol_taken",
+      "one_min_negation_or_three_min_hcs_negation"
+    ]
+  },
+  "march_2023_boundaries": {
+    "1973": "clean_bullish_strong_fu_observation_in_supplied_helper_replay",
+    "1975": "unresolved_do_not_force_match",
+    "1986": "hcs_style_control_geometry_not_universal_hcs_certification",
+    "staged_merge_1231_1232": false
+  },
+  "reference_feed": {
+    "required": "FOREXCOM:XAUUSD",
+    "state": "REQUIRED_DEFERRED_NOT_ALIGNED",
+    "broker_research_feed": "Exclusive Markets XAUUSD!",
+    "equivalence_allowed": false
+  },
+  "open_blockers": [
+    "B-01",
+    "B-02",
+    "B-03",
+    "B-04",
+    "B-05",
+    "B-06",
+    "B-07",
+    "B-08",
+    "trail_level_selection",
+    "reference_feed_alignment",
+    "x3_negation_of_negation_grammar"
+  ],
+  "supabase_writes": false,
+  "strategy_truth_changed": false,
+  "fu_certified": false,
+  "hcs_certified": false,
+  "true_stop_certified": false,
+  "tfs_certified": false,
+  "profitability_claim_allowed": false,
+  "promotion_allowed": false,
+  "live_execution_authorized": false,
+  "next_step": "build_source_episode_phase3_evidence_packets_then_render_and_compare_against_real_persisted_broker_replay_without_future_leakage"
+}
