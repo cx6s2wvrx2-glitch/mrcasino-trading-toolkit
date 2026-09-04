@@ -13,6 +13,19 @@ The user explicitly clarified the visible marker legend used by the supplied Cas
 
 This clarification was supplied together with a TradingView screenshot showing the Casino indicator running on `MNQ1!` on the `15m` timeframe, with multiple visible `A` and `F` markers.
 
+## Screenshot provenance
+
+Conversation-supplied screenshot fingerprint:
+
+- image dimensions: `2048 x 1280`
+- image mode: `RGBA`
+- byte size: `474441`
+- SHA-256: `283d9fb2f2350578848144c3498765ee9f39ca31e7e91c493dcfd8511e4cef7c`
+- visible platform/context: TradingView, `MNQ1!`, `15m`
+- visible supplied indicator label: `Casino 9.0.3`
+
+The binary screenshot is not copied into the XAUUSD market-data corpus. The hash is recorded only to make this user clarification traceable to the exact supplied visual evidence.
+
 ## What this resolves
 
 Historically, the V2 shadow of the supplied helper code preserved the original implementation enum names:
