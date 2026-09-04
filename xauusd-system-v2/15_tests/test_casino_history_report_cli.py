@@ -6,7 +6,7 @@ from xauusd_v2.casino_history_report_cli import build_summary_text
 
 
 class CasinoHistoryReportCLITests(unittest.TestCase):
-    def test_summary_surfaces_beta_source_hcs_negation_and_marker_rows(self) -> None:
+    def test_summary_surfaces_beta_source_hcs_negation_composite_and_marker_rows(self) -> None:
         report = {
             "status": "SUPPLIED_INDICATOR_HISTORY_REPLAY_COMPLETE_NOT_CERTIFIED",
             "snapshot_id": "sha256:test",
@@ -23,6 +23,7 @@ class CasinoHistoryReportCLITests(unittest.TestCase):
             "window_event_count": 3,
             "source_hcs_marker_proxy_candidate_count": 1,
             "source_marker_fu_negation_proxy_candidate_count": 1,
+            "source_hcs_plus_negation_proxy_candidate_count": 1,
             "window_gap_affected_derived_bar_count": 0,
             "events_on_gap_affected_derived_bars": 0,
             "reference_feed_alignment_complete": False,
@@ -60,6 +61,8 @@ class CasinoHistoryReportCLITests(unittest.TestCase):
                     "second_bar_time_utc": "2023-03-30T12:30:00Z",
                     "first_direction": "bullish",
                     "second_direction": "bearish",
+                    "first_semantic_role": "strong_fu",
+                    "second_semantic_role": "attempted_fu",
                     "form": "strong_attempted",
                     "source_strength_label_proxy": "L2_PROXY",
                     "same_direction": False,
@@ -80,15 +83,30 @@ class CasinoHistoryReportCLITests(unittest.TestCase):
                     "derived_bar_gap_affected": False,
                 }
             ],
+            "source_hcs_plus_negation_proxy_candidates": [
+                {
+                    "hcs_first_bar_time_utc": "2023-03-30T12:15:00Z",
+                    "hcs_bar_time_utc": "2023-03-30T12:30:00Z",
+                    "negating_bar_time_utc": "2023-03-30T12:45:00Z",
+                    "hcs_direction": "bearish",
+                    "negating_direction": "bullish",
+                    "hcs_form": "strong_attempted",
+                    "negation_candle_offset": 1,
+                    "derived_bar_gap_affected": False,
+                }
+            ],
         }
 
         text = build_summary_text(report, marker_limit=1)
         self.assertIn("HCS IMPLEMENTATION vs SOURCE-MARKER PROXY", text)
         self.assertIn("BETA HCS EVENTS: 1", text)
         self.assertIn("SOURCE-STYLE HCS MARKER PROXY CANDIDATES: 1", text)
+        self.assertIn("strong_fu->attempted_fu", text)
         self.assertIn("L2_PROXY", text)
         self.assertIn("SOURCE-MARKER FU NEGATION PROXY CANDIDATES: 1", text)
         self.assertIn("att_fu->fu", text)
+        self.assertIn("SOURCE HCS + NEGATION PROXY CANDIDATES: 1", text)
+        self.assertIn("NEG -> 2023-03-30T12:45:00Z", text)
         self.assertIn("offset=+1", text)
         self.assertIn("FIRST 1 STRONG/ATT EVENTS", text)
         self.assertIn("bright_green", text)
