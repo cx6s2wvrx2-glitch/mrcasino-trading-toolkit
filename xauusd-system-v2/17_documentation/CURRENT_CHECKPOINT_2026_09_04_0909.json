@@ -1,0 +1,66 @@
+{
+  "schema_version": "xauusd_v2_checkpoint_2026_09_04_0909_v1",
+  "timestamp_local": "2026-09-04T09:09:00+03:00",
+  "scope": "xauusd-system-v2-only",
+  "supabase_writes": false,
+  "reference_feed": {
+    "required": "FOREXCOM:XAUUSD",
+    "state": "REQUIRED_DEFERRED_NOT_ALIGNED"
+  },
+  "verified_snapshot": {
+    "broker_name": "Exclusive Markets Ltd.",
+    "broker_symbol": "XAUUSD!",
+    "normalized_sha256": "ff8b8996bc70dff90e96d2c8f233f3c3a7841ece4bc620287947dd4a7558cf24"
+  },
+  "pre_fix_real_m1_probe": {
+    "superseded_for_visible_marker_fidelity": true,
+    "1973": {
+      "touches": 20,
+      "strong": 2,
+      "attempted": 4,
+      "dual": 1,
+      "beta_hcs": 2,
+      "source_marker_hcs_proxy": 2
+    },
+    "1975": {
+      "touches": 4,
+      "strong": 0,
+      "attempted": 0,
+      "dual": 0,
+      "beta_hcs": 0,
+      "source_marker_hcs_proxy": 0
+    },
+    "1986": {
+      "touches": 8,
+      "strong": 0,
+      "attempted": 3,
+      "dual": 0,
+      "beta_hcs": 0,
+      "source_marker_hcs_proxy": 1,
+      "observed_proxy_chain": [
+        "2023-03-31T12:35:00Z attempted_fu bullish",
+        "2023-03-31T12:36:00Z attempted_fu bearish exact latest-marker wick retest"
+      ]
+    }
+  },
+  "fidelity_bug": {
+    "name": "casino_v7_default_useBearBull_filter_omitted",
+    "supplied_default": true,
+    "effect": "opposite-direction ATT marker could remain visible on the same directional candle",
+    "fixed": true
+  },
+  "fix": {
+    "helper": "apply_casino_v7_default_visible_filters",
+    "updated_consumers": [
+      "src/xauusd_v2/casino_historical_event_runner.py",
+      "src/xauusd_v2/casino_source_hcs_candidate.py"
+    ],
+    "code_test_head": "312fecc5330d43d8afc3123539c81f09504998a6",
+    "ci_conclusion": "success"
+  },
+  "next_step": "rerun verified M1 source-level probe on corrected head before further marker/HCS-proxy conclusions",
+  "strategy_semantics_certified": false,
+  "performance_claim_allowed": false,
+  "promotion_allowed": false,
+  "live_execution_authorized": false
+}
