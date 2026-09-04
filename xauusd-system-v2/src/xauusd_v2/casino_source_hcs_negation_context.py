@@ -7,9 +7,13 @@ from .agents.data_agent import MarketBar
 from .casino_directional_marker_semantics import CasinoMarkerDirection
 from .casino_source_hcs_candidate import (
     SourceHCSMarkerProxyForm,
+    SourceHCSMarkerProxyRun,
     run_source_hcs_marker_proxy,
 )
-from .casino_source_negation_candidate import run_source_marker_fu_negation_proxy
+from .casino_source_negation_candidate import (
+    SourceMarkerFUNegationProxyRun,
+    run_source_marker_fu_negation_proxy,
+)
 
 
 STATUS = "SOURCE_HCS_PLUS_NEGATION_PROXY_COMPLETE_NOT_CERTIFIED"
@@ -58,6 +62,8 @@ def run_source_hcs_plus_negation_proxy(
     *,
     bars: tuple[MarketBar, ...],
     doji_body_ratio_threshold: float = 0.30,
+    hcs_run: SourceHCSMarkerProxyRun | None = None,
+    negation_run: SourceMarkerFUNegationProxyRun | None = None,
 ) -> SourceHCSPlusNegationProxyRun:
     """Observe a narrow ``HCS + negation`` composite from source-marker proxies.
 
@@ -71,30 +77,33 @@ def run_source_hcs_plus_negation_proxy(
     that node is excluded here because it enters negation-of-negation / x3 territory,
     whose raw grammar is deliberately unresolved.
 
+    Callers scanning long history may pass already-computed HCS and FU-negation runs
+    to avoid repeating the same marker traversal.
+
     This is a compositional proxy only; it does not certify HCS, FU negation, x3,
     reference-feed equivalence, strategy performance or execution readiness.
     """
 
-    hcs_run = run_source_hcs_marker_proxy(
+    resolved_hcs = hcs_run or run_source_hcs_marker_proxy(
         bars=bars,
         doji_body_ratio_threshold=doji_body_ratio_threshold,
     )
-    negation_run = run_source_marker_fu_negation_proxy(
+    resolved_negation = negation_run or run_source_marker_fu_negation_proxy(
         bars=bars,
         doji_body_ratio_threshold=doji_body_ratio_threshold,
     )
 
     hcs_by_second_node: dict[tuple[datetime, CasinoMarkerDirection], list] = {}
-    for hcs in hcs_run.candidates:
+    for hcs in resolved_hcs.candidates:
         if hcs.second_is_fu_negation_proxy:
             continue
         key = (hcs.second_bar_time_utc, hcs.second_direction)
         hcs_by_second_node.setdefault(key, []).append(hcs)
 
     candidates: list[SourceHCSPlusNegationProxyCandidate] = []
-    for negation in negation_run.candidates:
+    for negation in resolved_negation.candidates:
         key = (negation.original_bar_time_utc, negation.original_direction)
-        for hcs in hcs_by_second_node.get(key, ()): 
+        for hcs in hcs_by_second_node.get(key, ()):
             candidates.append(
                 SourceHCSPlusNegationProxyCandidate(
                     hcs_first_bar_time_utc=hcs.first_bar_time_utc,
@@ -116,8 +125,8 @@ def run_source_hcs_plus_negation_proxy(
 
     return SourceHCSPlusNegationProxyRun(
         status=STATUS,
-        hcs_candidate_count=hcs_run.candidate_count,
-        fu_negation_candidate_count=negation_run.candidate_count,
+        hcs_candidate_count=resolved_hcs.candidate_count,
+        fu_negation_candidate_count=resolved_negation.candidate_count,
         composite_candidate_count=len(candidates),
         candidates=tuple(candidates),
     )
