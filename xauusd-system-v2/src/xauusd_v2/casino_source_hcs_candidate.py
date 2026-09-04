@@ -7,7 +7,7 @@ from enum import StrEnum
 
 from .agents.data_agent import MarketBar
 from .casino_directional_marker_semantics import CasinoMarkerDirection
-from .helper_fu_doji_shadow import apply_casino_v7_current_doji_filter
+from .helper_fu_doji_shadow import apply_casino_v7_default_visible_filters
 from .helper_fu_shadow import HelperFUClass, casino_v7_core_shadow
 
 
@@ -88,11 +88,12 @@ def run_source_hcs_marker_proxy(
 
     Source material defines HCS around two FU-family nodes retesting each other and
     explicitly allows Strong FU, Attempted FU and FU-negation node families. This
-    diagnostic operationalizes only the supplied Casino_v7 Strong/ATT marker output.
-    It compares every current marker node with the marker node(s) on the most recent
-    prior bar that emitted a marker and requires exact OHLC intersection with that
-    prior marker's directional wick. It deliberately does not require same direction,
-    because that boundary is not settled by the source examples currently governed.
+    diagnostic operationalizes only the supplied Casino_v7 Strong/ATT marker output
+    after the helper's default visible filters. It compares every current marker node
+    with the marker node(s) on the most recent prior bar that emitted a marker and
+    requires exact OHLC intersection with that prior marker's directional wick. It
+    deliberately does not require same direction, because that boundary is not settled
+    by the source examples currently governed.
 
     This is observability only. Casino helper output is implementation evidence, the
     exact wick rule is a research proxy, FU-negation is not integrated here, and no
@@ -118,7 +119,7 @@ def run_source_hcs_marker_proxy(
             previous_low=previous.low,
             previous_close=previous.close,
         )
-        filtered = apply_casino_v7_current_doji_filter(
+        filtered = apply_casino_v7_default_visible_filters(
             open=current.open,
             high=current.high,
             low=current.low,
