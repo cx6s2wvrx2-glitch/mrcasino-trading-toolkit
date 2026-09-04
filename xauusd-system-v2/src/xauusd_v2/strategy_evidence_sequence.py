@@ -12,6 +12,15 @@ from .ltf_execution import (
     LTFExecutionTrigger,
     evaluate_r145_ltf_execution,
 )
+from .true_stop_semantic import (
+    LTFTrigger,
+    TrueStopEntryResult,
+    TrueStopEntryState,
+    TrueStopResult,
+    evaluate_true_stop_entry,
+    evaluate_true_stop_main_poi,
+    evaluate_true_stop_respect,
+)
 
 
 class EvidenceState(StrEnum):
@@ -27,7 +36,12 @@ class StrategyEvidenceStage(StrEnum):
     HCS_ZONE_REACTION = "hcs_zone_reaction"
     TFS_CONFIRMED = "tfs_confirmed"
     LAOL_MET = "laol_met"
+    ALL_REQUIRED_10M_PLUS_TFS_FACTORS = "all_required_10m_plus_tfs_factors"
+    TEN_MIN_PLUS_HCS_NEGATION_MANIPULATION = "ten_min_plus_hcs_negation_manipulation"
+    TRUE_STOP_MAIN_POI_CONFIRMED = "true_stop_main_poi_confirmed"
+    TRUE_STOP_POI_RESPECTED = "true_stop_poi_respected"
     TRUE_STOP_RESPECTED = "true_stop_respected"
+    FINAL_LIQUIDITY_CALCULATION = "final_liquidity_calculation"
     TEN_MIN_TRUE_STOP_ESTABLISHED = "ten_min_true_stop_established"
     TEN_MIN_TRUE_STOP_FORMING = "ten_min_true_stop_forming"
     FULL_TFS_FACTORS = "full_tfs_factors"
@@ -157,6 +171,70 @@ def evaluate_r143_evidence(records: Iterable[StrategyEvidenceRecord]) -> Backtes
     }
 
     return evaluate_r143_sequence(**values)
+
+
+def evaluate_true_stop_main_poi_evidence(records: Iterable[StrategyEvidenceRecord]) -> TrueStopResult:
+    """Compose the existing True-Stop Main-POI semantic gate from traceable evidence."""
+    indexed = index_evidence(records)
+    return evaluate_true_stop_main_poi(
+        all_required_10m_plus_tfs_factors_aligned=evidence_state_to_optional_bool(
+            indexed.get(StrategyEvidenceStage.ALL_REQUIRED_10M_PLUS_TFS_FACTORS)
+        ),
+        ten_min_plus_hcs_or_negation_manipulation_present=evidence_state_to_optional_bool(
+            indexed.get(StrategyEvidenceStage.TEN_MIN_PLUS_HCS_NEGATION_MANIPULATION)
+        ),
+    )
+
+
+def evaluate_true_stop_respect_evidence(records: Iterable[StrategyEvidenceRecord]) -> TrueStopResult:
+    """Keep Main-POI existence separate from later price respect."""
+    indexed = index_evidence(records)
+    return evaluate_true_stop_respect(
+        main_poi_confirmed=evidence_state_to_optional_bool(
+            indexed.get(StrategyEvidenceStage.TRUE_STOP_MAIN_POI_CONFIRMED)
+        ),
+        price_respected_poi=evidence_state_to_optional_bool(
+            indexed.get(StrategyEvidenceStage.TRUE_STOP_POI_RESPECTED)
+        ),
+    )
+
+
+def evaluate_true_stop_entry_evidence(
+    records: Iterable[StrategyEvidenceRecord],
+    *,
+    trigger: LTFTrigger | None,
+) -> TrueStopEntryResult:
+    """Evaluate TS entry refinement only after respect + final liquidity calculation."""
+    indexed = index_evidence(records)
+    trigger_record = indexed.get(StrategyEvidenceStage.LTF_TRIGGER)
+    true_stop_respected = evidence_state_to_optional_bool(indexed.get(StrategyEvidenceStage.TRUE_STOP_RESPECTED))
+    final_liquidity = evidence_state_to_optional_bool(indexed.get(StrategyEvidenceStage.FINAL_LIQUIDITY_CALCULATION))
+
+    if trigger_record is not None and trigger_record.state is EvidenceState.MISSING:
+        if true_stop_respected is True and final_liquidity is True:
+            return TrueStopEntryResult(
+                TrueStopEntryState.WAIT,
+                None,
+                "True Stop and final liquidity are resolved but the LTF HCS/negation trigger has not been observed",
+            )
+    if trigger_record is None or trigger_record.state is EvidenceState.BLOCKED:
+        effective_trigger = None
+    elif trigger_record.state is EvidenceState.OBSERVED:
+        if trigger is None:
+            return TrueStopEntryResult(
+                TrueStopEntryState.NOT_CERTIFIED,
+                None,
+                "LTF trigger evidence is observed but the HCS/negation trigger type was not supplied",
+            )
+        effective_trigger = trigger
+    else:
+        effective_trigger = None
+
+    return evaluate_true_stop_entry(
+        true_stop_respected=true_stop_respected,
+        ltf_trigger=effective_trigger,
+        final_liquidity_calculation_resolved=final_liquidity,
+    )
 
 
 def evaluate_r145_evidence(
