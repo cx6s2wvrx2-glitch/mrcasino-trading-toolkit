@@ -1,0 +1,45 @@
+{
+  "schema_version": "source_fidelity_fixture_v1",
+  "episode_id": "mr-casino-2023-03-31-sell-sequence",
+  "source_locator": "01_sources/PRIMARY_NARRATIVE_2023_03_30_31.md#sell-side-narrative",
+  "timeframe_seconds": 60,
+  "window_start": "2023-03-31T00:00:00Z",
+  "window_end": "2023-04-01T00:00:00Z",
+  "anchors": [
+    {
+      "anchor_id": "source_1987_56_imbalance_area",
+      "level": "1987.56",
+      "predicate": "range_touch",
+      "source_ref": "PRIMARY_NARRATIVE_2023_03_30_31#locator-c"
+    },
+    {
+      "anchor_id": "source_1983_liquidity_area",
+      "level": "1983.00",
+      "predicate": "range_touch",
+      "source_ref": "PRIMARY_NARRATIVE_2023_03_30_31#locator-c-later-continuation"
+    },
+    {
+      "anchor_id": "source_1981_reentry_area",
+      "level": "1981.00",
+      "predicate": "range_touch",
+      "source_ref": "SOURCE_NARRATED_OUTCOME_RECON_2023_03_30_31#reconstruction-b"
+    },
+    {
+      "anchor_id": "source_1980_reentry_area",
+      "level": "1980.00",
+      "predicate": "range_touch",
+      "source_ref": "SOURCE_NARRATED_OUTCOME_RECON_2023_03_30_31#reconstruction-b"
+    },
+    {
+      "anchor_id": "source_1973_minimum_target",
+      "level": "1973.00",
+      "predicate": "range_touch",
+      "source_ref": "PRIMARY_NARRATIVE_2023_03_30_31#locator-c-continuation"
+    }
+  ],
+  "expansion_probe": {
+    "window_bars": 3,
+    "source_ref": "PRIMARY_NARRATIVE_2023_03_30_31#locator-c"
+  },
+  "promotion_allowed": false
+}

@@ -1,0 +1,81 @@
+{
+  "schema_version": "phase3_broker_stage_evidence_v1",
+  "episode_id": "mr-casino-2023-03-31-sell-sequence",
+  "broker": "Exclusive Markets Ltd.",
+  "broker_symbol": "XAUUSD!",
+  "reference_feed_required": "FOREXCOM:XAUUSD",
+  "reference_feed_aligned": false,
+  "source_reconstruction_ref": "17_documentation/SOURCE_NARRATED_OUTCOME_RECON_2023_03_30_31.md#reconstruction-b",
+  "records": [
+    {
+      "stage": "hcs_zone_reaction",
+      "semantic_state": "blocked",
+      "broker_path_observed": true,
+      "evidence_ref": "SOURCE_NARRATED_OUTCOME_RECON_2023_03_30_31#reconstruction-b:1987.56-1986-region",
+      "event_time": "2023-03-31T12:34:00Z",
+      "timeframe_minutes": 1,
+      "machine_stage_certified": false,
+      "reference_feed_aligned": false,
+      "note": "Exclusive prints a 1987.57 high and trades through 1986 in the source-described region. This is a broker-path fingerprint only; the 1986 HCS semantic stage remains non-certified. Separate HCS proxy diagnostics must not be promoted into canonical source equivalence."
+    },
+    {
+      "stage": "tfs_confirmed",
+      "semantic_state": "blocked",
+      "broker_path_observed": null,
+      "evidence_ref": null,
+      "event_time": null,
+      "timeframe_minutes": null,
+      "machine_stage_certified": false,
+      "reference_feed_aligned": false,
+      "note": "The broker path does not independently establish the source TFS stage for the sell episode."
+    },
+    {
+      "stage": "laol_met",
+      "semantic_state": "blocked",
+      "broker_path_observed": null,
+      "evidence_ref": null,
+      "event_time": null,
+      "timeframe_minutes": null,
+      "machine_stage_certified": false,
+      "reference_feed_aligned": false,
+      "note": "Major downside targets are visible in the narrative and later price path, but no canonical broker-side LAOL_MET semantic event is certified."
+    },
+    {
+      "stage": "true_stop_respected",
+      "semantic_state": "blocked",
+      "broker_path_observed": null,
+      "evidence_ref": null,
+      "event_time": null,
+      "timeframe_minutes": null,
+      "machine_stage_certified": false,
+      "reference_feed_aligned": false,
+      "note": "No broker-side machine-certified respected True Stop event is available for this sell packet."
+    },
+    {
+      "stage": "ten_min_true_stop_established",
+      "semantic_state": "blocked",
+      "broker_path_observed": null,
+      "evidence_ref": null,
+      "event_time": null,
+      "timeframe_minutes": 10,
+      "machine_stage_certified": false,
+      "reference_feed_aligned": false,
+      "note": "No broker-side machine-certified 10m True Stop establishment event is available for this sell packet."
+    },
+    {
+      "stage": "targets_and_timing",
+      "semantic_state": "blocked",
+      "broker_path_observed": true,
+      "evidence_ref": "SOURCE_NARRATED_OUTCOME_RECON_2023_03_30_31#reconstruction-b:1973",
+      "event_time": "2023-03-31T17:19:00Z",
+      "timeframe_minutes": 1,
+      "machine_stage_certified": false,
+      "reference_feed_aligned": false,
+      "note": "Exclusive later trades through the source-stated 1973 minimum target, but the reached target path does not certify the complete R-143 target-and-timing stage."
+    }
+  ],
+  "strategy_truth_changed": false,
+  "performance_claim_allowed": false,
+  "promotion_allowed": false,
+  "live_execution_authorized": false
+}

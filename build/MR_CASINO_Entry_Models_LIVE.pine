@@ -1,0 +1,716 @@
+//@version=6
+indicator("MR CASINO - Entry Models LIVE", overlay=true, max_lines_count=500, max_labels_count=500, max_boxes_count=500)
+
+// v2.8: PERSISTENCE — keep full trade history per TF, never delete within TradingView's 500-object cap.
+//   maxSet raised to 250 (=500 boxes / 2 per setup). All TF trade counts (3m..1h) are < 250 so NOTHING is pruned.
+// v2.7: CLEAN PATH filter (Casino [CONF]: "target ONE side", "two sides of liquidity at once = no-trade").
+//   Base: gate = permissive multi-TF TS/HCS correspondence. Selectivity = liq-taken + session + MAJOR. Mgmt: SL$, BE+50% @+$, rest to MAJOR opposite.
+// v2.8-alert: added alert() on each taken trade (BUY/SELL) for multi-TF phone alerts. No logic change.
+// v2.8-cap1: OPTIONAL input "cap1" (default OFF) — when ON, skips a new signal while a prior setup is still open (state==1). No change when OFF.
+// v2.9-ladder: TF-adaptive partials (FTMO). <=5m: 20% @2R + 80% runner to MAJOR. >=15m (incl 10m): 10% @2R, 30% @6R, 60% runner to MAJOR. BE after 1st partial. Net R stat = realized ladder R.
+// v2.9b-defaults: MTF-SYNC config baked as DEFAULT -> HTF gate 30m+1h, liq-taken OFF, clean-path OFF (matches the analysis trade set). No manual input tweaking needed.
+// v2.9d-visual: BOLD solid partial-level lines per trade (2R bright yellow, 6R bright orange, width 2) so the 10/30/60 ladder is clearly visible on chart.
+// v3.1-intrabar: alert fires INTRABAR (once_per_bar) so box+entry appears on the FORMING candle, not on close (forming signal, may repaint). v3.0-SL: STRUCTURAL SL at the 1st FU wick (+buffer) instead of fixed $2.5. R = entry<->SL distance (variable). Filter: skip if SL > maxSlDol ($5). Entry/target/ladder/HTF/session UNCHANGED.
+
+// ===================== INPUTS =====================
+gG = "Gate / detection"
+lookK   = input.int(25, "HCS lookback (bars)", minval=2, maxval=60, group=gG)
+lqLen   = input.int(5,  "Liquidity pivot length", minval=2, maxval=25, group=gG)
+dojiThr = input.float(0.11, "Doji body/range max", step=0.02, group=gG)
+gE = "Entry model"
+useHalf = input.bool(true, "Entry at 50% of HCS wick (off = wick start)", group=gE)
+minKeepR= input.float(1.0, "Min RR to target to keep setup", step=0.5, minval=0, group=gE)
+minShow = input.int(4,  "Min candles to show a closed setup", minval=1, maxval=20, group=gE)
+maxSet  = input.int(250, "Max setups kept (history)", minval=1, maxval=250, group=gE)
+gM = "Management (Casino)"
+slDol = input.float(2.5, "SL $ from entry (2-3$)", step=0.5, minval=0.1, group=gM)
+beDol = input.float(5.0, "BE + 50% partial at +$", step=0.5, minval=0.1, group=gM)
+gF = "Selectivity (Casino gate)"
+reqStrong = input.bool(false, "Require strong FU x strong FU (stricter)", group=gF)
+useHTF    = input.bool(true, "Align with HTF prevalent direction", group=gF)
+useBiasP  = input.bool(false, "HTF bias = PERSISTENT (>=50% negation) not last-HCS", group=gF)
+useLiqTaken = input.bool(false, "Require MAJOR liquidity TAKEN before entry", group=gF)
+liqWindow = input.int(25, "Liquidity-taken window (bars before HCS)", minval=1, maxval=60, group=gF)
+htfTf1    = input.timeframe("30",  "HTF trend 1 (MTF-SYNC 30m)", group=gF)
+htfTf2    = input.timeframe("60", "HTF trend 2 (MTF-SYNC 1h)", group=gF)
+reqMajor  = input.bool(true, "Target must be MAJOR liquidity (4 types)", group=gF)
+useTgtAlign = input.bool(false, "v2.6: Target = MOST-MAJOR (aligned with HTF 1h/4h major pool) [NULL - off]", group=gF)
+alignTolAtr = input.float(0.5, "Target-align tolerance (x ATR)", step=0.1, minval=0.1, group=gF)
+useCleanPath = input.bool(false, "v2.7: CLEAN PATH (skip if opposite MAJOR draw closer than target)", group=gF)
+capOne   = input.bool(false, "cap1: max 1 open position (skip new signal while one is open)", group=gF)
+tslHi     = input.timeframe("60", "TSL trend TF high (1h)", group=gF)
+negPct    = input.float(0.5, "Trend negation retrace (fraction of swing)", step=0.05, minval=0.1, maxval=1.0, group=gF)
+imbMult   = input.float(1.5, "IMB displacement (range >= x*ATR)", step=0.1, group=gF)
+dblAtr    = input.float(0.15, "Double top/bottom tolerance (x ATR)", step=0.05, group=gF)
+gT = "Session (no Asian)"
+useSess = input.bool(true, "Only London + NY (exclude Asian)", group=gT)
+sTz     = input.string("Europe/London", "Session timezone", group=gT)
+lonS    = input.session("0700-1200", "London window", group=gT)
+nyS     = input.session("1200-1730", "NY window", group=gT)
+gS = "Style"
+colLong = input.color(#26a69a, "Long",       group=gS)
+colShort= input.color(#ef5350, "Short",      group=gS)
+colRisk = input.color(#ef5350, "Risk box (red)",   group=gS)
+colRew  = input.color(#26a69a, "Reward box (green)", group=gS)
+riskT   = input.int(62, "Risk box transparency", minval=0, maxval=95, group=gS)
+rewT    = input.int(74, "Reward box transparency", minval=0, maxval=95, group=gS)
+showTbl = input.bool(true,"Show stats table", group=gS)
+showFac = input.bool(true,"Show long/short split", group=gS)
+showAudit = input.bool(false, "Audit read-back labels (for analysis)", group=gS)
+auditFrom = input.time(timestamp("2026-09-15T00:00:00"), "Audit from", group=gS)
+bufDol   = input.float(0.2, "SL buffer beyond 1st FU wick ($)", step=0.1, minval=0.0, group=gM)
+maxSlDol = input.float(5.0, "Max SL ($) - skip if wider", step=0.5, minval=0.5, group=gM)
+
+// ===================== SESSION + day count =====================
+inLon  = not na(time(timeframe.period, lonS, sTz))
+inNY_  = not na(time(timeframe.period, nyS, sTz))
+inSess = not useSess or inLon or inNY_
+var int nDays = 0
+dCh = ta.change(time("D"))
+if not na(dCh) and dCh != 0
+    nDays += 1
+atr14 = ta.atr(14)
+
+// ---- v2.9 TF-adaptive partial ladder (FTMO) ----
+isSmallTF = timeframe.in_seconds() <= 300
+pf1   = isSmallTF ? 0.20 : 0.10
+pf2   = isSmallTF ? 0.0  : 0.30
+pfRun = 1.0 - pf1 - pf2
+pL1   = 2.0
+pL2   = 6.0
+
+// ===================== FU / ATT FU =====================
+sweepH = high > high[1]
+sweepL = low  < low[1]
+engulf = sweepH and sweepL
+sfuBull = engulf and close > high[1]
+sfuBear = engulf and close < low[1]
+notStrong = not sfuBull and not sfuBear
+afuBull = notStrong and sweepL and close >= low[1]
+afuBear = notStrong and sweepH and close <= high[1]
+bull_fu = sfuBull or afuBull
+bear_fu = sfuBear or afuBear
+
+// ===================== v2 OBSERVATION LAYER (source-locked only; does NOT change entries) =====================
+// x3 candle (BETA-locked): outside bar taking BOTH sides, both wicks present, directional body.
+bothWicks = math.max(open, close) < high and math.min(open, close) > low
+isX3      = high > high[1] and low < low[1] and bothWicks
+x3Bull    = isX3 and close > open
+x3Bear    = isX3 and close < open
+// Self-negation (BETA-locked): outside bar but BODY stays INSIDE previous range (indecisive). Excludes x3.
+snBullRaw = high > high[1] and low < low[1] and math.max(open, close) < high[1] and math.min(open, close) > low[1] and open < close
+snBearRaw = high > high[1] and low < low[1] and math.max(open, close) < high[1] and math.min(open, close) > low[1] and open > close
+snBull    = snBullRaw and not isX3
+snBear    = snBearRaw and not isX3
+// Immediate negation (source-locked, lesson 05): next candle is OPPOSITE FU closing beyond the prior FU body.
+negBear   = bear_fu and bull_fu[1] and close < math.min(open[1], close[1])
+negBull   = bull_fu and bear_fu[1] and close > math.max(open[1], close[1])
+// markers (observation only)
+plotshape(x3Bull, "x3+", shape.diamond, location.belowbar, color=color.new(#00e5ff, 0), size=size.tiny)
+plotshape(x3Bear, "x3-", shape.diamond, location.abovebar, color=color.new(#00e5ff, 0), size=size.tiny)
+plotshape(snBull or snBear, "SN", shape.xcross, location.abovebar, color=color.new(#ba68c8, 0), size=size.tiny)
+plotshape(negBull, "neg+", shape.flag, location.belowbar, color=color.new(#ff9800, 0), size=size.tiny)
+plotshape(negBear, "neg-", shape.flag, location.abovebar, color=color.new(#ff9800, 0), size=size.tiny)
+
+// ===================== HCS + strength grade =====================
+hcsBull = false
+hcsBullStrong = false
+float hcsBullFuLo = na
+if bull_fu
+    for m = 2 to lookK
+        bBot = math.min(open[m], close[m])
+        if not hcsBull and bull_fu[m] and low >= low[m] and low <= bBot
+            clean = true
+            for k = 1 to m - 1
+                if low[k] <= low
+                    clean := false
+            if clean
+                hcsBull := true
+                hcsBullStrong := sfuBull and sfuBull[m]
+                hcsBullFuLo := low[m]
+hcsBear = false
+hcsBearStrong = false
+float hcsBearFuHi = na
+if bear_fu
+    for m = 2 to lookK
+        bTop = math.max(open[m], close[m])
+        if not hcsBear and bear_fu[m] and high <= high[m] and high >= bTop
+            clean = true
+            for k = 1 to m - 1
+                if high[k] >= high
+                    clean := false
+            if clean
+                hcsBear := true
+                hcsBearStrong := sfuBear and sfuBear[m]
+                hcsBearFuHi := high[m]
+
+// ===================== v2 OBS counts (after HCS defined; one per closed bar) =====================
+var int cX3 = 0
+var int cSN = 0
+var int cNeg = 0
+var int cHcsStrong = 0
+var int cHcsWeak = 0
+if barstate.isconfirmed
+    if x3Bull or x3Bear
+        cX3 += 1
+    if snBull or snBear
+        cSN += 1
+    if negBull or negBear
+        cNeg += 1
+    if hcsBull or hcsBear
+        if (hcsBull and hcsBullStrong) or (hcsBear and hcsBearStrong)
+            cHcsStrong += 1
+        else
+            cHcsWeak += 1
+
+// ===================== INTRABAR REPAINT TRACKER (live bars only) =====================
+// Counts HCS that FORM intrabar (box appears on the forming candle) but NO LONGER hold at close = repaint.
+var int  nFormedIB  = 0
+var int  nRepaintIB = 0
+var bool formedThisBar = false
+sigNowRP = hcsBull or hcsBear
+if barstate.isrealtime
+    if sigNowRP and not formedThisBar
+        formedThisBar := true
+        nFormedIB += 1
+    if barstate.isconfirmed
+        if formedThisBar and not sigNowRP
+            nRepaintIB += 1
+        formedThisBar := false
+
+// ===================== last-HCS direction (OLD gate) =====================
+f_htfHCS() =>
+    var int d = 0
+    sH = high > high[1]
+    sL = low  < low[1]
+    eng = sH and sL
+    sB  = eng and close > high[1]
+    sBe = eng and close < low[1]
+    hb = false
+    he = false
+    if sB
+        for m = 2 to 25
+            bBot = math.min(open[m], close[m])
+            if not hb and sB[m] and low >= low[m] and low <= bBot
+                hb := true
+    if sBe
+        for m = 2 to 25
+            bTop = math.max(open[m], close[m])
+            if not he and sBe[m] and high <= high[m] and high >= bTop
+                he := true
+    if hb
+        d := 1
+    else if he
+        d := -1
+    d
+hcsH1  = request.security(syminfo.tickerid, htfTf1, f_htfHCS(), lookahead=barmerge.lookahead_off)
+hcsH2  = request.security(syminfo.tickerid, htfTf2, f_htfHCS(), lookahead=barmerge.lookahead_off)
+
+// ===================== PERSISTENT direction (negate on >=50% retrace) =====================
+f_tslDir() =>
+    var int   d   = 0
+    var float sLo = na
+    var float sHi = na
+    sH = high > high[1]
+    sL = low  < low[1]
+    eng = sH and sL
+    sB  = eng and close > high[1]
+    sBe = eng and close < low[1]
+    hb = false
+    he = false
+    if sB
+        for m = 2 to 25
+            bBot = math.min(open[m], close[m])
+            if not hb and sB[m] and low >= low[m] and low <= bBot
+                hb := true
+    if sBe
+        for m = 2 to 25
+            bTop = math.max(open[m], close[m])
+            if not he and sBe[m] and high <= high[m] and high >= bTop
+                he := true
+    if d == 0
+        if hb
+            d := 1
+            sLo := low
+            sHi := high
+        else if he
+            d := -1
+            sHi := high
+            sLo := low
+    else if d == 1
+        sHi := math.max(sHi, high)
+        negLvl = sHi - negPct * (sHi - sLo)
+        if not na(sLo) and close < negLvl
+            if he
+                d := -1
+                sHi := high
+                sLo := low
+            else
+                d := 0
+    else if d == -1
+        sLo := math.min(sLo, low)
+        negLvl = sLo + negPct * (sHi - sLo)
+        if not na(sHi) and close > negLvl
+            if hb
+                d := 1
+                sLo := low
+                sHi := high
+            else
+                d := 0
+    d
+bias1hP  = request.security(syminfo.tickerid, tslHi, f_tslDir(), lookahead=barmerge.lookahead_off)
+bias4hP  = request.security(syminfo.tickerid, "240", f_tslDir(), lookahead=barmerge.lookahead_off)
+
+// ===================== HTF MAJOR liquidity pools (for target alignment = "most major") =====================
+f_htfMaj() =>
+    a = ta.atr(14)
+    phF = ta.pivothigh(lqLen, lqLen)
+    plF = ta.pivotlow(lqLen, lqLen)
+    var float[] blF = array.new_float()
+    var float[] slF = array.new_float()
+    var float lPHf = na
+    var float lPLf = na
+    if not na(phF)
+        rP  = high[lqLen] - low[lqLen]
+        bP  = math.abs(close[lqLen] - open[lqLen])
+        upW = high[lqLen] - math.max(open[lqLen], close[lqLen])
+        tDj = rP > 0 and bP <= dojiThr * rP
+        tBw = rP > 0 and upW >= 1.5 * bP and upW >= 0.4 * rP
+        tIm = rP > 0 and bP >= 0.9 * rP
+        tDb = not na(lPHf) and math.abs(phF - lPHf) <= dblAtr * a
+        if tDj or tBw or tIm or tDb
+            array.push(blF, phF)
+        lPHf := phF
+    if not na(plF)
+        rP  = high[lqLen] - low[lqLen]
+        bP  = math.abs(close[lqLen] - open[lqLen])
+        dnW = math.min(open[lqLen], close[lqLen]) - low[lqLen]
+        tDj = rP > 0 and bP <= dojiThr * rP
+        tBw = rP > 0 and dnW >= 1.5 * bP and dnW >= 0.4 * rP
+        tIm = rP > 0 and bP >= 0.9 * rP
+        tDb = not na(lPLf) and math.abs(plF - lPLf) <= dblAtr * a
+        if tDj or tBw or tIm or tDb
+            array.push(slF, plF)
+        lPLf := plF
+    if array.size(blF) > 0
+        for i = array.size(blF) - 1 to 0
+            if high > array.get(blF, i)
+                array.remove(blF, i)
+    if array.size(slF) > 0
+        for i = array.size(slF) - 1 to 0
+            if low < array.get(slF, i)
+                array.remove(slF, i)
+    while array.size(blF) > 8
+        array.shift(blF)
+    while array.size(slF) > 8
+        array.shift(slF)
+    float b0 = array.size(blF) > 0 ? array.get(blF, array.size(blF) - 1) : na
+    float b1 = array.size(blF) > 1 ? array.get(blF, array.size(blF) - 2) : na
+    float s0 = array.size(slF) > 0 ? array.get(slF, array.size(slF) - 1) : na
+    float s1 = array.size(slF) > 1 ? array.get(slF, array.size(slF) - 2) : na
+    [b0, b1, s0, s1]
+[hb1a, hb1b, hs1a, hs1b] = request.security(syminfo.tickerid, htfTf1, f_htfMaj(), lookahead=barmerge.lookahead_off)
+[hb4a, hb4b, hs4a, hs4b] = request.security(syminfo.tickerid, htfTf2, f_htfMaj(), lookahead=barmerge.lookahead_off)
+
+// ===================== LIQUIDITY POOLS + MAJOR (4 Casino types) + TAKEN tracking =====================
+ph = ta.pivothigh(lqLen, lqLen)
+pl = ta.pivotlow(lqLen, lqLen)
+var float[] buyLiq  = array.new_float()
+var bool[]  buyMaj  = array.new_bool()
+var int[]   buyLiqType  = array.new_int()
+var float[] sellLiq = array.new_float()
+var bool[]  sellMaj = array.new_bool()
+var int[]   sellLiqType = array.new_int()
+var int lastMajBuy  = -1000000
+var int lastMajSell = -1000000
+var float lastPH = na
+var float lastPL = na
+if not na(ph)
+    rP  = high[lqLen] - low[lqLen]
+    bP  = math.abs(close[lqLen] - open[lqLen])
+    upW = high[lqLen] - math.max(open[lqLen], close[lqLen])
+    tDoji = rP > 0 and bP <= dojiThr * rP
+    tBigW = rP > 0 and upW >= 1.5 * bP and upW >= 0.4 * rP
+    tImb  = rP > 0 and bP >= 0.9 * rP
+    tDbl  = not na(lastPH) and math.abs(ph - lastPH) <= dblAtr * atr14
+    array.push(buyLiq, ph)
+    array.push(buyMaj, tDoji or tBigW or tImb or tDbl)
+    array.push(buyLiqType, tDoji ? 1 : tDbl ? 2 : tImb ? 3 : tBigW ? 4 : 0)
+    lastPH := ph
+if not na(pl)
+    rP  = high[lqLen] - low[lqLen]
+    bP  = math.abs(close[lqLen] - open[lqLen])
+    dnW = math.min(open[lqLen], close[lqLen]) - low[lqLen]
+    tDoji = rP > 0 and bP <= dojiThr * rP
+    tBigW = rP > 0 and dnW >= 1.5 * bP and dnW >= 0.4 * rP
+    tImb  = rP > 0 and bP >= 0.9 * rP
+    tDbl  = not na(lastPL) and math.abs(pl - lastPL) <= dblAtr * atr14
+    array.push(sellLiq, pl)
+    array.push(sellMaj, tDoji or tBigW or tImb or tDbl)
+    array.push(sellLiqType, tDoji ? 1 : tDbl ? 2 : tImb ? 3 : tBigW ? 4 : 0)
+    lastPL := pl
+if array.size(buyLiq) > 0
+    for i = array.size(buyLiq) - 1 to 0
+        if high > array.get(buyLiq, i)
+            if array.get(buyMaj, i)
+                lastMajBuy := bar_index
+            array.remove(buyLiq, i)
+            array.remove(buyMaj, i)
+            array.remove(buyLiqType, i)
+if array.size(sellLiq) > 0
+    for i = array.size(sellLiq) - 1 to 0
+        if low < array.get(sellLiq, i)
+            if array.get(sellMaj, i)
+                lastMajSell := bar_index
+            array.remove(sellLiq, i)
+            array.remove(sellMaj, i)
+            array.remove(sellLiqType, i)
+while array.size(buyLiq) > 60
+    array.shift(buyLiq)
+    array.shift(buyMaj)
+    array.shift(buyLiqType)
+while array.size(sellLiq) > 60
+    array.shift(sellLiq)
+    array.shift(sellMaj)
+    array.shift(sellLiqType)
+
+// ===================== SETUP STATE =====================
+var float[] sEntry = array.new_float()
+var float[] sSL    = array.new_float()
+var float[] sTP    = array.new_float()
+var float[] sRR    = array.new_float()
+var int[]   sDir   = array.new_int()
+var int[]   sState = array.new_int()
+var int[]   sFill  = array.new_int()
+var bool[]  sBEon  = array.new_bool()
+var box[]   sRisk  = array.new_box()
+var box[]   sRew   = array.new_box()
+var label[] sLbl   = array.new_label()
+var float[] sBank  = array.new_float()
+var bool[]  sP2    = array.new_bool()
+var line[]  sPl1   = array.new_line()
+var line[]  sPl2   = array.new_line()
+var float[] sRiskR = array.new_float()
+var string[] sAudit = array.new_string()
+
+var int   nSet    = 0
+var int   nWin    = 0
+var int   nLoss   = 0
+var int   nBE     = 0
+var float sumWinR = 0.0
+var int nShortT = 0
+var int nLongT  = 0
+var int nAligned  = 0
+var int nFallback = 0
+var int nCutPath  = 0
+var float sumRealR = 0.0
+
+// ---- create + ENTER on the HCS itself (inline) ----
+newLong  = hcsBull
+newShort = hcsBear
+if newLong or newShort
+    dir     = newLong ? 1 : -1
+    wickExt = newLong ? low : high
+    bodyEnd = newLong ? math.min(open, close) : math.max(open, close)
+    entry   = useHalf ? (wickExt + bodyEnd) / 2 : bodyEnd
+    float fuExt = dir == 1 ? hcsBullFuLo : hcsBearFuHi
+    sl      = dir == 1 ? (not na(fuExt) ? fuExt - bufDol : entry - slDol) : (not na(fuExt) ? fuExt + bufDol : entry + slDol)
+    risk    = math.abs(entry - sl)
+    tol = alignTolAtr * atr14
+    float tp = na
+    bool tpAligned = false
+    float nearV = na
+    int   nearVType = 0
+    bool  nearVMaj = false
+    float nearD = 1e18
+    float bestV = na
+    int   bestSc = 0
+    float bestD  = 1e18
+    if dir == 1
+        if array.size(buyLiq) > 0
+            for i = 0 to array.size(buyLiq) - 1
+                v = array.get(buyLiq, i)
+                mj = array.get(buyMaj, i)
+                if v > entry and (not reqMajor or mj)
+                    d = v - entry
+                    if d < nearD
+                        nearD := d
+                        nearV := v
+                        nearVType := array.get(buyLiqType, i)
+                        nearVMaj := mj
+                    sc = (not na(hb1a) and math.abs(v - hb1a) <= tol ? 1 : 0) + (not na(hb1b) and math.abs(v - hb1b) <= tol ? 1 : 0) + (not na(hb4a) and math.abs(v - hb4a) <= tol ? 1 : 0) + (not na(hb4b) and math.abs(v - hb4b) <= tol ? 1 : 0)
+                    if sc > 0 and (sc > bestSc or (sc == bestSc and d < bestD))
+                        bestSc := sc
+                        bestD  := d
+                        bestV  := v
+    else
+        if array.size(sellLiq) > 0
+            for i = 0 to array.size(sellLiq) - 1
+                v = array.get(sellLiq, i)
+                mj = array.get(sellMaj, i)
+                if v < entry and (not reqMajor or mj)
+                    d = entry - v
+                    if d < nearD
+                        nearD := d
+                        nearV := v
+                        nearVType := array.get(sellLiqType, i)
+                        nearVMaj := mj
+                    sc = (not na(hs1a) and math.abs(v - hs1a) <= tol ? 1 : 0) + (not na(hs1b) and math.abs(v - hs1b) <= tol ? 1 : 0) + (not na(hs4a) and math.abs(v - hs4a) <= tol ? 1 : 0) + (not na(hs4b) and math.abs(v - hs4b) <= tol ? 1 : 0)
+                    if sc > 0 and (sc > bestSc or (sc == bestSc and d < bestD))
+                        bestSc := sc
+                        bestD  := d
+                        bestV  := v
+    if useTgtAlign and not na(bestV)
+        tp := bestV
+        tpAligned := true
+    else
+        tp := nearV
+    rrT = na(tp) or risk <= 0 ? na : math.abs(tp - entry) / risk
+    bool pathOK = true
+    if useCleanPath and not na(tp)
+        if dir == 1
+            float oppNear = na
+            if array.size(sellLiq) > 0
+                for i = 0 to array.size(sellLiq) - 1
+                    ov = array.get(sellLiq, i)
+                    omj = array.get(sellMaj, i)
+                    if omj and ov < entry and (na(oppNear) or ov > oppNear)
+                        oppNear := ov
+            if not na(oppNear) and (entry - oppNear) < (tp - entry)
+                pathOK := false
+        else
+            float oppNear = na
+            if array.size(buyLiq) > 0
+                for i = 0 to array.size(buyLiq) - 1
+                    ov = array.get(buyLiq, i)
+                    omj = array.get(buyMaj, i)
+                    if omj and ov > entry and (na(oppNear) or ov < oppNear)
+                        oppNear := ov
+            if not na(oppNear) and (oppNear - entry) < (entry - tp)
+                pathOK := false
+    strongOK = not reqStrong or (dir == 1 ? hcsBullStrong : hcsBearStrong)
+    persHtfOK = not useHTF or ((bias1hP == 0 or dir == bias1hP) and (bias4hP == 0 or dir == bias4hP))
+    lastHtfOK = not useHTF or ((hcsH1 == 0 or dir == hcsH1) and (hcsH2 == 0 or dir == hcsH2))
+    htfOK = useBiasP ? persHtfOK : lastHtfOK
+    liqOK = not useLiqTaken or (dir == -1 ? (bar_index - lastMajBuy) <= liqWindow : (bar_index - lastMajSell) <= liqWindow)
+    baseGate = strongOK and htfOK and inSess and liqOK
+    int openNow = 0
+    if array.size(sState) > 0
+        for oi = 0 to array.size(sState) - 1
+            if array.get(sState, oi) == 1
+                openNow += 1
+    slOK = risk > 0 and risk <= maxSlDol
+    takeIt = baseGate and pathOK and slOK and (not capOne or openNow == 0)
+    validTgt = not na(tp) and not na(rrT) and rrT >= minKeepR
+    if validTgt and baseGate and not pathOK
+        nCutPath += 1
+    if validTgt and takeIt
+        col = dir == 1 ? colLong : colShort
+        rb = box.new(bar_index, entry, bar_index, sl, border_color=color.new(colRisk, 20), bgcolor=color.new(colRisk, riskT))
+        gb = box.new(bar_index, entry, bar_index, tp, border_color=color.new(colRew, 20), bgcolor=color.new(colRew, rewT))
+        lb = label.new(bar_index, sl, dir == 1 ? "▲" : "▼", style=dir == 1 ? label.style_label_up : label.style_label_down, color=color.new(col, 15), textcolor=color.white, size=size.tiny)
+        plPrice1 = entry + (dir == 1 ? 1 : -1) * pL1 * risk
+        pl1ln = line.new(bar_index, plPrice1, bar_index, plPrice1, color=color.new(#ffea00, 0), style=line.style_solid, width=2)
+        line pl2ln = na
+        if pf2 > 0
+            plPrice2 = entry + (dir == 1 ? 1 : -1) * pL2 * risk
+            pl2ln := line.new(bar_index, plPrice2, bar_index, plPrice2, color=color.new(#ff6d00, 0), style=line.style_solid, width=2)
+        array.push(sEntry, entry)
+        array.push(sSL, sl)
+        array.push(sTP, tp)
+        array.push(sRR, rrT)
+        array.push(sDir, dir)
+        array.push(sState, 1)
+        array.push(sFill, bar_index)
+        array.push(sBEon, false)
+        array.push(sBank, 0.0)
+        array.push(sP2, false)
+        array.push(sRiskR, risk)
+        array.push(sPl1, pl1ln)
+        array.push(sPl2, pl2ln)
+        array.push(sRisk, rb)
+        array.push(sRew, gb)
+        array.push(sLbl, lb)
+        zoneStr = ((dir == hcsH2 or hcsH2 == 0) and (dir == bias4hP or bias4hP == 0)) ? "CONT" : "REV"
+        tgtT = nearVType == 1 ? "doji" : nearVType == 2 ? "dbl" : nearVType == 3 ? "imb" : nearVType == 4 ? "bigwick" : "na"
+        lqTk = (dir == 1 ? (bar_index - lastMajSell) <= liqWindow : (bar_index - lastMajBuy) <= liqWindow) ? "Y" : "N"
+        audit = "AUDIT|t=" + str.format_time(time, "yyyy-MM-dd HH:mm", "GMT+3") + "|tf=" + timeframe.period + "|dir=" + (dir == 1 ? "BUY" : "SELL") + "|e=" + str.tostring(entry, format.mintick) + "|tsl=" + str.tostring(sl, format.mintick) + "|tp=" + str.tostring(tp, format.mintick) + "|rr=" + str.tostring(rrT, "#.#") + "|tgt=" + tgtT + "|maj=" + (nearVMaj ? "Y" : "N") + "|h30=" + (hcsH1 == 1 ? "+" : hcsH1 == -1 ? "-" : "0") + "|h1=" + (hcsH2 == 1 ? "+" : hcsH2 == -1 ? "-" : "0") + "|h4=" + (bias4hP == 1 ? "+" : bias4hP == -1 ? "-" : "0") + "|zone=" + zoneStr + "|lqTaken=" + lqTk
+        array.push(sAudit, audit)
+        nSet += 1
+        if dir == -1
+            nShortT += 1
+        else
+            nLongT += 1
+        if tpAligned
+            nAligned += 1
+        else
+            nFallback += 1
+        alert("MR CASINO " + (dir == 1 ? "BUY" : "SELL") + " " + syminfo.ticker + " " + timeframe.period + "  entry " + str.tostring(entry, format.mintick) + "  SL " + str.tostring(sl, format.mintick) + "  TP " + str.tostring(tp, format.mintick), alert.freq_once_per_bar)
+        while array.size(sEntry) > maxSet
+            box.delete(array.get(sRisk, 0))
+            box.delete(array.get(sRew, 0))
+            label.delete(array.get(sLbl, 0))
+            line.delete(array.get(sPl1, 0))
+            pl2d = array.get(sPl2, 0)
+            if not na(pl2d)
+                line.delete(pl2d)
+            array.shift(sRisk)
+            array.shift(sRew)
+            array.shift(sLbl)
+            array.shift(sEntry)
+            array.shift(sSL)
+            array.shift(sTP)
+            array.shift(sRR)
+            array.shift(sDir)
+            array.shift(sState)
+            array.shift(sFill)
+            array.shift(sBEon)
+            array.shift(sBank)
+            array.shift(sP2)
+            array.shift(sRiskR)
+            array.shift(sPl1)
+            array.shift(sPl2)
+            array.shift(sAudit)
+
+// ---- manage: BE + SL/TP (from the bar AFTER the HCS) ----
+if array.size(sEntry) > 0
+    for i = array.size(sEntry) - 1 to 0
+        st = array.get(sState, i)
+        if st == 1
+            dir = array.get(sDir, i)
+            en  = array.get(sEntry, i)
+            sl  = array.get(sSL, i)
+            tp  = array.get(sTP, i)
+            rr  = array.get(sRR, i)
+            fb  = array.get(sFill, i)
+            lb  = array.get(sLbl, i)
+            rb  = array.get(sRisk, i)
+            gb  = array.get(sRew, i)
+            beA = array.get(sBEon, i)
+            box.set_right(rb, bar_index)
+            box.set_right(gb, bar_index)
+            line.set_x2(array.get(sPl1, i), bar_index)
+            pl2i = array.get(sPl2, i)
+            if not na(pl2i)
+                line.set_x2(pl2i, bar_index)
+            if bar_index > fb
+                float bank = array.get(sBank, i)
+                bool p2 = array.get(sP2, i)
+                float thisR = array.get(sRiskR, i)
+                favorR = (dir == 1 ? high - en : en - low) / thisR
+                if not beA and favorR >= pL1
+                    beA := true
+                    array.set(sBEon, i, true)
+                    array.set(sSL, i, en)
+                    sl := en
+                    bank += pf1 * pL1
+                    array.set(sBank, i, bank)
+                if pf2 > 0 and beA and not p2 and favorR >= pL2
+                    p2 := true
+                    array.set(sP2, i, true)
+                    bank += pf2 * pL2
+                    array.set(sBank, i, bank)
+                hitSL = dir == 1 ? low <= sl : high >= sl
+                hitTP = dir == 1 ? high >= tp : low <= tp
+                rightB = math.max(bar_index, fb + minShow)
+                if hitSL
+                    box.set_right(rb, rightB)
+                    box.set_right(gb, rightB)
+                    if beA
+                        array.set(sState, i, 5)
+                        nBE += 1
+                        sumRealR += bank
+                        label.set_text(lb, "P +" + str.tostring(bank, "#.#") + "R")
+                        label.set_color(lb, color.new(colRew, 25))
+                        log.info(array.get(sAudit, i) + "|out=PART|realR=" + str.tostring(bank, "#.#"))
+                        if showAudit and time >= auditFrom
+                            label.new(bar_index, en, array.get(sAudit, i) + "|out=PART|realR=" + str.tostring(bank, "#.#"), style=label.style_none, textcolor=color.gray, size=size.tiny)
+                    else
+                        array.set(sState, i, 3)
+                        nLoss += 1
+                        sumRealR += -1.0
+                        label.set_text(lb, "SL")
+                        log.info(array.get(sAudit, i) + "|out=SL|realR=-1")
+                        if showAudit and time >= auditFrom
+                            label.new(bar_index, en, array.get(sAudit, i) + "|out=SL|realR=-1", style=label.style_none, textcolor=color.gray, size=size.tiny)
+                else if hitTP
+                    if not beA
+                        beA := true
+                        array.set(sBEon, i, true)
+                        bank += pf1 * pL1
+                    if pf2 > 0 and not array.get(sP2, i)
+                        array.set(sP2, i, true)
+                        bank += pf2 * pL2
+                    array.set(sBank, i, bank)
+                    realized = bank + pfRun * rr
+                    array.set(sState, i, 2)
+                    nWin += 1
+                    sumWinR += rr
+                    sumRealR += realized
+                    box.set_right(rb, rightB)
+                    box.set_right(gb, rightB)
+                    label.set_text(lb, "WIN +" + str.tostring(realized, "#.#") + "R")
+                    log.info(array.get(sAudit, i) + "|out=WIN|realR=" + str.tostring(realized, "#.#"))
+                    if showAudit and time >= auditFrom
+                        label.new(bar_index, en, array.get(sAudit, i) + "|out=WIN|realR=" + str.tostring(realized, "#.#"), style=label.style_none, textcolor=color.gray, size=size.tiny)
+
+// ===================== STATS TABLE =====================
+var table tb = na
+if showTbl and barstate.islast
+    if na(tb)
+        tb := table.new(position.top_right, 2, 17, border_width=1, border_color=color.new(color.gray, 50))
+    bg = color.new(#1e1e1e, 0)
+    dec    = nWin + nBE + nLoss
+    wr     = dec > 0 ? 100.0 * (nWin + nBE) / dec : 0.0
+    fullWr = dec > 0 ? 100.0 * nWin / dec : 0.0
+    perDay = nDays > 0 ? nSet / nDays : 0.0
+    netR   = sumRealR
+    table.cell(tb, 0, 0, "MR CASINO Entries", text_color=color.white, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 0, "LIVE " + (isSmallTF ? "20/80" : "10/30/60"), text_color=color.new(color.gray, 0), bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 1, "Setups / day", text_color=#ffd54f, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 1, str.tostring(perDay, "#.##"), text_color=#ffd54f, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 2, "Taken", text_color=color.white, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 2, str.tostring(nSet), text_color=color.white, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 3, "FULL-TP wins", text_color=colRew, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 3, str.tostring(nWin), text_color=colRew, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 4, "Partial exits", text_color=color.new(colRew, 30), bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 4, str.tostring(nBE), text_color=color.new(colRew, 30), bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 5, "Losses (pre-P1)", text_color=colShort, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 5, str.tostring(nLoss), text_color=colShort, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 6, "FULL-TP hit%", text_color=#26a69a, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 6, str.tostring(fullWr, "#.#") + "%", text_color=#26a69a, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 7, "WIN% (Casino +5$)", text_color=#ffd54f, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 7, str.tostring(wr, "#.#") + "%", text_color=#ffd54f, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 8, "Net R (approx)", text_color=color.white, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 8, str.tostring(netR, "#.#"), text_color=color.white, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 9, "Tgt aligned/fallbk", text_color=color.new(color.gray, 0), bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 9, str.tostring(nAligned) + " / " + str.tostring(nFallback), text_color=color.new(color.gray, 0), bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 10, "Cut by clean-path", text_color=#ffb74d, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 10, str.tostring(nCutPath), text_color=#ffb74d, bgcolor=bg, text_size=size.small)
+    rpPct = nFormedIB > 0 ? 100.0 * nRepaintIB / nFormedIB : 0.0
+    table.cell(tb, 0, 11, "Repaints (live)", text_color=#64b5f6, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 11, str.tostring(nRepaintIB) + "/" + str.tostring(nFormedIB) + " (" + str.tostring(rpPct, "#.#") + "%)", text_color=#64b5f6, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 12, "HCS strong/weak", text_color=#26a69a, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 12, str.tostring(cHcsStrong) + " / " + str.tostring(cHcsWeak), text_color=#26a69a, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 13, "x3 candles", text_color=#00e5ff, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 13, str.tostring(cX3), text_color=#00e5ff, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 14, "Self-negations", text_color=#ba68c8, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 14, str.tostring(cSN), text_color=#ba68c8, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 15, "Immediate negations", text_color=#ff9800, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 15, str.tostring(cNeg), text_color=#ff9800, bgcolor=bg, text_size=size.small)
+    table.cell(tb, 0, 16, "v2 = OBS layer only", text_color=color.new(color.gray, 0), bgcolor=bg, text_size=size.small)
+    table.cell(tb, 1, 16, "entries unchanged", text_color=color.new(color.gray, 0), bgcolor=bg, text_size=size.small)
+
+// ===================== LONG / SHORT SPLIT =====================
+var table ab = na
+if showFac and barstate.islast
+    if na(ab)
+        ab := table.new(position.bottom_right, 2, 3, border_width=1, border_color=color.new(color.gray, 50))
+    bg = color.new(#1e1e1e, 0)
+    hd = color.new(#2a2a2a, 0)
+    table.cell(ab, 0, 0, "SIDE", text_color=color.white, bgcolor=hd, text_size=size.small)
+    table.cell(ab, 1, 0, "taken", text_color=color.white, bgcolor=hd, text_size=size.small)
+    table.cell(ab, 0, 1, "Shorts", text_color=colShort, bgcolor=bg, text_size=size.small)
+    table.cell(ab, 1, 1, str.tostring(nShortT), text_color=colShort, bgcolor=bg, text_size=size.small)
+    table.cell(ab, 0, 2, "Longs", text_color=colLong, bgcolor=bg, text_size=size.small)
+    table.cell(ab, 1, 2, str.tostring(nLongT), text_color=colLong, bgcolor=bg, text_size=size.small)

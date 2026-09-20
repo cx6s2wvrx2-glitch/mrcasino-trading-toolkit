@@ -1,0 +1,62 @@
+{
+  "schema_version": "r143_source_evidence_map_v1",
+  "episode_id": "mr-casino-2023-03-31-sell-sequence",
+  "source_locator": "01_sources/PRIMARY_NARRATIVE_2023_03_30_31.md#sell-side-narrative",
+  "stages": [
+    {
+      "stage": "HCS_ZONE_REACTION",
+      "status": "explicit",
+      "source_refs": [
+        "PRIMARY_NARRATIVE_2023_03_30_31#locator-c"
+      ],
+      "note": "Source explicitly places price in the manipulation zone and identifies the 1m HCS at 1986 as the clearest sell entry.",
+      "machine_stage_certified": false
+    },
+    {
+      "stage": "TFS",
+      "status": "partial",
+      "source_refs": [
+        "PRIMARY_NARRATIVE_2023_03_30_31#locator-c"
+      ],
+      "note": "Source says the market is in the right place to form the daily FU downside needed for true sells and that the entry makes sense by timeframe strength, but this does not by itself expose a complete machine-certified TFS establishment event.",
+      "machine_stage_certified": false
+    },
+    {
+      "stage": "LAOL_MET",
+      "status": "unresolved",
+      "source_refs": [
+        "PRIMARY_NARRATIVE_2023_03_30_31#locator-c"
+      ],
+      "note": "Major liquidity below and downside targets are explicit, but the preserved narrative does not explicitly certify the canonical R-143 LAOL_MET stage for this replay.",
+      "machine_stage_certified": false
+    },
+    {
+      "stage": "TRUE_STOP_RESPECTED",
+      "status": "unresolved",
+      "source_refs": [],
+      "note": "No explicit respected True Stop event with stage timing is preserved in this sell-side excerpt.",
+      "machine_stage_certified": false
+    },
+    {
+      "stage": "TEN_MIN_TRUE_STOP_ESTABLISHED",
+      "status": "unresolved",
+      "source_refs": [],
+      "note": "No explicit 10m True Stop establishment event with stage timing is preserved in this sell-side excerpt.",
+      "machine_stage_certified": false
+    },
+    {
+      "stage": "TARGETS_AND_TIMING",
+      "status": "partial",
+      "source_refs": [
+        "PRIMARY_NARRATIVE_2023_03_30_31#locator-c-continuation",
+        "PRIMARY_NARRATIVE_2023_03_30_31#locator-c-later-continuation"
+      ],
+      "note": "The source explicitly targets 1973 at least and discusses later zoning/re-entry areas, but the complete R-143 target-and-timing package is not fully certified by the excerpt alone.",
+      "machine_stage_certified": false
+    }
+  ],
+  "complete_source_sequence_claim": false,
+  "promotion_allowed": false,
+  "performance_claim_allowed": false,
+  "live_execution_authorized": false
+}

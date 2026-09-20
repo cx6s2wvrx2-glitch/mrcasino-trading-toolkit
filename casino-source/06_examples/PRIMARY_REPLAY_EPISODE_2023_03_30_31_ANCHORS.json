@@ -1,0 +1,81 @@
+{
+  "schema_version": "source_price_anchor_set_v1",
+  "episode_id": "casino-2023-03-30-31",
+  "source_locator": "PRICE ACTION REFLECTION.zip#narrated-market-days:2023-03-30_to_2023-03-31",
+  "promotion_allowed": false,
+  "live_execution_authorized": false,
+  "anchors": [
+    {
+      "anchor_id": "casino-2023-03-30-31-1972-zone",
+      "price": "1972.00",
+      "evidence_class": "PRIMARY_SOURCE_LABEL",
+      "source_image": "IMG_20230403_022157_701.jpg / IMG_20230403_022255_472.jpg",
+      "source_claim": "Untested 45min HCS zone of manipulation at 1972; 1972 also described as major liquidity context.",
+      "source_note": "Narrated Thursday/Friday review; level is context and not a standalone entry.",
+      "role": "hcs_zone_and_liquidity_context"
+    },
+    {
+      "anchor_id": "casino-2023-03-30-31-1972-19-liquidity",
+      "price": "1972.19",
+      "evidence_class": "PRIMARY_SOURCE_LABEL",
+      "source_image": "IMG_20230403_022408_340.jpg",
+      "source_claim": "1972.19 liquidity is being left behind.",
+      "source_note": "Part of the buy-establishment recap near the zone of manipulation.",
+      "role": "liquidity_level"
+    },
+    {
+      "anchor_id": "casino-2023-03-30-31-1972-70-true-stop",
+      "price": "1972.70",
+      "evidence_class": "PRIMARY_SOURCE_LABEL",
+      "source_image": "IMG_20230403_022408_340.jpg",
+      "source_claim": "1972.70 true stop respected.",
+      "source_note": "Exact respect must be checked per feed; no broker tolerance is implied.",
+      "role": "true_stop_level"
+    },
+    {
+      "anchor_id": "casino-2023-03-30-31-1973-fu",
+      "price": "1973.00",
+      "evidence_class": "PRIMARY_SOURCE_LABEL",
+      "source_image": "IMG_20230403_022417_223.jpg",
+      "source_claim": "Strongest 1min FU closure at 1973 used in the advanced-entry narrative after buys were established.",
+      "source_note": "Price anchor only; B-01/B-03 prevent inventing unresolved FU strength mechanics.",
+      "role": "fu_entry_context"
+    },
+    {
+      "anchor_id": "casino-2023-03-30-31-1975-hcs-reentry",
+      "price": "1975.00",
+      "evidence_class": "PRIMARY_SOURCE_LABEL",
+      "source_image": "IMG_20230403_022417_223.jpg",
+      "source_claim": "1975 produced the easy 1min HCS setup for a re-entry.",
+      "source_note": "Source-described re-entry context after stronger manipulation around 1973.",
+      "role": "hcs_reentry_context"
+    },
+    {
+      "anchor_id": "casino-2023-03-30-31-1984-19-target",
+      "price": "1984.19",
+      "evidence_class": "PRIMARY_SOURCE_LABEL",
+      "source_image": "IMG_20230403_022314_422.jpg",
+      "source_claim": "1984.19 is described as a clear imbalance target within the buy reasoning.",
+      "source_note": "Target-context anchor; B-04 remains open for broker-specific imbalance calibration.",
+      "role": "major_target_context"
+    },
+    {
+      "anchor_id": "casino-2023-03-30-31-1987-zone",
+      "price": "1987.00",
+      "evidence_class": "PRIMARY_SOURCE_LABEL",
+      "source_image": "IMG_20230403_022225_730.jpg",
+      "source_claim": "Higher zone of manipulation at 1987.",
+      "source_note": "Higher contextual zone used in the Friday narrative.",
+      "role": "zone_of_manipulation"
+    },
+    {
+      "anchor_id": "casino-2023-03-30-31-1987-56-imb",
+      "price": "1987.56",
+      "evidence_class": "PRIMARY_SOURCE_LABEL",
+      "source_image": "IMG_20230403_022511_073.jpg",
+      "source_claim": "The 1min IMB at 1987.56 was filled in majority after the high-impact push.",
+      "source_note": "Exact source price used as a cross-feed fingerprint; does not resolve B-04.",
+      "role": "imbalance_fingerprint"
+    }
+  ]
+}

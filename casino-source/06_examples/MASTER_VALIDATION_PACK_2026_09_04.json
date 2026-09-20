@@ -1,0 +1,278 @@
+{
+  "schema_version": "xauusd_v2_master_validation_pack_v1",
+  "date": "2026-09-04",
+  "status": "RESEARCH_FOUNDATION_NOT_STRATEGY_CERTIFIED",
+  "scope": "xauusd-system-v2 only",
+  "purpose": "single canonical human-and-machine map of strategy understanding, evidence state, agent reality, March validation frontiers, unresolved blockers, and gates before performance research",
+  "strategy_flow": [
+    "liquidity_context",
+    "fu_event_language",
+    "hcs_negation_relationships",
+    "zone_poi_reaction",
+    "tfs_prevalent_direction",
+    "active_laol",
+    "true_stop_main_poi_respect",
+    "ten_min_true_stop_establishment",
+    "ltf_execution_refinement",
+    "targets_management",
+    "deterministic_risk_gate"
+  ],
+  "official_r143_subset": [
+    "zone_poi_reaction",
+    "tfs_prevalent_direction",
+    "active_laol",
+    "true_stop_main_poi_respect",
+    "ten_min_true_stop_establishment",
+    "targets_management"
+  ],
+  "truth_layers": [
+    {
+      "id": "liquidity_context",
+      "state": "PARTIAL",
+      "locked": [
+        "liquidity calculation precedes final entry logic",
+        "major liquidity and LAOL are distinct concepts",
+        "visible LTF liquidity is not automatically the active target"
+      ],
+      "open": [
+        "deterministic priority among multiple liquidity candidates",
+        "exact active-LAOL selection/refinement",
+        "broker-specific imbalance calibration"
+      ]
+    },
+    {
+      "id": "fu_event_language",
+      "state": "PARTIAL",
+      "locked": [
+        "FU semantic criteria require liquidity taken, opposite-direction move, and same-candle relationship",
+        "Strong FU and Attempted FU primitive logic is timeframe-invariant by explicit user clarification",
+        "supplied helper/code is implementation evidence and cannot self-certify strategy truth"
+      ],
+      "open": [
+        "B-01 exact sufficient opposite-direction move/break mechanics",
+        "B-03 universal numeric Strong-FU threshold if one exists",
+        "exact source-aligned occurrence mapping"
+      ]
+    },
+    {
+      "id": "hcs_negation_relationships",
+      "state": "PARTIAL",
+      "locked": [
+        "HCS is a retest relationship between FU-family nodes",
+        "latest FU wick is a material source-backed relationship",
+        "ATT to opposite ATT is not ordinary FU negation",
+        "HCS plus Negation remains a separate composite",
+        "12:31 plus 12:32 March BUY staged merge is forbidden without source authority"
+      ],
+      "open": [
+        "universal raw HCS certification",
+        "HCS temporal/co-location grammar",
+        "B-05 x3-by-x3 raw OHLC grammar"
+      ]
+    },
+    {
+      "id": "zone_poi_reaction",
+      "state": "PARTIAL",
+      "locked": [
+        "zone touch alone is not an entry",
+        "HCS-zone reaction is secondary confluence and the first R-143 stage"
+      ],
+      "open": [
+        "canonical broker-side HCS-zone semantic occurrence in March",
+        "FOREXCOM reference-feed equivalence"
+      ]
+    },
+    {
+      "id": "tfs_prevalent_direction",
+      "state": "PARTIAL",
+      "locked": [
+        "TFS means confirmed prevalent direction",
+        "forming FU or generic timeframe-strength context is not established TFS",
+        "later evidence cannot retroactively certify an earlier decision point",
+        "sub-10m refinement cannot establish TFS alone"
+      ],
+      "open": [
+        "exact pre-entry TFS establishment evidence for March 31 SELL around 1986"
+      ]
+    },
+    {
+      "id": "active_laol",
+      "state": "PARTIAL",
+      "locked": [
+        "LAOL is separate from major liquidity",
+        "LAOL respected, LAOL taken, liquidity left behind, and R-143 LAOL met are not silently interchangeable",
+        "LTF LAOL taken participates in the 10m True Stop build sequence"
+      ],
+      "open": [
+        "exact canonical event/criterion that counts as R-143 LAOL met",
+        "exact March 30 BUY mapping"
+      ]
+    },
+    {
+      "id": "true_stop_main_poi_respect",
+      "state": "PARTIAL",
+      "locked": [
+        "True Stop is not any arbitrary high, low, or FU wick",
+        "Main HTF True Stop requires aligned 10m-plus factors",
+        "Main POI respect precedes final LTF execution logic"
+      ],
+      "open": [
+        "complete source/broker semantic mapping in March",
+        "canonical feed equivalence"
+      ]
+    },
+    {
+      "id": "ten_min_true_stop_establishment",
+      "state": "PARTIAL",
+      "locked": [
+        "source relationship includes True Stop respected, LAOL taken, then new 10m HCS True Stop for established direction"
+      ],
+      "open": [
+        "raw x3-by-x3 build grammar",
+        "complete March source occurrence evidence"
+      ]
+    },
+    {
+      "id": "ltf_execution_refinement",
+      "state": "PARTIAL",
+      "locked": [
+        "pattern alone is not sufficient entry authority",
+        "confirmed path requires retail liquidity manipulation, LTF LAOL taken, and eligible LTF trigger",
+        "confirmed mode waits for established 10m True Stop",
+        "aggressive exception requires full TFS factors plus forming 10m True Stop"
+      ],
+      "open": [
+        "complete upstream semantic closure for canonical automation"
+      ]
+    },
+    {
+      "id": "targets_management",
+      "state": "PARTIAL",
+      "locked": [
+        "Core Breakout Liquidity is a minimum target after opposite LAOL/POI respect",
+        "R-143 target package includes core, major liquidity, and opposite LAOL context"
+      ],
+      "open": [
+        "B-06 exact Accepted RR numeric/dynamic definition",
+        "exact trail-level selection",
+        "broker-quality cost model before performance research"
+      ]
+    },
+    {
+      "id": "deterministic_risk_gate",
+      "state": "BLOCKED_FOR_PRODUCTION",
+      "locked": [
+        "risk is separate from FU/HCS detection",
+        "risk engine has hard-veto behavior and no embedded production defaults"
+      ],
+      "open": [
+        "B-08 explicit user-approved production risk limits"
+      ]
+    }
+  ],
+  "march_episodes": {
+    "2023-03-30_buy": {
+      "role": "validation specimen",
+      "source_frontier": "LAOL_MET",
+      "broker_frontier": "HCS_ZONE_REACTION",
+      "reference_alignment": false,
+      "useful_observations": [
+        "source-labelled 1972.70 True Stop anchor has related Exclusive broker path",
+        "ordered broker path preserves 1972.70 area to 1973 area to 1975 area to 1984.19 target area",
+        "1975 remains unresolved and must not be force-fit"
+      ],
+      "not_allowed": [
+        "promoting liquidity left behind to LAOL met",
+        "merging 12:31 retest plus 12:32 ATT1 into one staged HCS without authority",
+        "claiming complete R-143 certification"
+      ]
+    },
+    "2023-03-31_sell": {
+      "role": "validation specimen",
+      "source_frontier": "TFS_CONFIRMED",
+      "broker_frontier": "HCS_ZONE_REACTION",
+      "reference_alignment": false,
+      "useful_observations": [
+        "Exclusive broker reproduces the distinctive 1987.56 / 1986 region and later path toward 1973",
+        "1986 remains useful HCS-labelled/control context without universal HCS certification"
+      ],
+      "not_allowed": [
+        "promoting forming daily FU or generic timeframe strength to established TFS",
+        "using a later 4h close retroactively at the 1986 decision",
+        "claiming complete R-143 certification"
+      ]
+    }
+  },
+  "agent_reality": {
+    "canonical_agent_count": 8,
+    "all_foundations_implemented": true,
+    "continuous_background_swarm_observed": false,
+    "orchestrator_version": "0.6.0",
+    "agent06_blind_case_count": 173,
+    "completed_audited_full_external_agent06_run_observed": false
+  },
+  "live_evidence_snapshot": {
+    "supabase": {
+      "user_approved_sources": 29,
+      "examples": 215,
+      "knowledge_claims": 195,
+      "verified_knowledge_claims": 0,
+      "rules": 23,
+      "verified_rules": 0,
+      "open_disagreements": 14,
+      "agent_runs": 32
+    },
+    "latest_green_ci_before_pack": {
+      "run_id": 33870216602,
+      "run_number": 674,
+      "head_sha": "2d19d3150dd20327cdb484fa7c43f25fe0bd4eb4",
+      "conclusion": "success"
+    }
+  },
+  "canonical_blockers": [
+    "B-01",
+    "B-02",
+    "B-03",
+    "B-04",
+    "B-05",
+    "B-06",
+    "B-07",
+    "B-08"
+  ],
+  "user_only_questions_currently_isolated": [
+    {
+      "id": "UQ-01",
+      "topic": "LAOL_MET",
+      "question": "What exact event or criterion counts as R-143 LAOL met, and specifically what should count as LAOL met in the March 30 BUY sequence?",
+      "ask_now": false
+    },
+    {
+      "id": "UQ-02",
+      "topic": "TFS_CONFIRMED",
+      "question": "What exact pre-entry evidence establishes TFS for the March 31 SELL around 1986?",
+      "ask_now": false
+    }
+  ],
+  "next_gates": [
+    "resolve source semantic frontiers without invention",
+    "complete canonical FOREXCOM reference alignment when data is available",
+    "freeze a strategy version only after semantic agreement",
+    "complete external independent validation on the frozen definition",
+    "establish content-addressed parameters and broker-quality cost model",
+    "run lookahead-safe historical/OOS/walk-forward research",
+    "approve production risk policy separately",
+    "perform separate certification/promotion review"
+  ],
+  "authority": {
+    "strategy_certified": false,
+    "fu_certified": false,
+    "hcs_certified": false,
+    "tfs_certified": false,
+    "true_stop_certified": false,
+    "r143_certified": false,
+    "performance_claim_allowed": false,
+    "production_risk_ready": false,
+    "promotion_allowed": false,
+    "live_execution_authorized": false
+  }
+}

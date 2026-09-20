@@ -1,0 +1,248 @@
+{
+  "schema_version": "xauusd_v2_strategy_truth_map_v1",
+  "date": "2026-09-04",
+  "scope": "xauusd-system-v2",
+  "canonical_reference_feed": "FOREXCOM:XAUUSD",
+  "broker_research_feed": "Exclusive Markets XAUUSD!",
+  "reference_feed_alignment_complete": false,
+  "strategy_certified": false,
+  "performance_claim_allowed": false,
+  "promotion_allowed": false,
+  "live_execution_authorized": false,
+  "legend": {
+    "implemented_research_layer": "Source/supplied-code concept is represented in software, but this does not certify strategy truth.",
+    "source_clear_machine_open": "Source concept is clear enough for architecture, but exact machine occurrence/geometry remains open.",
+    "source_partial": "Source supports the concept but an exact stage boundary or occurrence is incomplete.",
+    "blocked": "Do not infer or promote until explicit authority/evidence closes the boundary."
+  },
+  "flow": [
+    {
+      "order": 1,
+      "id": "liquidity_context",
+      "label_gr": "Liquidity / κατεύθυνση / ενεργό context",
+      "purpose": "Καθορίζει ποια πλευρά έχει τη σημαντικότερη εναπομένουσα liquidity και αν επιτρέπεται να εξεταστεί entry model.",
+      "source_status": "source_clear_machine_open",
+      "implementation_status": "partial",
+      "key_truth": [
+        "Liquidity calculation προηγείται της τελικής εισόδου.",
+        "Major liquidity και LAOL δεν είναι το ίδιο πράγμα.",
+        "Ορατό LTF liquidity δεν γίνεται αυτόματα ενεργός στόχος.",
+        "Δεν υπάρχει πιστοποιημένο numeric scoring formula για competing liquidity."
+      ],
+      "open_boundaries": [
+        "broker-specific IMB calibration",
+        "deterministic priority when multiple liquidity candidates coexist",
+        "exact active-LAOL selection/refinement"
+      ]
+    },
+    {
+      "order": 2,
+      "id": "fu_event_language",
+      "label_gr": "Strong FU / Attempted FU",
+      "purpose": "Η βασική fractal γλώσσα manipulation που διαβάζει ο analyzer σε κάθε timeframe.",
+      "source_status": "implemented_research_layer",
+      "implementation_status": "implemented_research_layer",
+      "key_truth": [
+        "Bright green = bullish Strong FU.",
+        "Faded green = bullish Attempted FU.",
+        "Bright red = bearish Strong FU.",
+        "Faded red = bearish Attempted FU.",
+        "Η ίδια primitive λογική εφαρμόζεται fractally σε όλα τα timeframes.",
+        "Supplied Casino code/helper είναι ισχυρή implementation evidence για markers, όχι αυτόματη strategy certification."
+      ],
+      "open_boundaries": [
+        "B-01 exact sufficient opposite-direction move/break mechanics",
+        "B-03 universal numeric Strong-FU threshold if one exists"
+      ]
+    },
+    {
+      "order": 3,
+      "id": "hcs_negation_stack",
+      "label_gr": "HCS / FU Negation / HCS + Negation",
+      "purpose": "Συνθέτει FU-family manipulation nodes σε retest/negation relationships.",
+      "source_status": "implemented_research_layer",
+      "implementation_status": "implemented_research_layer",
+      "key_truth": [
+        "Source-style HCS research proxy: μεταγενέστερο FU-family node κάνει retest το latest visible prior FU-family wick και σχηματίζει νέο FU-family node.",
+        "FU Negation research proxy: latest Strong/ATT manipulation -> opposite Strong/F μέσα σε +1/+2 candles.",
+        "ATT -> opposite ATT δεν προάγεται σε ordinary FU Negation.",
+        "FU Negation μπορεί να είναι semantic role ενός physical HCS node χωρίς διπλομέτρηση.",
+        "HCS + Negation είναι ξεχωριστό composite.",
+        "BETA HCS και source-style HCS παραμένουν διαφορετικά layers."
+      ],
+      "open_boundaries": [
+        "universal HCS raw semantic certification",
+        "x3 / x3-by-x3 / negation-of-negation raw grammar",
+        "exact canonical source-feed occurrence alignment"
+      ]
+    },
+    {
+      "order": 4,
+      "id": "zone_poi_reaction",
+      "label_gr": "Zone / POI / HCS-zone reaction",
+      "purpose": "Τοποθετεί τα manipulation events σε ενεργή περιοχή τραπεζικών orders αντί να τα χρησιμοποιεί ως standalone patterns.",
+      "source_status": "source_clear_machine_open",
+      "implementation_status": "partial",
+      "key_truth": [
+        "HCS-zone reaction είναι secondary confluence που συνθέτει το POI.",
+        "Η zone μόνη της δεν είναι entry και δεν είναι ολόκληρο POI.",
+        "Zone reaction είναι το πρώτο στάδιο του επίσημου R-143 backtest sequence."
+      ],
+      "open_boundaries": [
+        "machine-certified March HCS-zone occurrence on canonical feed",
+        "full zone lifecycle integration into the Phase-3 sequence"
+      ]
+    },
+    {
+      "order": 5,
+      "id": "tfs",
+      "label_gr": "TFS / επικρατούσα κατεύθυνση",
+      "purpose": "Επιβεβαιώνει την prevalent direction και την authority του POI/LAOL στο κατάλληλο timeframe setting.",
+      "source_status": "source_clear_machine_open",
+      "implementation_status": "partial",
+      "key_truth": [
+        "TFS = confirmed prevalent direction.",
+        "Η ανάλυση confirmation γίνεται μετά το candle close.",
+        "Sub-10m evidence μπορεί να κάνει refinement αλλά δεν δημιουργεί μόνο του established TFS.",
+        "AS FORMING δεν δημιουργεί ανεξάρτητη κατεύθυνση· πατά πάνω σε ήδη established prevalent TFS.",
+        "Macro, scalp, intraday, swing, extreme swing TFS settings πρέπει να παραμένουν χωριστά."
+      ],
+      "open_boundaries": [
+        "exact full 10m+ factor set",
+        "exact timeframe selection when confirmation layers disagree",
+        "March 31 pre-1986 exact established-TFS occurrence remains source-partial"
+      ]
+    },
+    {
+      "order": 6,
+      "id": "laol",
+      "label_gr": "LAOL / ενεργό last area of liquidity",
+      "purpose": "Ορίζει το ενεργό reversal/target reference μέσα στο σωστό TFS setting και POI.",
+      "source_status": "source_clear_machine_open",
+      "implementation_status": "partial",
+      "key_truth": [
+        "True reversal = LAOL-to-LAOL ανά TFS setting.",
+        "LAOL = final point of a liquidity trail / active last-area reference inside reversal context.",
+        "LAOL respected, LAOL taken και R-143 LAOL met δεν εξισώνονται αυτόματα.",
+        "LAOL taken ξεκινά το 10m TS clock στην LTF execution sequence.",
+        "TFS μπορεί να επιβεβαιώνει LAOL/refined POI μέσω multi-timeframe confluence."
+      ],
+      "open_boundaries": [
+        "exact deterministic meaning of R-143 LAOL met versus respected/taken",
+        "March 30 canonical LAOL_MET occurrence",
+        "exact active LAOL selection when multiple TF candidates coexist"
+      ]
+    },
+    {
+      "order": 7,
+      "id": "true_stop",
+      "label_gr": "True Stop / Main POI",
+      "purpose": "Ορίζει το contextual low/high όπου ευθυγραμμίζονται οι απαιτούμενοι 10m+ TFS factors και όπου πρέπει να φανεί respect πριν το refinement entry.",
+      "source_status": "source_clear_machine_open",
+      "implementation_status": "partial",
+      "key_truth": [
+        "True Stop δεν είναι οποιοδήποτε swing high/low, FU wick ή HCS.",
+        "Κάθε true PA wave βασίζεται σε 10m+ HCS/negation manipulation.",
+        "Main HTF True Stop βρίσκεται στο low/high alignment των απαιτούμενων 10m+ TFS factors.",
+        "LTF HCS/negation entry ακολουθεί μετά από TS respect + final liquidity calculation."
+      ],
+      "open_boundaries": [
+        "exact exhaustive 10m+ factor list",
+        "exact candle-level TS respected geometry",
+        "feed-sensitive March 30 1972.70 equivalence"
+      ]
+    },
+    {
+      "order": 8,
+      "id": "ten_min_establishment",
+      "label_gr": "10m True Stop establishment",
+      "purpose": "Μετατρέπει το post-LAOL/TS sequence σε established direction για το normal confirmed execution path.",
+      "source_status": "source_clear_machine_open",
+      "implementation_status": "partial",
+      "key_truth": [
+        "Establishment ladder: TS respected -> LAOL taken -> new 10m HCS TS for established direction.",
+        "1m HCS x3 / x3 negation examples περιγράφονται ως building process προς 10m HCS establishment.",
+        "Confirmed execution περιμένει established 10m TS· aggressive mode μπορεί μόνο υπό πλήρες TFS context + 10m TS forming."
+      ],
+      "open_boundaries": [
+        "B-05 x3-by-x3 raw grammar",
+        "machine-certified March 10m TS occurrence"
+      ]
+    },
+    {
+      "order": 9,
+      "id": "ltf_execution",
+      "label_gr": "LTF refinement / entry candidate",
+      "purpose": "Βρίσκει τη στιγμή execution μόνο αφού έχει υπάρξει το απαιτούμενο context.",
+      "source_status": "source_clear_machine_open",
+      "implementation_status": "partial",
+      "key_truth": [
+        "R-145: retail liquidity manipulated -> LTF LAOL taken -> 1m negation ή 3m HCS+negation.",
+        "HCS/FU/zone touch μόνο του δεν επιτρέπει trade.",
+        "Advanced source example: αφού έχουν established τα buys, 5m ATT-FU retest + strongest 1m FU close μπορεί να δώσει advanced entry.",
+        "Later 1m HCS μπορεί να δώσει easier re-entry όταν η κατεύθυνση είναι ήδη πιο established."
+      ],
+      "open_boundaries": [
+        "exact entry-family certification cases",
+        "risk gate remains downstream",
+        "exact FU strength mechanics where entry family depends on them"
+      ]
+    },
+    {
+      "order": 10,
+      "id": "targets_management",
+      "label_gr": "Targets / management",
+      "purpose": "Κατευθύνει την έξοδο από Core προς major liquidity και απέναντι LAOL χωρίς να εφευρίσκει fixed pip targets.",
+      "source_status": "source_clear_machine_open",
+      "implementation_status": "partial",
+      "key_truth": [
+        "Core Breakout Liquidity είναι minimum target αφού το απέναντι LAOL/POI γίνει respected.",
+        "R-143 targets/timing περιλαμβάνει core + major + LAOL.",
+        "Previous liquidity-trail steps μπορούν να λειτουργούν ως targets μετά reversal.",
+        "Trail-level selection rule παραμένει unresolved."
+      ],
+      "open_boundaries": [
+        "exact trail-level selection",
+        "B-06 accepted RR numeric/dynamic definition",
+        "broker-quality cost/slippage artifacts before performance research"
+      ]
+    },
+    {
+      "order": 11,
+      "id": "risk_execution_authority",
+      "label_gr": "Risk / execution authority",
+      "purpose": "Ξεχωριστή deterministic safety gate μετά τη στρατηγική, όχι μέρος της pattern recognition.",
+      "source_status": "blocked",
+      "implementation_status": "engineering_contract_only",
+      "key_truth": [
+        "Καμία semantic detection δεν ενεργοποιεί αυτόματα live trade.",
+        "Production risk policy δεν έχει εγκριθεί αριθμητικά.",
+        "LLM/agent δεν έχει live execution authority."
+      ],
+      "open_boundaries": [
+        "B-08 explicit production numeric risk policy",
+        "separate strategy certification/promotion process"
+      ]
+    }
+  ],
+  "official_r143_order": [
+    "zone_poi_reaction",
+    "tfs",
+    "laol",
+    "true_stop",
+    "ten_min_establishment",
+    "targets_management"
+  ],
+  "current_march_frontiers": {
+    "2023-03-30_buy": {
+      "source_semantic_frontier": "laol",
+      "broker_semantic_frontier": "zone_poi_reaction",
+      "reference_alignment_complete": false
+    },
+    "2023-03-31_sell": {
+      "source_semantic_frontier": "tfs",
+      "broker_semantic_frontier": "zone_poi_reaction",
+      "reference_alignment_complete": false
+    }
+  }
+}
